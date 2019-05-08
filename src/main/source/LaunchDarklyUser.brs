@@ -1,7 +1,12 @@
 function LaunchDarklyUser(userKey as String) as Object
     return {
         private: {
-            userKey: userKey
+            key: userKey,
+            encode: function() as String
+                return FormatJSON({
+                    key: m.key
+                })
+            end function
         }
     }
 end function
