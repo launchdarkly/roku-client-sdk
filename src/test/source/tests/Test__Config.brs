@@ -25,6 +25,17 @@ function TestCase__Config_PollingInterval_Setter()
     return m.assertEqual(config.private.pollingInterval, 41)
 end function
 
+function TestCase__Config_Offline_Default()
+    config = LaunchDarklyConfig("mob")
+    return m.assertEqual(config.private.offline, false)
+end function
+
+function TestCase__Config_Offline_Setter()
+    config = LaunchDarklyConfig("mob")
+    config.setOffline(true)
+    return m.assertEqual(config.private.offline, true)
+end function
+
 function TestSuite__Config() as Object
     this = BaseTestSuite()
 
@@ -35,6 +46,8 @@ function TestSuite__Config() as Object
     this.addTest("TestCase__Config_AppURI_Setter", TestCase__Config_AppURI_Setter)
     this.addTest("TestCase__Config_PollingInterval_Default", TestCase__Config_PollingInterval_Default)
     this.addTest("TestCase__Config_PollingInterval_Setter", TestCase__Config_PollingInterval_Setter)
+    this.addTest("TestCase__Config_Offline_Default", TestCase__Config_Offline_Default)
+    this.addTest("TestCase__Config_Offline_Setter", TestCase__Config_Offline_Setter)
 
     return this
 end function
