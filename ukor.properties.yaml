@@ -1,0 +1,10 @@
+name: roku2
+version: 0.0.1
+buildDir: build
+sourceDir: src
+defaults:
+  falvor: main
+flavors:
+  main:
+    src:
+      - main

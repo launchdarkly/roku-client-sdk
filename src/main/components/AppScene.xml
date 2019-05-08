@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<component name="AppScene" extends="Scene">
+  <interface>
+  </interface>
+	<script type="text/brightscript" uri="AppScene.brs"/>
+  <children>
+  </children>
+</component>
