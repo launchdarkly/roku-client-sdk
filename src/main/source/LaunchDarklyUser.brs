@@ -9,11 +9,49 @@ function LaunchDarklyUser(userKey as String) as Object
             name: invalid,
             avatar: invalid,
             custom: invalid,
-            privateAttributeNames: CreateObject("roList"),
+            privateAttributeNames: {},
             encode: function() as String
-                return FormatJSON({
+                redacted = {
                     key: m.key
-                })
+                }
+
+                if m.anonymous = true then
+                    redacted.anonymous = true
+                end if
+
+                if m.firstName <> invalid then
+                    redacted.firstName = m.firstName
+                end if
+
+                if m.lastName <> invalid then
+                    redacted.lastName = m.lastName
+                end if
+
+                if m.email <> invalid then
+                    redacted.email = m.email
+                end if
+
+                if m.avatar <> invalid then
+                    redacted.avatar = m.avatar
+                end if
+
+                if m.custom <> invalid then
+                    custom = {}
+                    privateAttrs = createObject("roArray")
+
+                    for each attribute in m.custom
+                        if m.privateAttributeNames.lookup(attribute) = invalid then
+                            custom.addReplace(attribute, m.custom.lookup(attribute))
+                        else
+                            privateAttrs.push(attribute)
+                        end if
+                    end for
+
+                    redacted.custom = custom
+                    redacted.privateAttrs = privateAttrs
+                end if
+
+                return FormatJSON(redacted)
             end function
         },
         setAnonymous: function(anonymous as Boolean) as Void
@@ -34,14 +72,8 @@ function LaunchDarklyUser(userKey as String) as Object
         setAvatar: function(avatar as String) as Void
             m.private.avatar = avatar
         end function,
-        setCustom: function(custom as Object) as Void
-            m.private.custom = custom
-        end function,
-        setPrivateAttributes: function(privateAttributes as Object) as Void
-            m.privateAttributeNames = privateAttributes
-        end function,
         addPrivateAttribute: function(privateAttribute as String) as Void
-            m.privateAttributeNames.addTail(privateAttribute)
+            m.privateAttributeNames.addReplace(privateAttribute, 1)
         end function
     }
 end function
