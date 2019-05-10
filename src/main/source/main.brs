@@ -1,9 +1,9 @@
 sub main(params as object)
     print "in showChannelSGScreen"
 
-    screen = CreateObject("roSGScreen")
-    m.port = CreateObject("roMessagePort")
-    screen.setMessagePort(m.port)
+    screen = createObject("roSGScreen")
+    port = createObject("roMessagePort")
+    screen.setMessagePort(port)
 
     screen.show()
 
@@ -19,12 +19,22 @@ sub main(params as object)
         runner.run()
     end if
 
+    config = LaunchDarklyConfig("mob-")
+    config.setAppURI("https://app.ld.catamorphic.com")
+    user = LaunchDarklyUser("user-key")
+    client = LaunchDarklyClient(config, user, port)
 
     while (true)
-      msg = wait(2500, m.port)
+        msg = wait(2500, port)
 
-      if type(msg) = "roSGScreenEvent"
-          if msg.isScreenClosed() then return
-      end if
+        client.handleMessage(msg)
+
+        print "evaluation: " client.variation("hello-c-client-side", false)
+
+        if type(msg) = "roSGScreenEvent"
+            if msg.isScreenClosed() then
+                return
+            end if
+        end if
     end while
 end sub

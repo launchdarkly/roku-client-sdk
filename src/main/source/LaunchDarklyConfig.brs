@@ -12,7 +12,7 @@ function LaunchDarklyConfig(mobileKey as String) as Object
         setPollingInterval: function(pollingInterval as Integer) as Void
             m.private.pollingInterval = pollingInterval
         end function,
-        setOffline: function(offline as Boolean) as void
+        setOffline: function(offline as Boolean) as Void
             m.private.offline = offline
         end function
     }
