@@ -11,6 +11,13 @@ function TestCase__User_Encode_Trivial()
     return m.assertEqual(encoded, expected)
 end function
 
+function TestCase__User_Set_Name()
+    user = LaunchDarklyUser("my-key")
+    name = "alice"
+    user.setName(name)
+    return m.assertEqual(user.private.name, name)
+end function
+
 function TestSuite__User() as Object
     this = BaseTestSuite()
 
@@ -18,6 +25,7 @@ function TestSuite__User() as Object
 
     this.addTest("TestCase__User_Constructor", TestCase__User_Constructor)
     this.addTest("TestCase__User_Encode_Trivial", TestCase__User_Encode_Trivial)
+    this.addTest("TestCase__User_Set_Name", TestCase__User_Set_Name)
 
     return this
 end function
