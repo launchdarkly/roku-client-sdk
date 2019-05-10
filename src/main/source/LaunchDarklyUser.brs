@@ -10,7 +10,7 @@ function LaunchDarklyUser(userKey as String) as Object
             avatar: invalid,
             custom: invalid,
             privateAttributeNames: {},
-            encode: function() as String
+            encode: function(redact as boolean) as String
                 redacted = {
                     key: m.key
                 }
@@ -40,7 +40,7 @@ function LaunchDarklyUser(userKey as String) as Object
                     privateAttrs = createObject("roArray")
 
                     for each attribute in m.custom
-                        if m.privateAttributeNames.lookup(attribute) = invalid then
+                        if redact = false OR m.privateAttributeNames.lookup(attribute) = invalid then
                             custom.addReplace(attribute, m.custom.lookup(attribute))
                         else
                             privateAttrs.push(attribute)

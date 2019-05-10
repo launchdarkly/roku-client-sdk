@@ -5,7 +5,7 @@ end function
 
 function TestCase__User_Encode_Trivial()
     user = LaunchDarklyUser("my-key")
-    encoded = user.private.encode()
+    encoded = user.private.encode(false)
     regex = CreateObject("roRegex", "\|", "")
     expected = regex.replaceAll("{|key|:|my-key|}", chr(34))
     return m.assertEqual(encoded, expected)
