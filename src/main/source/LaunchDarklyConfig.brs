@@ -4,7 +4,9 @@ function LaunchDarklyConfig(mobileKey as String) as Object
             appURI: "https://app.launchdarkly.com",
             pollingInterval: 15,
             mobileKey: mobileKey,
-            offline: false
+            offline: false,
+            privateAttributeNames: {},
+            allAttributesPrivate: false
         },
         setAppURI: function(appURI as String) as Void
             m.private.appURI = appURI
@@ -14,6 +16,12 @@ function LaunchDarklyConfig(mobileKey as String) as Object
         end function,
         setOffline: function(offline as Boolean) as Void
             m.private.offline = offline
+        end function,
+        addPrivateAttribute: function(privateAttribute as String) as Void
+            m.private.privateAttributeNames.addReplace(privateAttribute, 1)
+        end function,
+        setAllAttributesPrivate: function(allAttributesPrivate as Boolean) as Void
+            m.private.allAttributesPrivate = allAttributesPrivate
         end function
     }
 end function
