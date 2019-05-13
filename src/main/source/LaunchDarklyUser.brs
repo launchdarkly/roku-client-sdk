@@ -29,7 +29,7 @@ function LaunchDarklyUser(userKey as String) as Object
                 return true
             end function,
 
-            encode: function(redact as boolean, config=invalid as object) as String
+            encode: function(redact as Boolean, config=invalid as Object) as Object
                 redacted = {
                     key: m.key
                 }
@@ -50,13 +50,17 @@ function LaunchDarklyUser(userKey as String) as Object
                     redacted.email = m.email
                 end if
 
+                if m.name <> invalid then
+                    redacted.name = m.name
+                end if
+
                 if m.avatar <> invalid then
                     redacted.avatar = m.avatar
                 end if
 
                 if m.custom <> invalid then
                     custom = {}
-                    privateAttrs = createObject("roArray")
+                    privateAttrs = createObject("roArray", 0, true)
 
                     for each attribute in m.custom
                         if redact = false OR m.isAttributePublic(attribute, config) then
@@ -67,10 +71,13 @@ function LaunchDarklyUser(userKey as String) as Object
                     end for
 
                     redacted.custom = custom
-                    redacted.privateAttrs = privateAttrs
+
+                    if privateAttrs.count() <> 0 then
+                        redacted.privateAttrs = privateAttrs
+                    end if
                 end if
 
-                return FormatJSON(redacted)
+                return redacted
             end function
         },
         setAnonymous: function(anonymous as Boolean) as Void
@@ -91,8 +98,11 @@ function LaunchDarklyUser(userKey as String) as Object
         setAvatar: function(avatar as String) as Void
             m.private.avatar = avatar
         end function,
+        setCustom: function(custom as Object) as Void
+            m.private.custom = custom
+        end function,
         addPrivateAttribute: function(privateAttribute as String) as Void
-            m.privateAttributeNames.addReplace(privateAttribute, 1)
+            m.private.privateAttributeNames.addReplace(privateAttribute, 1)
         end function
     }
 end function

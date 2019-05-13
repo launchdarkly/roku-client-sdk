@@ -81,7 +81,7 @@ function LaunchDarklyClient(config as Object, user as Object, port as Object) as
     }
 
     buffer = createObject("roByteArray")
-    buffer.fromAsciiString(user.private.encode(false))
+    buffer.fromAsciiString(FormatJSON(user.private.encode(false)))
     userBase64JSON = buffer.toBase64String()
     url = config.private.appURI + "/msdk/evalx/users/" + userBase64JSON
     print url
