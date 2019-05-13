@@ -41,29 +41,37 @@ end function
 
 function TestCase__User_Encode_RedactedAttributes()
     key = "alice-key"
+    color = "blue"
     custom = {
         cookie: "abc123",
-        color: "blue",
+        color: color,
         magnitude: 3
     }
+    avatar = "alice avatar"
+    firstName = "alice"
 
     config = LaunchDarklyConfig("mob")
     config.addPrivateAttribute("magnitude")
 
     user = LaunchDarklyUser(key)
+    user.setAvatar(avatar)
+    user.setFirstName(firstName)
     user.setCustom(custom)
+    user.addPrivateAttribute("avatar")
     user.addPrivateAttribute("cookie")
     user.addPrivateAttribute("DoesNotExist")
 
     privateAttrs = createObject("roArray", 0, true)
+    privateAttrs.push("avatar")
     privateAttrs.push("magnitude")
     privateAttrs.push("cookie")
 
     actual = user.private.encode(true, config)
     expected = {
         key: key,
+        firstName: firstName,
         custom: {
-            color: "blue"
+            color: color
         },
         privateAttrs: privateAttrs
     }
