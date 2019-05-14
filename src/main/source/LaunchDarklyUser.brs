@@ -42,7 +42,7 @@ function LaunchDarklyUser(userKey as String) as Object
                         result.addReplace(field, value)
                     end if
                 end if
-            end function
+            end function,
 
             encode: function(redact as Boolean, config=invalid as Object) as Object
                 encoded = {
