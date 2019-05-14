@@ -1,9 +1,9 @@
-function LaunchDarklyClient(config as Object, user as Object, port as Object) as Object
+function LaunchDarklyClient(config as Object, user as Object, messagePort as Object) as Object
     this = {
         private: {
             user: user,
             config: config,
-            port: port,
+            messagePort: messagePort,
             store: {},
 
             pollingTransfer: createObject("roUrlTransfer"),
@@ -86,7 +86,7 @@ function LaunchDarklyClient(config as Object, user as Object, port as Object) as
     url = config.private.appURI + "/msdk/evalx/users/" + userBase64JSON
     print url
 
-    this.private.pollingTransfer.setPort(port)
+    this.private.pollingTransfer.setPort(messagePort)
     this.private.pollingTransfer.setURL(url)
     this.private.pollingTransfer.addHeader("Authorization", config.private.mobileKey)
     this.private.pollingTransfer.SetCertificatesFile("common:/certs/ca-bundle.crt")

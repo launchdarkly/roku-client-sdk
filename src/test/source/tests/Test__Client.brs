@@ -1,9 +1,9 @@
 function TestCase__Client_Eval_Offline()
-    port = CreateObject("roMessagePort")
+    messagePort = CreateObject("roMessagePort")
     config = LaunchDarklyConfig("mob-abc123")
     config.setOffline(true)
     user = LaunchDarklyUser("user-key")
-    client = LaunchDarklyClient(config, user, port)
+    client = LaunchDarklyClient(config, user, messagePort)
     fallback = "fallback"
     return m.assertEqual(client.variation("flag", fallback), fallback)
 end function

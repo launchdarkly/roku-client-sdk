@@ -2,8 +2,8 @@ sub main(params as object)
     print "in showChannelSGScreen"
 
     screen = createObject("roSGScreen")
-    port = createObject("roMessagePort")
-    screen.setMessagePort(port)
+    messagePort = createObject("roMessagePort")
+    screen.setMessagePort(messagePort)
 
     screen.show()
 
@@ -22,10 +22,10 @@ sub main(params as object)
     config = LaunchDarklyConfig("mob-")
     config.setAppURI("https://app.ld.catamorphic.com")
     user = LaunchDarklyUser("user-key")
-    client = LaunchDarklyClient(config, user, port)
+    client = LaunchDarklyClient(config, user, messagePort)
 
     while (true)
-        msg = wait(2500, port)
+        msg = wait(2500, messagePort)
 
         client.handleMessage(msg)
 
