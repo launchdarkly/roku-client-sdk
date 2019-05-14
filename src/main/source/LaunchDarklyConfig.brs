@@ -6,7 +6,9 @@ function LaunchDarklyConfig(mobileKey as String) as Object
             mobileKey: mobileKey,
             offline: false,
             privateAttributeNames: {},
-            allAttributesPrivate: false
+            allAttributesPrivate: false,
+            eventsCapacity: 100,
+            eventsFlushInterval: 30
         },
         setAppURI: function(appURI as String) as Void
             m.private.appURI = appURI
@@ -22,6 +24,12 @@ function LaunchDarklyConfig(mobileKey as String) as Object
         end function,
         setAllAttributesPrivate: function(allAttributesPrivate as Boolean) as Void
             m.private.allAttributesPrivate = allAttributesPrivate
+        end function,
+        setEventsCapacity: function(capacity as Integer) as Void
+            m.private.eventsCapacity = capacity
+        end function,
+        setEventsFlushInterval: function(interval as Integer) as Void
+            m.private.eventsFlushInterval = interval
         end function
     }
 end function
