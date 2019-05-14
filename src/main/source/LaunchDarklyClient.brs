@@ -10,6 +10,8 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             pollingTimer: createObject("roTimeSpan"),
             pollingActive: false,
 
+            events: createObject("roArray", 0, true),
+
             handlePolling: function(message as Dynamic) as Void
                 responseCode = message.getResponseCode()
 
@@ -32,6 +34,22 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                     m.pollingTimer.mark()
                     m.pollingActive = false
                 end if
+            end function,
+
+            makeBaseEvent: function(kind as String) as Object
+                return {
+                    kind: kind,
+                    user: m.user.private.encode(true, m.config),
+                    creationDate: 0
+                }
+            end function,
+
+            enqueueEvent: function(event as Object) as Void
+                if m.events.count() < m.config.private.eventsCapacity then
+                    m.events.push(event)
+                else
+                    print "eventsCapacity exceeded dropping event"
+                end if
             end function
         },
 
@@ -51,6 +69,17 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                     return flag.value
                 end if
             end if
+        end function,
+
+        track: function(key as String, data=invalid as Object) as Void
+            event = m.private.makeBaseEvent("identify")
+            event.key = key
+
+            if data <> invalid then
+                event.data = data
+            end if
+
+            m.private.enqueueEvent(event)
         end function,
 
         handleMessage: function(message as Dynamic) as Boolean
