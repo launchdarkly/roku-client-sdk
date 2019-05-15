@@ -1,9 +1,9 @@
-function TestCase__Config_Constructor()
+function TestCase__Config_Constructor() as String
     config = LaunchDarklyConfig("mob")
     return m.assertEqual(config.private.mobileKey, "mob")
 end function
 
-function TestCase__Config_AppURI()
+function TestCase__Config_AppURI() as String
     config = LaunchDarklyConfig("mob")
 
     a = m.assertEqual(config.private.appURI, "https://app.launchdarkly.com")
@@ -16,7 +16,7 @@ function TestCase__Config_AppURI()
     return m.assertEqual(config.private.appURI, "https://test.com")
 end function
 
-function TestCase__Config_PollingInterval()
+function TestCase__Config_PollingInterval() as String
     config = LaunchDarklyConfig("mob")
 
     a = m.assertEqual(config.private.pollingInterval, 15)
@@ -29,7 +29,7 @@ function TestCase__Config_PollingInterval()
     return m.assertEqual(config.private.pollingInterval, 41)
 end function
 
-function TestCase__Config_Offline()
+function TestCase__Config_Offline() as String
     config = LaunchDarklyConfig("mob")
 
     a = m.assertEqual(config.private.offline, false)
@@ -42,7 +42,7 @@ function TestCase__Config_Offline()
     return m.assertEqual(config.private.offline, true)
 end function
 
-function TestCase__Config_EventsCapacity()
+function TestCase__Config_EventsCapacity() as String
     config = LaunchDarklyConfig("mob")
 
     a = m.assertEqual(config.private.eventsCapacity, 100)
@@ -55,7 +55,7 @@ function TestCase__Config_EventsCapacity()
     return m.assertEqual(config.private.eventsCapacity, 52)
 end function
 
-function TestCase__Config_EventsFlushInterval()
+function TestCase__Config_EventsFlushInterval() as String
     config = LaunchDarklyConfig("mob")
 
     a = m.assertEqual(config.private.eventsCapacity, 100)

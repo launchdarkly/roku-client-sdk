@@ -6,13 +6,13 @@ function makeTestClient() as Object
     return LaunchDarklyClient(config, user, messagePort)
 end function
 
-function TestCase__Client_Eval_Offline()
+function TestCase__Client_Eval_Offline() as String
     client = makeTestClient()
     fallback = "fallback"
     return m.assertEqual(client.variation("flag", fallback), fallback)
 end function
 
-function TestCase__Client_Track()
+function TestCase__Client_Track() as String
     client = makeTestClient()
     fallback = "fallback"
 
@@ -53,7 +53,7 @@ function TestCase__Client_Track()
     return m.assertTrue(event.creationDate > 0)
 end function
 
-function TestCase__Client_Identify()
+function TestCase__Client_Identify() as String
     client = makeTestClient()
 
     newUserKey = "user-key2"

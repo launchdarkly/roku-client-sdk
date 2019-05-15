@@ -1,10 +1,10 @@
-function TestCase__User_Constructor()
+function TestCase__User_Constructor() as String
     user = LaunchDarklyUser("user-key")
 
     return m.assertEqual(user.private.key, "user-key")
 end function
 
-function TestCase__User_Encode_AllAttributes()
+function TestCase__User_Encode_AllAttributes() as String
     key = "alice-key"
     anonymous = false
     firstName = "Alice"
@@ -39,7 +39,7 @@ function TestCase__User_Encode_AllAttributes()
     return m.assertEqual(actual, expected)
 end function
 
-function TestCase__User_Encode_RedactedAttributes()
+function TestCase__User_Encode_RedactedAttributes() as String
     key = "alice-key"
     color = "blue"
     custom = {
