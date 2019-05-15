@@ -11,6 +11,8 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             pollingActive: false,
 
             events: createObject("roArray", 0, true),
+            eventsFlushTimer: createObject("roTimeSpan"),
+            eventsFlushActive: false,
 
             handlePolling: function(message as Dynamic) as Void
                 responseCode = message.getResponseCode()
@@ -31,16 +33,22 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 if responseCode = 401 OR responseCode = 403 then
                     print "not authorized"
                 else
-                    m.pollingTimer.mark()
-                    m.pollingActive = false
+                    m.stopPolling()
                 end if
             end function,
 
             makeBaseEvent: function(kind as String) as Object
+                REM Clock is stopped on object creation
+                now = CreateObject("roDateTime")
+                REM Ensure 64 bit number is used
+                creationDate& = now.asSeconds()
+                creationDate& *= 1000
+                creationDate& += now.getMilliseconds()
+
                 return {
                     kind: kind,
                     user: m.user.private.encode(true, m.config),
-                    creationDate: 0
+                    creationDate: creationDate&
                 }
             end function,
 
@@ -50,6 +58,37 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 else
                     print "eventsCapacity exceeded dropping event"
                 end if
+            end function,
+
+            prepareNetworkingCommon: function(transfer as Object) as Void
+                transfer.setPort(m.messagePort)
+                transfer.addHeader("Authorization", m.config.private.mobileKey)
+                transfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
+                transfer.InitClientCertificates()
+            end function,
+
+            preparePolling: function() as Void
+                buffer = createObject("roByteArray")
+                buffer.fromAsciiString(FormatJSON(m.user.private.encode(false)))
+                userBase64JSON = buffer.toBase64String()
+                url = m.config.private.appURI + "/msdk/evalx/users/" + userBase64JSON
+                print url
+
+                m.prepareNetworkingCommon(m.pollingTransfer)
+                m.pollingTransfer.setURL(url)
+            end function,
+
+            startPolling: function() as Void
+                if m.config.private.offline = false then
+                    m.pollingActive = true
+                    m.pollingTransfer.asyncGetToString()
+                end if
+            end function,
+
+            stopPolling: function() as Void
+                m.pollingTimer.mark()
+                m.pollingActive = false
+                m.pollingTransfer.asyncCancel()
             end function
         },
 
@@ -72,7 +111,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
         end function,
 
         track: function(key as String, data=invalid as Object) as Void
-            event = m.private.makeBaseEvent("identify")
+            event = m.private.makeBaseEvent("track")
             event.key = key
 
             if data <> invalid then
@@ -80,6 +119,15 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             end if
 
             m.private.enqueueEvent(event)
+        end function,
+
+        identify: function(user as Object) as Void
+            m.private.user = user
+            event = m.private.makeBaseEvent("identify")
+            m.private.enqueueEvent(event)
+            m.private.stopPolling()
+            m.private.preparePolling()
+            m.private.startPolling()
         end function,
 
         handleMessage: function(message as Dynamic) as Boolean
@@ -98,10 +146,19 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 elapsed = m.private.pollingTimer.totalSeconds()
 
                 if elapsed >= m.private.config.private.pollingInterval then
-                    print "timeout hit"
+                    print "polling timeout hit"
 
-                    m.private.pollingTransfer.asyncGetToString()
-                    m.private.pollingActive = true
+                    m.private.startPolling()
+                end if
+            end if
+
+            if m.private.eventsFlushActive = false then
+                elapsed = m.private.eventsFlushTimer.totalSeconds()
+
+                if elapsed >= m.private.config.private.eventsFlushInterval then
+                    print "flush timeout hit"
+
+                    m.private.eventsFlushActive = true
                 end if
             end if
 
@@ -109,22 +166,8 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
         end function
     }
 
-    buffer = createObject("roByteArray")
-    buffer.fromAsciiString(FormatJSON(user.private.encode(false)))
-    userBase64JSON = buffer.toBase64String()
-    url = config.private.appURI + "/msdk/evalx/users/" + userBase64JSON
-    print url
-
-    this.private.pollingTransfer.setPort(messagePort)
-    this.private.pollingTransfer.setURL(url)
-    this.private.pollingTransfer.addHeader("Authorization", config.private.mobileKey)
-    this.private.pollingTransfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
-    this.private.pollingTransfer.InitClientCertificates()
-
-    if config.private.offline = false then
-        this.private.pollingActive = true
-        this.private.pollingTransfer.asyncGetToString()
-    end if
+    this.private.preparePolling()
+    this.private.startPolling()
 
     return this
 end function
