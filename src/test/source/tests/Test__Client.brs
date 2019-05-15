@@ -50,12 +50,7 @@ function TestCase__Client_Track()
         return a
     end if
 
-    a = m.assertTrue(event.creationDate > 0)
-    if a <> "" then
-        return a
-    end if
-
-    return ""
+    return m.assertTrue(event.creationDate > 0)
 end function
 
 function TestCase__Client_Identify()
@@ -80,12 +75,7 @@ function TestCase__Client_Identify()
 
     event = eventQueue.getEntry(0)
 
-    a = m.assertEqual(event.kind, "identify")
-    if a <> "" then
-        return a
-    end if
-
-    return ""
+    return m.assertEqual(event.kind, "identify")
 end function
 
 function TestSuite__Client() as Object
