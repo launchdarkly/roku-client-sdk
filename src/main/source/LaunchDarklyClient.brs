@@ -111,6 +111,14 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                             version: counter.version
                         }
 
+                        if counterKey = "unknown" then
+                            counterNode.unknown = true
+                        end if
+
+                        if counterKey <> "default" then
+                            counterNode.variation = counter.variation
+                        end if
+
                         featureNode.counters.push(counterNode)
                     end for
 
@@ -120,7 +128,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 return event
             end function,
 
-            summarizeEval: function(value as Dynamic, flagKey as String, flag as Object, fallback as Dynamic) as Void
+            summarizeEval: function(value as Dynamic, flagKey as String, flag as Object, fallback as Dynamic, typeMatch as String) as Void
                 summary = m.eventsSummary.lookup(flagKey)
 
                 if summary = invalid then
@@ -139,6 +147,8 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
 
                 if flag = invalid then
                     counterKey = "unknown"
+                else if typeMatch = false then
+                    counterKey = "default"
                 else
                     version = invalid
 
@@ -221,7 +231,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             end function
         },
 
-        variation: function(flagKey as String, fallback as Dynamic, strong=false as Boolean) as Dynamic
+        variation: function(flagKey as String, fallback as Dynamic, strong=invalid as Dynamic) as Dynamic
             if m.private.config.private.offline then
                 return fallback
             else
@@ -236,31 +246,44 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
 
                     now = m.private.getMilliseconds()
 
+                    typeMatch = true
+                    if strong <> invalid then
+                        if getInterface(flag.value, strong) = invalid then
+                            print "eval type mismatch"
+
+                            typeMatch = false
+                        end if
+                    end if
+
                     if flag.track <> invalid AND flag.track > 0 AND flag.track > now then
                         event = m.private.makeFeatureEvent(flag, fallback)
 
                         m.private.enqueueEvent(event)
                     end if
 
-                    return flag.value
+                    if typeMatch = true then
+                        return flag.value
+                    else
+                        return fallback
+                    end if
                 end if
             end if
         end function,
 
         variationInt: function(flagKey as String, fallback as Integer) as Integer
-            return variation(flagKey, fallback, true)
+            return variation(flagKey, fallback, "ifInteger")
         end function,
 
         variationBool: function(flagKey as String, fallback as Boolean) as Boolean
-            return variation(flagKey, fallback, true)
+            return variation(flagKey, fallback, "ifBoolean")
         end function,
 
         variationString: function(flagKey as String, fallback as String) as String
-            return variation(flagKey, fallback, true)
+            return variation(flagKey, fallback, "ifString")
         end function,
 
         variationAA: function(flagKey as String, fallback as Object) as Object
-            return variation(flagKey, fallback, true)
+            return variation(flagKey, fallback, "ifAssociativeArray")
         end function,
 
         track: function(key as String, data=invalid as Object) as Void
