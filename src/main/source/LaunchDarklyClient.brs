@@ -221,7 +221,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             end function
         },
 
-        variation: function(flagKey as String, fallback as Dynamic) as Dynamic
+        variation: function(flagKey as String, fallback as Dynamic, strong=false as Boolean) as Dynamic
             if m.private.config.private.offline then
                 return fallback
             else
@@ -245,6 +245,18 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                     return flag.value
                 end if
             end if
+        end function,
+
+        variationInt: function(flagKey as String, fallback as Integer) as Integer
+            return variation(flagKey, fallback, true)
+        end function,
+
+        variationBool: function(flagKey as String, fallback as Boolean) as Boolean
+            return variation(flagKey, fallback, true)
+        end function,
+
+        variationString: function(flagKey as String, fallback as String) as String
+            return variation(flagKey, fallback, true)
         end function,
 
         track: function(key as String, data=invalid as Object) as Void
