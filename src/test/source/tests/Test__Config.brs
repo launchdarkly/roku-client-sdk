@@ -16,6 +16,19 @@ function TestCase__Config_AppURI() as String
     return m.assertEqual(config.private.appURI, "https://test.com")
 end function
 
+function TestCase__Config_EventsURI() as String
+    config = LaunchDarklyConfig("mob")
+
+    a = m.assertEqual(config.private.eventsURI, "https://mobile.launchdarkly.com")
+    if a <> "" then
+        return a
+    end if
+
+    config.setEventsURI("https://test.com")
+
+    return m.assertEqual(config.private.eventsURI, "https://test.com")
+end function
+
 function TestCase__Config_PollingInterval() as String
     config = LaunchDarklyConfig("mob")
 

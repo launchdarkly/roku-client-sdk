@@ -2,6 +2,7 @@ function LaunchDarklyConfig(mobileKey as String) as Object
     return {
         private: {
             appURI: "https://app.launchdarkly.com",
+            eventsURI: "https://mobile.launchdarkly.com",
             pollingInterval: 15,
             mobileKey: mobileKey,
             offline: false,
@@ -12,6 +13,9 @@ function LaunchDarklyConfig(mobileKey as String) as Object
         },
         setAppURI: function(appURI as String) as Void
             m.private.appURI = appURI
+        end function,
+        setEventsURI: function(eventsURI as String) as Void
+            m.private.eventsURI = eventsURI
         end function,
         setPollingInterval: function(pollingInterval as Integer) as Void
             m.private.pollingInterval = pollingInterval
