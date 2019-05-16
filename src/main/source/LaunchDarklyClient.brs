@@ -54,19 +54,38 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 end if
             end function,
 
-            makeBaseEvent: function(kind as String) as Object
+            getMilliseconds: function()
                 REM Clock is stopped on object creation
                 now = CreateObject("roDateTime")
                 REM Ensure 64 bit number is used
                 creationDate& = now.asSeconds()
                 creationDate& *= 1000
                 creationDate& += now.getMilliseconds()
+                return creationDate&
+            end function,
 
+            makeBaseEvent: function(kind as String) as Object
                 return {
                     kind: kind,
                     user: m.user.private.encode(true, m.config),
-                    creationDate: creationDate&
+                    creationDate: m.getMilliseconds()
                 }
+            end function,
+
+            makeFeatureEvent: function(value as Dynamic, fallback as Dynamic) as Object
+                event = m.makeBaseEvent("feature")
+
+                if flag.lookup("flagVersion") <> invalid then
+                    event.version = flag.flagVersion
+                else
+                    event.version = flag.version
+                end if
+
+                event.variation = flag.variation
+                event.value = flag.value
+                event.default = fallback
+
+                return event
             end function,
 
             enqueueEvent: function(event as Object) as Void
@@ -131,6 +150,14 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                     return fallback
                 else
                     print "found flag"
+
+                    now = m.private.getMilliseconds()
+
+                    if flag.track > 0 AND flag.track > now then
+                        event = m.private.makeFeatureEvent(flag, fallback)
+
+                        m.private.enqueueEvent(event)
+                    end if
 
                     return flag.value
                 end if
