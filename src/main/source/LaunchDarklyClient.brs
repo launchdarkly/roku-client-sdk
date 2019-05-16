@@ -14,6 +14,8 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             events: createObject("roArray", 0, true),
             eventsFlushTimer: createObject("roTimeSpan"),
             eventsFlushActive: false,
+            eventsSummary: {},
+            eventsSummaryStart: 0,
 
             handlePollingMessage: function(message as Dynamic) as Void
                 responseCode = message.getResponseCode()
@@ -86,6 +88,87 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 event.default = fallback
 
                 return event
+            end function,
+
+            makeSummaryEvent: function() as Object
+                event = m.makeBaseEvent("summary")
+                events.startDate = m.eventsSummaryStart
+                event.endDate = m.getMilliseconds()
+                event.features = {}
+
+                for each featureKey in m.eventsSummary
+                    feature = m.eventsSummary.lookup(featureKey)
+
+                    featureNode = {
+                        counters: createObject("roArray", 0, true)
+                    }
+
+                    for each counterKey in feature.counters
+                        counter = feature.counters.lookup(counterKey)
+
+                        counterNode = {
+                            count: counter.count,
+                            version: counter.version
+                        }
+
+                        featureNode.counters.push(counterNode)
+                    end for
+
+                    event.features.addReplace(featureKey, featureNode)
+                end for
+
+                return event
+            end function,
+
+            summarizeEval: function(value as Dynamic, flagKey as String, flag as Object, fallback as Dynamic) as Void
+                summary = m.eventsSummary.lookup(flagKey)
+
+                if summary = invalid then
+                    summary = {}
+                    m.eventsSummary.addReplace(flagKey, summary)
+                    summary.default = fallback
+                    summary.counters = {}
+                end if
+
+                if m.eventsSummaryStart = 0 then
+                    m.eventsSummaryStart = m.getMilliseconds()
+                    print "summary" m.eventsSummaryStart
+                end if
+
+                counterKey = invalid
+
+                if flag = invalid then
+                    counterKey = "unknown"
+                else
+                    version = invalid
+
+                    if flag.flagVersion <> invalid then
+                        version = flag.flagVersion
+                    else
+                        version = flag.version
+                    end if
+
+                    counterKey = version.toStr() + " " + flag.variation
+                end if
+
+                counter = summary.counters.lookup(counterKey)
+
+                if counterKey = invalid then
+                    counter = {
+                        value: value,
+                        count: 0
+                    }
+
+                    summary.counters.addReplace(counterKey, counter)
+                end if
+
+                if flag <> invalid AND counter.count = 0 then
+                    counter.version = flag.version
+                    counter.flagVersion = flag.version
+                    counter.variation = flag.variation
+                end if
+
+                counter.count += 1
             end function,
 
             enqueueEvent: function(event as Object) as Void
