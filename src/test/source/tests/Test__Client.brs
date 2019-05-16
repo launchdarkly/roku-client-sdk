@@ -25,7 +25,9 @@ function TestCase__Client_Eval_NotTracked() as String
     expectedValue = "def"
     client.private.store = {
         flag1: {
-            value: expectedValue
+            value: expectedValue,
+            variation: 3,
+            version: 4
         }
     }
 
@@ -50,11 +52,13 @@ function TestCase__Client_Eval_Tracked() as String
     expectedValue = "def"
     expectedVariation = 3
     expectedFallback = "abc"
+    expectedVersion = 5
     client.private.store = {
         flag1: {
             value: expectedValue,
             track: future,
-            variation: expectedVariation
+            variation: expectedVariation,
+            flagVersion: expectedVersion
         }
     }
 
@@ -96,7 +100,15 @@ function TestCase__Client_Eval_Tracked() as String
         return a
     end if
 
+    a = m.assertEqual(event.version, expectedVersion)
+    if a <> "" then
+        return a
+    end if
+
     return m.assertTrue(event.creationDate > 0)
+end function
+
+function TestCase__Client_Summary() as String
 end function
 
 function TestCase__Client_Track() as String

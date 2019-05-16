@@ -128,7 +128,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 return event
             end function,
 
-            summarizeEval: function(value as Dynamic, flagKey as String, flag as Object, fallback as Dynamic, typeMatch as String) as Void
+            summarizeEval: function(value as Dynamic, flagKey as String, flag as Object, fallback as Dynamic, typeMatch as Boolean) as Void
                 summary = m.eventsSummary.lookup(flagKey)
 
                 if summary = invalid then
@@ -158,12 +158,12 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                         version = flag.version
                     end if
 
-                    counterKey = version.toStr() + " " + flag.variation
+                    counterKey = version.toStr() + " " + flag.variation.toStr()
                 end if
 
                 counter = summary.counters.lookup(counterKey)
 
-                if counterKey = invalid then
+                if counter = invalid then
                     counter = {
                         value: value,
                         count: 0
@@ -240,6 +240,8 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 if flag = invalid then
                     print "missing flag"
 
+                    m.private.summarizeEval(fallback, flagKey, invalid, fallback, true)
+
                     return fallback
                 else
                     print "found flag"
@@ -261,11 +263,16 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                         m.private.enqueueEvent(event)
                     end if
 
+                    value = invalid
                     if typeMatch = true then
-                        return flag.value
+                        value = flag.value
                     else
-                        return fallback
+                        value = fallback
                     end if
+
+                    m.private.summarizeEval(value, flagKey, flag, fallback, typeMatch)
+
+                    return value
                 end if
             end if
         end function,
