@@ -300,6 +300,13 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
         flush: function() as Void
             if m.private.config.private.offline = false then
                 if m.private.eventsFlushActive = false then
+                    if m.private.eventsSummaryStart <> 0 then
+                        summary = this.private.makeSummaryEvent()
+                        m.private.events.push(summary)
+                        m.private.eventsSummary = {}
+                        m.private.eventsSummaryStart = 0
+                    end if
+
                     m.private.eventsFlushActive = true
                     serialized = FormatJSON(m.private.events)
                     m.private.events.clear()
