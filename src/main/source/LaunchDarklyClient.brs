@@ -259,7 +259,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             return variation(flagKey, fallback, true)
         end function,
 
-        variationObject: function(flagKey as String, fallback as Object) as Object
+        variationAA: function(flagKey as String, fallback as Object) as Object
             return variation(flagKey, fallback, true)
         end function,
 
