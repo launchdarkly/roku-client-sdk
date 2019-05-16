@@ -72,10 +72,10 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 }
             end function,
 
-            makeFeatureEvent: function(value as Dynamic, fallback as Dynamic) as Object
+            makeFeatureEvent: function(flag as Object, fallback as Dynamic) as Object
                 event = m.makeBaseEvent("feature")
 
-                if flag.lookup("flagVersion") <> invalid then
+                if flag.flagVersion <> invalid then
                     event.version = flag.flagVersion
                 else
                     event.version = flag.version
