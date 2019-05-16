@@ -10,11 +10,12 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             pollingTimer: createObject("roTimeSpan"),
             pollingActive: false,
 
+            eventsTransfer: createObject("roUrlTransfer"),
             events: createObject("roArray", 0, true),
             eventsFlushTimer: createObject("roTimeSpan"),
             eventsFlushActive: false,
 
-            handlePolling: function(message as Dynamic) as Void
+            handlePollingMessage: function(message as Dynamic) as Void
                 responseCode = message.getResponseCode()
 
                 print responseCode
@@ -28,6 +29,22 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                         print "updating store"
                         m.store = decoded
                     end if
+                end if
+
+                if responseCode = 401 OR responseCode = 403 then
+                    print "not authorized"
+                else
+                    m.stopPolling()
+                end if
+            end function,
+
+            handleEventMessage: function(message as Dynamic) as Void
+                responseCode = message.getResponseCode()
+
+                print responseCode
+
+                if responseCode = 200 then
+                    print "events sent"
                 end if
 
                 if responseCode = 401 OR responseCode = 403 then
@@ -78,6 +95,16 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 m.pollingTransfer.setURL(url)
             end function,
 
+            prepareEventTransfer: function() as Void
+                url = m.config.private.eventsURI + "/mobile"
+                print url
+
+                m.prepareNetworkingCommon(m.eventsTransfer)
+                m.eventsTransfer.addHeader("Content-Type", "application/json")
+                m.eventsTransfer.addHeader("X-LaunchDarkly-Event-Schema", "3")
+                m.eventsTransfer.setURL(url)
+            end function
+
             startPolling: function() as Void
                 if m.config.private.offline = false then
                     m.pollingActive = true
@@ -121,6 +148,15 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             m.private.enqueueEvent(event)
         end function,
 
+        flush: function() as Void
+            if m.private.eventsFlushActive = false then
+                m.private.eventsFlushActive = true
+                serialized = FormatJSON(m.private.events)
+                m.private.events.clear()
+                m.private.eventsTransfer.asyncPostFromString(serialized)
+            end if
+        end function,
+
         identify: function(user as Object) as Void
             m.private.user = user
             event = m.private.makeBaseEvent("identify")
@@ -134,9 +170,14 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             if type(message) = "roUrlEvent" then
                 eventId = message.getSourceIdentity()
                 pollingId = m.private.pollingTransfer.getIdentity()
+                eventsId = m.private.eventsTransfer.getIdentity()
 
                 if eventId = pollingId then
-                    m.private.handlePolling(message)
+                    m.private.handlePollingMessage(message)
+
+                    return true
+                else if eventId = eventsId then
+                    m.private.handleEventsMessage(message)
 
                     return true
                 end if
@@ -158,7 +199,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 if elapsed >= m.private.config.private.eventsFlushInterval then
                     print "flush timeout hit"
 
-                    m.private.eventsFlushActive = true
+                    m.flush()
                 end if
             end if
 
@@ -166,6 +207,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
         end function
     }
 
+    this.private.prepareEventTransfer()
     this.private.preparePolling()
     this.private.startPolling()
 
