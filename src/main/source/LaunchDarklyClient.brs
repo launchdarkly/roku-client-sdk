@@ -40,19 +40,19 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 end if
             end function,
 
-            handleEventMessage: function(message as Dynamic) as Void
+            handleEventsMessage: function(message as Dynamic) as Void
                 responseCode = message.getResponseCode()
 
                 print responseCode
 
-                if responseCode = 200 then
+                if responseCode = 202 then
                     print "events sent"
                 end if
 
                 if responseCode = 401 OR responseCode = 403 then
                     print "not authorized"
                 else
-                    m.stopPolling()
+                    m.stopEventsTransfer()
                 end if
             end function,
 
@@ -92,7 +92,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
 
             makeSummaryEvent: function() as Object
                 event = m.makeBaseEvent("summary")
-                events.startDate = m.eventsSummaryStart
+                event.startDate = m.eventsSummaryStart
                 event.endDate = m.getMilliseconds()
                 event.features = {}
 
@@ -140,7 +140,6 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
 
                 if m.eventsSummaryStart = 0 then
                     m.eventsSummaryStart = m.getMilliseconds()
-                    print "summary" m.eventsSummaryStart
                 end if
 
                 counterKey = invalid
@@ -228,6 +227,12 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 m.pollingTimer.mark()
                 m.pollingActive = false
                 m.pollingTransfer.asyncCancel()
+            end function,
+
+            stopEventsTransfer: function() as Void
+                m.eventsFlushTimer.mark()
+                m.eventsFlushActive = false
+                m.eventsTransfer.asyncCancel()
             end function
         },
 
@@ -308,7 +313,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             if m.private.config.private.offline = false then
                 if m.private.eventsFlushActive = false then
                     if m.private.eventsSummaryStart <> 0 then
-                        summary = this.private.makeSummaryEvent()
+                        summary = m.private.makeSummaryEvent()
                         m.private.events.push(summary)
                         m.private.eventsSummary = {}
                         m.private.eventsSummaryStart = 0
