@@ -6,10 +6,39 @@ function makeTestClient() as Object
     return LaunchDarklyClient(config, user, messagePort)
 end function
 
+function makeTestClientOnline() as Object
+    messagePort = CreateObject("roMessagePort")
+    config = LaunchDarklyConfig("mob-abc123")
+    user = LaunchDarklyUser("user-key")
+    return LaunchDarklyClient(config, user, messagePort)
+end function
+
 function TestCase__Client_Eval_Offline() as String
     client = makeTestClient()
     fallback = "fallback"
     return m.assertEqual(client.variation("flag", fallback), fallback)
+end function
+
+function TestCase__Client_Eval_NotTracked() as String
+    client = makeTestClientOnline()
+
+    expectedValue = "def"
+    client.private.store = {
+        flag1: {
+            value: expectedValue
+        }
+    }
+
+    actualValue = client.variation("flag1", "abc")
+
+    a = m.assertEqual(actualValue, expectedValue)
+    if a <> "" then
+        return a
+    end if
+
+    eventQueue = client.private.events
+
+    return m.assertEqual(eventQueue.count(), 0)
 end function
 
 function TestCase__Client_Track() as String
@@ -84,6 +113,7 @@ function TestSuite__Client() as Object
     this.name = "TestSuite__Client"
 
     this.addTest("TestCase__Client_Eval_Offline", TestCase__Client_Eval_Offline)
+    this.addTest("TestCase__Client_Eval_NotTracked", TestCase__Client_Eval_NotTracked)
     this.addTest("TestCase__Client_Track", TestCase__Client_Track)
     this.addTest("TestCase__Client_Identify", TestCase__Client_Identify)
 

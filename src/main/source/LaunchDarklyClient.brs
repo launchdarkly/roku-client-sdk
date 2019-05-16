@@ -153,7 +153,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
 
                     now = m.private.getMilliseconds()
 
-                    if flag.track > 0 AND flag.track > now then
+                    if flag.track <> invalid AND flag.track > 0 AND flag.track > now then
                         event = m.private.makeFeatureEvent(flag, fallback)
 
                         m.private.enqueueEvent(event)
