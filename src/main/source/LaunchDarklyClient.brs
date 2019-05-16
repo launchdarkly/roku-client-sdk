@@ -259,6 +259,10 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             return variation(flagKey, fallback, true)
         end function,
 
+        variationObject: function(flagKey as String, fallback as Object) as Object
+            return variation(flagKey, fallback, true)
+        end function,
+
         track: function(key as String, data=invalid as Object) as Void
             event = m.private.makeBaseEvent("track")
             event.key = key
