@@ -149,11 +149,13 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
         end function,
 
         flush: function() as Void
-            if m.private.eventsFlushActive = false then
-                m.private.eventsFlushActive = true
-                serialized = FormatJSON(m.private.events)
-                m.private.events.clear()
-                m.private.eventsTransfer.asyncPostFromString(serialized)
+            if m.private.config.private.offline = false then
+                if m.private.eventsFlushActive = false then
+                    m.private.eventsFlushActive = true
+                    serialized = FormatJSON(m.private.events)
+                    m.private.events.clear()
+                    m.private.eventsTransfer.asyncPostFromString(serialized)
+                end if
             end if
         end function,
 
