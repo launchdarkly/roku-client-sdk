@@ -257,8 +257,6 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
 
                     typeMatch = true
                     if strong <> invalid then
-                        print flag.value
-                        print getInterface(flag.value, strong)
                         if getInterface(flag.value, strong) = invalid then
                             print "eval type mismatch"
 

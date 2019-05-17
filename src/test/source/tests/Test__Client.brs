@@ -78,34 +78,23 @@ function TestCase__Client_Eval_Tracked() as String
 
     event = eventQueue.getEntry(0)
 
-    a = m.assertEqual(event.kind, "feature")
+    a = m.assertTrue(event.creationDate > 0)
     if a <> "" then
         return a
     end if
 
-    a = m.assertEqual(event.user, {
-        key: "user-key"
+    event.delete("creationDate")
+
+    return m.assertEqual(event, {
+        kind: "feature",
+        user: {
+            key: "user-key"
+        },
+        value: expectedValue,
+        variation: expectedVariation,
+        default: expectedFallback,
+        version: expectedVersion
     })
-    if a <> "" then
-        return a
-    end if
-
-    a = m.assertEqual(event.variation, expectedVariation)
-    if a <> "" then
-        return a
-    end if
-
-    a = m.assertEqual(event.default, expectedFallback)
-    if a <> "" then
-        return a
-    end if
-
-    a = m.assertEqual(event.version, expectedVersion)
-    if a <> "" then
-        return a
-    end if
-
-    return m.assertTrue(event.creationDate > 0)
 end function
 
 function TestCase__Client_Summary_Unknown() as String
