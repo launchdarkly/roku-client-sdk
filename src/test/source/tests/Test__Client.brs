@@ -194,7 +194,7 @@ function TestCase__Client_Track() as String
 
     event = eventQueue.getEntry(0)
 
-    a = m.assertEqual(event.kind, "track")
+    a = m.assertEqual(event.kind, "custom")
     if a <> "" then
         return a
     end if

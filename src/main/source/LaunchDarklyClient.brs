@@ -301,7 +301,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
         end function,
 
         track: function(key as String, data=invalid as Object) as Void
-            event = m.private.makeBaseEvent("track")
+            event = m.private.makeBaseEvent("custom")
             event.key = key
 
             if data <> invalid then
