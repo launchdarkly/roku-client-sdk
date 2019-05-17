@@ -122,68 +122,44 @@ function TestCase__Client_Summary_Unknown() as String
 
     event = client.private.makeSummaryEvent()
 
-    a = m.assertEqual(event.kind, "summary")
+    a = m.assertTrue(event.creationDate > 0)
     if a <> "" then
         return a
     end if
-
-    a = m.assertEqual(event.user, {
-        key: "user-key"
-    })
-    if a <> "" then
-        return a
-    end if
-
-    a = m.assertTrue(event.startDate > 0)
-    if a <> "" then
-        return a
-    end if
+    event.delete("creationDate")
 
     a = m.assertTrue(event.endDate > 0)
     if a <> "" then
         return a
     end if
+    event.delete("endDate")
 
-    a = m.assertEqual(event.features.count(), 1)
+    a = m.assertTrue(event.startDate > 0)
     if a <> "" then
         return a
     end if
+    event.delete("startDate")
 
-    feature = event.features.lookup(flagKey)
+    counters = createObject("roArray", 0, true)
+    counters.push({
+        version: 4,
+        variation: 3,
+        count: 2,
+        value: expectedValue
+    })
 
-    a = m.assertEqual(feature.default, fallback)
-    if a <> "" then
-        return a
-    end if
-
-    a = m.assertEqual(feature.counters.count(), 1)
-    if a <> "" then
-        return a
-    end if
-
-    counter = feature.counters.getEntry(0)
-
-    a = m.assertEqual(counter.value, expectedValue)
-    if a <> "" then
-        return a
-    end if
-
-    a = m.assertEqual(counter.unknown, invalid)
-    if a <> "" then
-        return a
-    end if
-
-    a = m.assertEqual(counter.version, 4)
-    if a <> "" then
-        return a
-    end if
-
-    a = m.assertEqual(counter.variation, 3)
-    if a <> "" then
-        return a
-    end if
-
-    return m.assertEqual(counter.count, 2)
+    return m.assertEqual(FormatJSON(event), FormatJSON({
+        kind: "summary",
+        features: {
+            flag1: {
+                default: fallback,
+                counters: counters
+            }
+        },
+        user: {
+            key: "user-key"
+        }
+    }))
 end function
 
 
