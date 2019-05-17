@@ -1,6 +1,8 @@
 function LaunchDarklyClient(config as Object, user as Object, messagePort as Object) as Object
     this = {
         private: {
+            sdkVersion: "1.0.0-beta.1",
+
             user: user,
             config: config,
             messagePort: messagePort,
@@ -192,6 +194,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
 
             prepareNetworkingCommon: function(transfer as Object) as Void
                 transfer.setPort(m.messagePort)
+                transfer.addHeader("User-Agent", "RokuClient/" + m.sdkVersion)
                 transfer.addHeader("Authorization", m.config.private.mobileKey)
                 transfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
                 transfer.InitClientCertificates()
