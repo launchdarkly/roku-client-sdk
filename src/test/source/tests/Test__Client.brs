@@ -108,7 +108,97 @@ function TestCase__Client_Eval_Tracked() as String
     return m.assertTrue(event.creationDate > 0)
 end function
 
-function TestCase__Client_Summary_Default() as String
+function TestCase__Client_Summary_Unknown() as String
+    client = makeTestClientOnline()
+
+    flagKey = "flag1"
+    fallback = "myFallback"
+    expectedValue = "expected"
+
+    client.private.store = {
+        flag1: {
+            value: expectedValue,
+            variation: 3,
+            version: 4
+        }
+    }
+
+    actualValue = client.variation(flagKey, fallback)
+    client.variation(flagKey, fallback)
+
+    a = m.assertEqual(actualValue, expectedValue)
+    if a <> "" then
+        return a
+    end if
+
+    event = client.private.makeSummaryEvent()
+
+    a = m.assertEqual(event.kind, "summary")
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertEqual(event.user, {
+        key: "user-key"
+    })
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertTrue(event.startDate > 0)
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertTrue(event.endDate > 0)
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertEqual(event.features.count(), 1)
+    if a <> "" then
+        return a
+    end if
+
+    feature = event.features.lookup(flagKey)
+
+    a = m.assertEqual(feature.default, fallback)
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertEqual(feature.counters.count(), 1)
+    if a <> "" then
+        return a
+    end if
+
+    counter = feature.counters.getEntry(0)
+
+    a = m.assertEqual(counter.value, expectedValue)
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertEqual(counter.unknown, invalid)
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertEqual(counter.version, 4)
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertEqual(counter.variation, 3)
+    if a <> "" then
+        return a
+    end if
+
+    return m.assertEqual(counter.count, 2)
+end function
+
+
+function TestCase__Client_Summary_Known() as String
     client = makeTestClientOnline()
 
     flagKey = "flag1"
@@ -249,7 +339,8 @@ function TestSuite__Client() as Object
     this.addTest("TestCase__Client_Eval_Tracked", TestCase__Client_Eval_Tracked)
     this.addTest("TestCase__Client_Track", TestCase__Client_Track)
     this.addTest("TestCase__Client_Identify", TestCase__Client_Identify)
-    this.addTest("TestCase__Client_Summary_Default", TestCase__Client_Summary_Default)
+    this.addTest("TestCase__Client_Summary_Unknown", TestCase__Client_Summary_Unknown)
+    this.addTest("TestCase__Client_Summary_Known", TestCase__Client_Summary_Known)
 
     return this
 end function
