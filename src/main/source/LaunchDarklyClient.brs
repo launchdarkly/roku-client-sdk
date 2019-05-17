@@ -100,6 +100,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                     feature = m.eventsSummary.lookup(featureKey)
 
                     featureNode = {
+                        default: feature.default,
                         counters: createObject("roArray", 0, true)
                     }
 
@@ -108,7 +109,8 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
 
                         counterNode = {
                             count: counter.count,
-                            version: counter.version
+                            version: counter.version,
+                            value: counter.value
                         }
 
                         if counterKey = "unknown" then

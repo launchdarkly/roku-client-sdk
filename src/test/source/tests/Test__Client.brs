@@ -108,7 +108,69 @@ function TestCase__Client_Eval_Tracked() as String
     return m.assertTrue(event.creationDate > 0)
 end function
 
-function TestCase__Client_Summary() as String
+function TestCase__Client_Summary_Default() as String
+    client = makeTestClientOnline()
+
+    flagKey = "flag1"
+    expectedFallback = "myFallback"
+
+    actualValue = client.variation(flagKey, expectedFallback)
+    client.variation(flagKey, expectedFallback)
+
+    a = m.assertEqual(actualValue, expectedFallback)
+    if a <> "" then
+        return a
+    end if
+
+    event = client.private.makeSummaryEvent()
+
+    a = m.assertEqual(event.kind, "summary")
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertEqual(event.user, {
+        key: "user-key"
+    })
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertTrue(event.startDate > 0)
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertTrue(event.endDate > 0)
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertEqual(event.features.count(), 1)
+    if a <> "" then
+        return a
+    end if
+
+    feature = event.features.lookup(flagKey)
+
+    a = m.assertEqual(feature.default, expectedFallback)
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertEqual(feature.counters.count(), 1)
+    if a <> "" then
+        return a
+    end if
+
+    counter = feature.counters.getEntry(0)
+
+    a = m.assertEqual(counter.value, expectedFallback)
+    if a <> "" then
+        return a
+    end if
+
+    return m.assertEqual(counter.count, 2)
 end function
 
 function TestCase__Client_Track() as String
@@ -187,6 +249,7 @@ function TestSuite__Client() as Object
     this.addTest("TestCase__Client_Eval_Tracked", TestCase__Client_Eval_Tracked)
     this.addTest("TestCase__Client_Track", TestCase__Client_Track)
     this.addTest("TestCase__Client_Identify", TestCase__Client_Identify)
+    this.addTest("TestCase__Client_Summary_Default", TestCase__Client_Summary_Default)
 
     return this
 end function
