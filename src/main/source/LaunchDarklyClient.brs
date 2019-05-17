@@ -111,16 +111,19 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
 
                         counterNode = {
                             count: counter.count,
-                            version: counter.version,
                             value: counter.value
                         }
 
-                        if counterKey = "unknown" then
-                            counterNode.unknown = true
+                        if counter.version <> invalid then
+                            counterNode.version = counter.version
                         end if
 
-                        if counterKey <> "default" then
+                        if counter.variation <> invalid then
                             counterNode.variation = counter.variation
+                        end if
+
+                        if counterKey = "unknown" then
+                            counterNode.unknown = true
                         end if
 
                         featureNode.counters.push(counterNode)

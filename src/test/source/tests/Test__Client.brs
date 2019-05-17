@@ -97,7 +97,7 @@ function TestCase__Client_Eval_Tracked() as String
     })
 end function
 
-function TestCase__Client_Summary_Unknown() as String
+function TestCase__Client_Summary_Known() as String
     client = makeTestClientOnline()
 
     flagKey = "flag1"
@@ -163,7 +163,7 @@ function TestCase__Client_Summary_Unknown() as String
 end function
 
 
-function TestCase__Client_Summary_Known() as String
+function TestCase__Client_Summary_Unknown() as String
     client = makeTestClientOnline()
 
     flagKey = "flag1"
@@ -179,53 +179,43 @@ function TestCase__Client_Summary_Known() as String
 
     event = client.private.makeSummaryEvent()
 
-    a = m.assertEqual(event.kind, "summary")
+    a = m.assertTrue(event.creationDate > 0)
     if a <> "" then
         return a
     end if
-
-    a = m.assertEqual(event.user, {
-        key: "user-key"
-    })
-    if a <> "" then
-        return a
-    end if
-
-    a = m.assertTrue(event.startDate > 0)
-    if a <> "" then
-        return a
-    end if
+    event.delete("creationDate")
 
     a = m.assertTrue(event.endDate > 0)
     if a <> "" then
         return a
     end if
+    event.delete("endDate")
 
-    a = m.assertEqual(event.features.count(), 1)
+    a = m.assertTrue(event.startDate > 0)
     if a <> "" then
         return a
     end if
+    event.delete("startDate")
 
-    feature = event.features.lookup(flagKey)
+    counters = createObject("roArray", 0, true)
+    counters.push({
+        count: 2,
+        value: expectedFallback,
+        unknown: true
+    })
 
-    a = m.assertEqual(feature.default, expectedFallback)
-    if a <> "" then
-        return a
-    end if
-
-    a = m.assertEqual(feature.counters.count(), 1)
-    if a <> "" then
-        return a
-    end if
-
-    counter = feature.counters.getEntry(0)
-
-    a = m.assertEqual(counter.value, expectedFallback)
-    if a <> "" then
-        return a
-    end if
-
-    return m.assertEqual(counter.count, 2)
+    return m.assertEqual(FormatJSON(event), FormatJSON({
+        kind: "summary",
+        features: {
+            flag1: {
+                default: expectedFallback,
+                counters: counters
+            }
+        },
+        user: {
+            key: "user-key"
+        }
+    }))
 end function
 
 function TestCase__Client_Track() as String
