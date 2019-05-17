@@ -329,6 +329,40 @@ function TestCase__Client_Identify() as String
     return m.assertEqual(event.kind, "identify")
 end function
 
+function testVariation(ctx as Object, functionName as String, expectedValue as Dynamic, fallback as Dynamic) as String
+    client = makeTestClientOnline()
+
+    flagKey = "flag1"
+
+    client.private.store = {
+        flag1: {
+            value: expectedValue,
+            variation: 3,
+            version: 4
+        }
+    }
+
+    actualValue = client[functionName](flagKey, fallback)
+
+    return ctx.assertEqual(actualValue, expectedValue)
+end function
+
+function TestCase__Client_Variation_Int() as String
+    return testVariation(m, "variationInt", 13, 5)
+end function
+
+function TestCase__Client_Variation_Bool() as String
+    return testVariation(m, "variationBool", true, false)
+end function
+
+function TestCase__Client_Variation_String() as String
+    return testVariation(m, "variationString", "abc", "def")
+end function
+
+function TestCase__Client_Variation_AA() as String
+    return testVariation(m, "variationAA", { b: 6 }, { a: 4 })
+end function
+
 function TestSuite__Client() as Object
     this = BaseTestSuite()
 
@@ -341,6 +375,10 @@ function TestSuite__Client() as Object
     this.addTest("TestCase__Client_Identify", TestCase__Client_Identify)
     this.addTest("TestCase__Client_Summary_Unknown", TestCase__Client_Summary_Unknown)
     this.addTest("TestCase__Client_Summary_Known", TestCase__Client_Summary_Known)
+    this.addTest("TestCase__Client_Variation_Int", TestCase__Client_Variation_Int)
+    this.addTest("TestCase__Client_Variation_Bool", TestCase__Client_Variation_Bool)
+    this.addTest("TestCase__Client_Variation_String", TestCase__Client_Variation_String)
+    this.addTest("TestCase__Client_Variation_AA", TestCase__Client_Variation_AA)
 
     return this
 end function

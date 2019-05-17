@@ -257,6 +257,8 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
 
                     typeMatch = true
                     if strong <> invalid then
+                        print flag.value
+                        print getInterface(flag.value, strong)
                         if getInterface(flag.value, strong) = invalid then
                             print "eval type mismatch"
 
@@ -285,19 +287,19 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
         end function,
 
         variationInt: function(flagKey as String, fallback as Integer) as Integer
-            return variation(flagKey, fallback, "ifInteger")
+            return m.variation(flagKey, fallback, "ifInt")
         end function,
 
         variationBool: function(flagKey as String, fallback as Boolean) as Boolean
-            return variation(flagKey, fallback, "ifBoolean")
+            return m.variation(flagKey, fallback, "ifBoolean")
         end function,
 
         variationString: function(flagKey as String, fallback as String) as String
-            return variation(flagKey, fallback, "ifString")
+            return m.variation(flagKey, fallback, "ifString")
         end function,
 
         variationAA: function(flagKey as String, fallback as Object) as Object
-            return variation(flagKey, fallback, "ifAssociativeArray")
+            return m.variation(flagKey, fallback, "ifAssociativeArray")
         end function,
 
         track: function(key as String, data=invalid as Object) as Void
