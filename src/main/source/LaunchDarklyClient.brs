@@ -68,6 +68,14 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 return creationDate&
             end function,
 
+            getFlagVersion: function(flag as Object) as Integer
+                if flag.flagVersion <> invalid then
+                    return flag.flagVersion
+                else
+                    return flag.version
+                end if
+            end function,
+
             makeBaseEvent: function(kind as String) as Object
                 return {
                     kind: kind,
@@ -79,12 +87,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             makeFeatureEvent: function(flag as Object, fallback as Dynamic) as Object
                 event = m.makeBaseEvent("feature")
 
-                if flag.flagVersion <> invalid then
-                    event.version = flag.flagVersion
-                else
-                    event.version = flag.version
-                end if
-
+                event.version = m.getFlagVersion(flag)
                 event.variation = flag.variation
                 event.value = flag.value
                 event.default = fallback
@@ -156,15 +159,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 else if typeMatch = false then
                     counterKey = "default"
                 else
-                    version = invalid
-
-                    if flag.flagVersion <> invalid then
-                        version = flag.flagVersion
-                    else
-                        version = flag.version
-                    end if
-
-                    counterKey = version.toStr() + " " + flag.variation.toStr()
+                    counterKey = m.getFlagVersion(flag).toStr() + " " + flag.variation.toStr()
                 end if
 
                 counter = summary.counters.lookup(counterKey)
@@ -179,8 +174,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 end if
 
                 if flag <> invalid AND counter.count = 0 then
-                    counter.version = flag.version
-                    counter.flagVersion = flag.version
+                    counter.version = m.getFlagVersion(flag)
                     counter.variation = flag.variation
                 end if
 
