@@ -3,13 +3,13 @@ function LaunchDarklyConfig(mobileKey as String) as Object
         private: {
             appURI: "https://app.launchdarkly.com",
             eventsURI: "https://mobile.launchdarkly.com",
-            pollingInterval: 15,
+            pollingIntervalSeconds: 15,
             mobileKey: mobileKey,
             offline: false,
             privateAttributeNames: {},
             allAttributesPrivate: false,
             eventsCapacity: 100,
-            eventsFlushInterval: 30
+            eventsFlushIntervalSeconds: 30
         },
         setAppURI: function(appURI as String) as Void
             m.private.appURI = appURI
@@ -17,8 +17,8 @@ function LaunchDarklyConfig(mobileKey as String) as Object
         setEventsURI: function(eventsURI as String) as Void
             m.private.eventsURI = eventsURI
         end function,
-        setPollingInterval: function(pollingInterval as Integer) as Void
-            m.private.pollingInterval = pollingInterval
+        setPollingIntervalSeconds: function(pollingIntervalSeconds as Integer) as Void
+            m.private.pollingIntervalSeconds = pollingIntervalSeconds
         end function,
         setOffline: function(offline as Boolean) as Void
             m.private.offline = offline
@@ -32,8 +32,8 @@ function LaunchDarklyConfig(mobileKey as String) as Object
         setEventsCapacity: function(capacity as Integer) as Void
             m.private.eventsCapacity = capacity
         end function,
-        setEventsFlushInterval: function(interval as Integer) as Void
-            m.private.eventsFlushInterval = interval
+        setEventsFlushIntervalSeconds: function(intervalSeconds as Integer) as Void
+            m.private.eventsFlushIntervalSeconds = intervalSeconds
         end function
     }
 end function

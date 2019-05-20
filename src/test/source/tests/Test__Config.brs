@@ -29,17 +29,17 @@ function TestCase__Config_EventsURI() as String
     return m.assertEqual(config.private.eventsURI, "https://test.com")
 end function
 
-function TestCase__Config_PollingInterval() as String
+function TestCase__Config_PollingIntervalSeconds() as String
     config = LaunchDarklyConfig("mob")
 
-    a = m.assertEqual(config.private.pollingInterval, 15)
+    a = m.assertEqual(config.private.pollingIntervalSeconds, 15)
     if a <> "" then
         return a
     end if
 
-    config.setPollingInterval(41)
+    config.setPollingIntervalSeconds(41)
 
-    return m.assertEqual(config.private.pollingInterval, 41)
+    return m.assertEqual(config.private.pollingIntervalSeconds, 41)
 end function
 
 function TestCase__Config_Offline() as String
@@ -68,18 +68,18 @@ function TestCase__Config_EventsCapacity() as String
     return m.assertEqual(config.private.eventsCapacity, 52)
 end function
 
-function TestCase__Config_EventsFlushInterval() as String
+function TestCase__Config_EventsFlushIntervalSeconds() as String
     config = LaunchDarklyConfig("mob")
 
-    a = m.assertEqual(config.private.eventsCapacity, 100)
+    a = m.assertEqual(config.private.eventsFlushIntervalSeconds, 30)
 
     if a <> "" then
         return a
     end if
 
-    config.setEventsFlushInterval(90)
+    config.setEventsFlushIntervalSeconds(90)
 
-    return m.assertEqual(config.private.eventsFlushInterval, 90)
+    return m.assertEqual(config.private.eventsFlushIntervalSeconds, 90)
 end function
 
 function TestSuite__Config() as Object
@@ -89,10 +89,10 @@ function TestSuite__Config() as Object
 
     this.addTest("TestCase__Config_Constructor", TestCase__Config_Constructor)
     this.addTest("TestCase__Config_AppURI", TestCase__Config_AppURI)
-    this.addTest("TestCase__Config_PollingInterval", TestCase__Config_PollingInterval)
+    this.addTest("TestCase__Config_PollingIntervalSeconds", TestCase__Config_PollingIntervalSeconds)
     this.addTest("TestCase__Config_Offline", TestCase__Config_Offline)
     this.addTest("TestCase__Config_EventsCapacity", TestCase__Config_EventsCapacity)
-    this.addTest("TestCase__Config_FlushInterval", TestCase__Config_EventsFlushInterval)
+    this.addTest("TestCase__Config_FlushIntervalSeconds", TestCase__Config_EventsFlushIntervalSeconds)
 
     return this
 end function

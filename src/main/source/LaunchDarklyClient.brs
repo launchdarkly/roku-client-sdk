@@ -358,7 +358,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             if m.private.pollingActive = false then
                 elapsed = m.private.pollingTimer.totalSeconds()
 
-                if elapsed >= m.private.config.private.pollingInterval then
+                if elapsed >= m.private.config.private.pollingIntervalSeconds then
                     print "polling timeout hit"
 
                     m.private.startPolling()
@@ -368,7 +368,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             if m.private.eventsFlushActive = false then
                 elapsed = m.private.eventsFlushTimer.totalSeconds()
 
-                if elapsed >= m.private.config.private.eventsFlushInterval then
+                if elapsed >= m.private.config.private.eventsFlushIntervalSeconds then
                     print "flush timeout hit"
 
                     m.flush()
