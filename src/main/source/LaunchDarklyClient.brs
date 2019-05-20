@@ -54,7 +54,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 if responseCode = 401 OR responseCode = 403 then
                     print "not authorized"
                 else
-                    m.stopEventsTransfer()
+                    m.stopEvents()
                 end if
             end function,
 
@@ -231,7 +231,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 m.pollingTransfer.asyncCancel()
             end function,
 
-            stopEventsTransfer: function() as Void
+            stopEvents: function() as Void
                 m.eventsFlushTimer.mark()
                 m.eventsFlushActive = false
                 m.eventsTransfer.asyncCancel()
