@@ -239,24 +239,20 @@ function TestCase__Client_Track() as String
 
     event = eventQueue.getEntry(0)
 
-    a = m.assertEqual(event.kind, "custom")
+    a = m.assertTrue(event.creationDate > 0)
     if a <> "" then
         return a
     end if
+    event.delete("creationDate")
 
-    a = m.assertEqual(event.user, {
-        key: "user-key"
-    })
-    if a <> "" then
-        return a
-    end if
-
-    a = m.assertEqual(event.key, eventName)
-    if a <> "" then
-        return a
-    end if
-
-    return m.assertTrue(event.creationDate > 0)
+    return m.assertEqual(FormatJSON(event), FormatJSON({
+        kind: "custom",
+        user: {
+            key: "user-key"
+        },
+        key: eventName,
+        data: eventData
+    }))
 end function
 
 function TestCase__Client_Identify() as String
@@ -281,7 +277,18 @@ function TestCase__Client_Identify() as String
 
     event = eventQueue.getEntry(0)
 
-    return m.assertEqual(event.kind, "identify")
+    a = m.assertTrue(event.creationDate > 0)
+    if a <> "" then
+        return a
+    end if
+    event.delete("creationDate")
+
+    return m.assertEqual(FormatJSON(event), FormatJSON({
+        kind: "identify",
+        user: {
+            key: "user-key2"
+        }
+    }))
 end function
 
 function testVariation(ctx as Object, functionName as String, expectedValue as Dynamic, fallback as Dynamic) as String
