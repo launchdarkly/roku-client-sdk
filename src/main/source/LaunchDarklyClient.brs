@@ -4,6 +4,8 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             sdkVersion: "1.0.0-beta.1",
 
             user: user,
+            encodedUser: user.private.encode(true, config),
+
             config: config,
             messagePort: messagePort,
             store: {},
@@ -79,7 +81,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             makeBaseEvent: function(kind as String) as Object
                 return {
                     kind: kind,
-                    user: m.user.private.encode(true, m.config),
+                    user: m.encodedUser,
                     creationDate: m.getMilliseconds()
                 }
             end function,
@@ -333,6 +335,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
 
         identify: function(user as Object) as Void
             m.private.user = user
+            m.private.encodedUser = m.private.user.private.encode(true, m.private.config)
             event = m.private.makeBaseEvent("identify")
             m.private.enqueueEvent(event)
             m.private.stopPolling()
