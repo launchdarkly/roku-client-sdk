@@ -63,11 +63,11 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             getMilliseconds: function()
                 REM Clock is stopped on object creation
                 now = CreateObject("roDateTime")
-                REM Ensure 64 bit number is used
-                creationDate& = now.asSeconds()
-                creationDate& *= 1000
-                creationDate& += now.getMilliseconds()
-                return creationDate&
+                REM Ensure double is used
+                creationDate# = now.asSeconds()
+                creationDate# *= 1000
+                creationDate# += now.getMilliseconds()
+                return creationDate#
             end function,
 
             getFlagVersion: function(flag as Object) as Integer
