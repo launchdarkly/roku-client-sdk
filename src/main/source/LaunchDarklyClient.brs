@@ -40,7 +40,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 if responseCode = 401 OR responseCode = 403 then
                     print "not authorized"
                 else
-                    m.stopPolling()
+                    m.resetPollingTransfer()
                 end if
             end function,
 
@@ -56,7 +56,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 if responseCode = 401 OR responseCode = 403 then
                     print "not authorized"
                 else
-                    m.stopEvents()
+                    m.resetEventsTransfer()
                 end if
             end function,
 
@@ -220,20 +220,20 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 m.eventsTransfer.setURL(url)
             end function
 
-            startPolling: function() as Void
+            startPollingTransfer: function() as Void
                 if m.config.private.offline = false then
                     m.pollingActive = true
                     m.pollingTransfer.asyncGetToString()
                 end if
             end function,
 
-            stopPolling: function() as Void
+            resetPollingTransfer: function() as Void
                 m.pollingTimer.mark()
                 m.pollingActive = false
                 m.pollingTransfer.asyncCancel()
             end function,
 
-            stopEvents: function() as Void
+            resetEventsTransfer: function() as Void
                 m.eventsFlushTimer.mark()
                 m.eventsFlushActive = false
                 m.eventsTransfer.asyncCancel()
@@ -338,9 +338,9 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             m.private.encodedUser = m.private.user.private.encode(true, m.private.config)
             event = m.private.makeBaseEvent("identify")
             m.private.enqueueEvent(event)
-            m.private.stopPolling()
+            m.private.resetPollingTransfer()
             m.private.preparePolling()
-            m.private.startPolling()
+            m.private.startPollingTransfer()
         end function,
 
         handleMessage: function(message as Dynamic) as Boolean
@@ -366,7 +366,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 if elapsed >= m.private.config.private.pollingIntervalSeconds then
                     print "polling timeout hit"
 
-                    m.private.startPolling()
+                    m.private.startPollingTransfer()
                 end if
             end if
 
@@ -386,7 +386,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
 
     this.private.prepareEventTransfer()
     this.private.preparePolling()
-    this.private.startPolling()
+    this.private.startPollingTransfer()
 
     return this
 end function
