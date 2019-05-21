@@ -56,7 +56,7 @@ function TestCase__Client_Eval_Tracked() as String
     client.private.store = {
         flag1: {
             value: expectedValue,
-            track: future,
+            trackEvents: future,
             variation: expectedVariation,
             flagVersion: expectedVersion
         }

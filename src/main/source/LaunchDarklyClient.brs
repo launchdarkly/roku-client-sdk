@@ -266,12 +266,13 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                         end if
                     end if
 
-                    if flag.track <> invalid AND flag.track = true then
-                        if flag.debugEventsUntilDate = invalid OR flag.debugEventsUntilDate > now then
-                            event = m.private.makeFeatureEvent(flag, fallback)
+                    shouldTrack = flag.trackEvents <> invalid AND flag.trackEvents = true
+                    shouldDebug = flag.debugEventsUntilDate <> invalid AND flag.debugEventsUntilDate > now
 
-                            m.private.enqueueEvent(event)
-                        end if
+                    if shouldTrack OR shouldDebug then
+                       event = m.private.makeFeatureEvent(flag, fallback)
+
+                       m.private.enqueueEvent(event)
                     end if
 
                     value = invalid
