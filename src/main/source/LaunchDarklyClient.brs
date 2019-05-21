@@ -264,10 +264,12 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                         end if
                     end if
 
-                    if flag.track <> invalid AND flag.track > 0 AND flag.track > now then
-                        event = m.private.makeFeatureEvent(flag, fallback)
+                    if flag.track <> invalid AND flag.track = true then
+                        if flag.debugEventsUntilDate = invalid OR flag.debugEventsUntilDate > now then
+                            event = m.private.makeFeatureEvent(flag, fallback)
 
-                        m.private.enqueueEvent(event)
+                            m.private.enqueueEvent(event)
+                        end if
                     end if
 
                     value = invalid
