@@ -310,19 +310,19 @@ function testVariation(ctx as Object, functionName as String, expectedValue as D
 end function
 
 function TestCase__Client_Variation_Int() as String
-    return testVariation(m, "variationInt", 13, 5)
+    return testVariation(m, "intVariation", 13, 5)
 end function
 
 function TestCase__Client_Variation_Bool() as String
-    return testVariation(m, "variationBool", true, false)
+    return testVariation(m, "boolVariation", true, false)
 end function
 
 function TestCase__Client_Variation_String() as String
-    return testVariation(m, "variationString", "abc", "def")
+    return testVariation(m, "stringVariation", "abc", "def")
 end function
 
 function TestCase__Client_Variation_AA() as String
-    return testVariation(m, "variationAA", { b: 6 }, { a: 4 })
+    return testVariation(m, "aaVariation", { b: 6 }, { a: 4 })
 end function
 
 function TestSuite__Client() as Object

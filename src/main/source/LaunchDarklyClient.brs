@@ -284,19 +284,19 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             end if
         end function,
 
-        variationInt: function(flagKey as String, fallback as Integer) as Integer
+        intVariation: function(flagKey as String, fallback as Integer) as Integer
             return m.variation(flagKey, fallback, "ifInt")
         end function,
 
-        variationBool: function(flagKey as String, fallback as Boolean) as Boolean
+        boolVariation: function(flagKey as String, fallback as Boolean) as Boolean
             return m.variation(flagKey, fallback, "ifBoolean")
         end function,
 
-        variationString: function(flagKey as String, fallback as String) as String
+        stringVariation: function(flagKey as String, fallback as String) as String
             return m.variation(flagKey, fallback, "ifString")
         end function,
 
-        variationAA: function(flagKey as String, fallback as Object) as Object
+        aaVariation: function(flagKey as String, fallback as Object) as Object
             return m.variation(flagKey, fallback, "ifAssociativeArray")
         end function,
 
