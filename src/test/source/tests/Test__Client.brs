@@ -46,9 +46,6 @@ end function
 function TestCase__Client_Eval_Tracked() as String
     client = makeTestClientOnline()
 
-    future = client.private.getMilliseconds()
-    future += 1000 * 10
-
     expectedValue = "def"
     expectedVariation = 3
     expectedFallback = "abc"
@@ -56,7 +53,7 @@ function TestCase__Client_Eval_Tracked() as String
     client.private.store = {
         flag1: {
             value: expectedValue,
-            trackEvents: future,
+            trackEvents: true,
             variation: expectedVariation,
             flagVersion: expectedVersion
         }
