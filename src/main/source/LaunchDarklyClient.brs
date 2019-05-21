@@ -24,7 +24,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
 
                 print responseCode
 
-                if responseCode = 200 then
+                if responseCode >= 200 AND responseCode < 300 then
                     decoded = ParseJSON(message.getString())
 
                     if decoded = invalid then
@@ -47,7 +47,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
 
                 print responseCode
 
-                if responseCode = 202 then
+                if responseCode >= 200 AND responseCode < 300 then
                     print "events sent"
                 end if
 
