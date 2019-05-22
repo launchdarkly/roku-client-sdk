@@ -24,21 +24,22 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             handlePollingMessage: function(message as Dynamic) as Void
                 responseCode = message.getResponseCode()
 
-                print responseCode
+                m.config.private.logger.debug("polling response code: " + responseCode.toStr())
 
                 if responseCode >= 200 AND responseCode < 300 then
                     decoded = ParseJSON(message.getString())
 
                     if decoded = invalid then
-                        print "failed json decoding"
+                        m.config.private.logger.error("failed json decoding")
                     else
-                        print "updating store"
+                        m.config.private.logger.debug("updating store")
+
                         m.store = decoded
                     end if
                 end if
 
                 if responseCode = 401 OR responseCode = 403 then
-                    print "not authorized"
+                    m.config.private.logger.error("not authorized")
                 else
                     m.resetPollingTransfer()
                 end if
@@ -47,14 +48,14 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             handleEventsMessage: function(message as Dynamic) as Void
                 responseCode = message.getResponseCode()
 
-                print responseCode
+                m.config.private.logger.debug("events response code: " + responseCode.toStr())
 
                 if responseCode >= 200 AND responseCode < 300 then
-                    print "events sent"
+                    m.config.private.logger.debug("events sent")
                 end if
 
                 if responseCode = 401 OR responseCode = 403 then
-                    print "not authorized"
+                    m.config.private.logger.error("not authorized")
                 else
                     m.resetEventsTransfer()
                 end if
@@ -187,7 +188,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 if m.events.count() < m.config.private.eventsCapacity then
                     m.events.push(event)
                 else
-                    print "eventsCapacity exceeded dropping event"
+                    m.config.private.logger.warn("eventsCapacity exceeded dropping event")
                 end if
             end function,
 
@@ -204,7 +205,8 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 buffer.fromAsciiString(FormatJSON(m.user.private.encode(false)))
                 userBase64JSON = buffer.toBase64String()
                 url = m.config.private.appURI + "/msdk/evalx/users/" + userBase64JSON
-                print url
+
+                m.config.private.logger.debug("polling url: " + url)
 
                 m.prepareNetworkingCommon(m.pollingTransfer)
                 m.pollingTransfer.setURL(url)
@@ -212,7 +214,8 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
 
             prepareEventTransfer: function() as Void
                 url = m.config.private.eventsURI + "/mobile"
-                print url
+
+                m.config.private.logger.debug("events url: " + url)
 
                 m.prepareNetworkingCommon(m.eventsTransfer)
                 m.eventsTransfer.addHeader("Content-Type", "application/json")
@@ -247,20 +250,18 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 flag = m.private.store.lookup(flagKey)
 
                 if flag = invalid then
-                    print "missing flag"
+                    m.private.config.private.logger.error("missing flag")
 
                     m.private.summarizeEval(fallback, flagKey, invalid, fallback, true)
 
                     return fallback
                 else
-                    print "found flag"
-
                     now = m.private.getMilliseconds()
 
                     typeMatch = true
                     if strong <> invalid then
                         if getInterface(flag.value, strong) = invalid then
-                            print "eval type mismatch"
+                            m.private.config.private.logger.error("eval type mismatch")
 
                             typeMatch = false
                         end if
@@ -365,7 +366,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 elapsed = m.private.pollingTimer.totalSeconds()
 
                 if elapsed >= m.private.config.private.pollingIntervalSeconds then
-                    print "polling timeout hit"
+                    m.private.config.private.logger.debug("polling timeout hit")
 
                     m.private.startPollingTransfer()
                 end if
@@ -375,7 +376,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 elapsed = m.private.eventsFlushTimer.totalSeconds()
 
                 if elapsed >= m.private.config.private.eventsFlushIntervalSeconds then
-                    print "flush timeout hit"
+                    m.private.config.private.logger.debug("flush timeout hit")
 
                     m.flush()
                 end if
