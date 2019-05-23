@@ -9,7 +9,8 @@ function LaunchDarklyConfig(mobileKey as String) as Object
             privateAttributeNames: {},
             allAttributesPrivate: false,
             eventsCapacity: 100,
-            eventsFlushIntervalSeconds: 30
+            eventsFlushIntervalSeconds: 30,
+            logger: LaunchDarklyLogger(LaunchDarklyLoggerPrint())
         },
         setAppURI: function(appURI as String) as Void
             m.private.appURI = appURI
@@ -34,6 +35,9 @@ function LaunchDarklyConfig(mobileKey as String) as Object
         end function,
         setEventsFlushIntervalSeconds: function(intervalSeconds as Integer) as Void
             m.private.eventsFlushIntervalSeconds = intervalSeconds
+        end function,
+        setLogger: function(logger as Object) as Void
+            m.private.logger = logger
         end function
     }
 end function
