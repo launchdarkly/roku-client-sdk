@@ -10,34 +10,48 @@ function LaunchDarklyConfig(mobileKey as String) as Object
             allAttributesPrivate: false,
             eventsCapacity: 100,
             eventsFlushIntervalSeconds: 30,
-            logger: LaunchDarklyLogger(LaunchDarklyLoggerPrint())
+            logger: LaunchDarklyLogger(LaunchDarklyLoggerPrint()),
+            storeBackend: invalid
         },
+
         setAppURI: function(appURI as String) as Void
             m.private.appURI = appURI
         end function,
+
         setEventsURI: function(eventsURI as String) as Void
             m.private.eventsURI = eventsURI
         end function,
+
         setPollingIntervalSeconds: function(pollingIntervalSeconds as Integer) as Void
             m.private.pollingIntervalSeconds = pollingIntervalSeconds
         end function,
+
         setOffline: function(offline as Boolean) as Void
             m.private.offline = offline
         end function,
+
         addPrivateAttribute: function(privateAttribute as String) as Void
             m.private.privateAttributeNames.addReplace(privateAttribute, 1)
         end function,
+
         setAllAttributesPrivate: function(allAttributesPrivate as Boolean) as Void
             m.private.allAttributesPrivate = allAttributesPrivate
         end function,
+
         setEventsCapacity: function(capacity as Integer) as Void
             m.private.eventsCapacity = capacity
         end function,
+
         setEventsFlushIntervalSeconds: function(intervalSeconds as Integer) as Void
             m.private.eventsFlushIntervalSeconds = intervalSeconds
         end function,
-        setLogger: function(logger as Object) as Void
-            m.private.logger = logger
+
+        setLogger: function(newLogger as Object) as Void
+            m.private.logger = newLogger
+        end function,
+
+        setStoreBackend: function(newStoreBackend as Object) as Void
+            m.private.storeBackend = newStoreBackend
         end function
     }
 end function

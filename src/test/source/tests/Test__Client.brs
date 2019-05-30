@@ -23,13 +23,13 @@ function TestCase__Client_Eval_NotTracked() as String
     client = makeTestClientOnline()
 
     expectedValue = "def"
-    client.private.store = {
+    client.private.store.putAll({
         flag1: {
             value: expectedValue,
             variation: 3,
             version: 4
         }
-    }
+    })
 
     actualValue = client.variation("flag1", "abc")
 
@@ -50,14 +50,14 @@ function TestCase__Client_Eval_Tracked() as String
     expectedVariation = 3
     expectedFallback = "abc"
     expectedVersion = 5
-    client.private.store = {
+    client.private.store.putAll({
         flag1: {
             value: expectedValue,
             trackEvents: true,
             variation: expectedVariation,
             flagVersion: expectedVersion
         }
-    }
+    })
 
     actualValue = client.variation("flag1", expectedFallback)
 
@@ -101,13 +101,13 @@ function TestCase__Client_Summary_Known() as String
     fallback = "myFallback"
     expectedValue = "expected"
 
-    client.private.store = {
+    client.private.store.putAll({
         flag1: {
             value: expectedValue,
             variation: 3,
             version: 4
         }
-    }
+    })
 
     actualValue = client.variation(flagKey, fallback)
     client.variation(flagKey, fallback)
@@ -293,13 +293,13 @@ function testVariation(ctx as Object, functionName as String, expectedValue as D
 
     flagKey = "flag1"
 
-    client.private.store = {
+    client.private.store.putAll({
         flag1: {
             value: expectedValue,
             variation: 3,
             version: 4
         }
-    }
+    })
 
     actualValue = client[functionName](flagKey, fallback)
 

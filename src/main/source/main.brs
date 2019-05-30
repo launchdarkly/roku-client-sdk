@@ -19,13 +19,13 @@ sub main(params as object)
         runner.run()
     end if
 
-    logger = LaunchDarklyLogger(LaunchDarklyLoggerPrint())
-    logger.setLogLevel(logger.levels.debug)
+    myLogger = LaunchDarklyLogger(LaunchDarklyLoggerPrint())
+    myLogger.setLogLevel(myLogger.levels.debug)
 
     config = LaunchDarklyConfig("mob-")
     config.setAppURI("https://app.ld.catamorphic.com")
     config.setEventsURI("https://events.ld.catamorphic.com")
-    config.setLogger(logger)
+    config.setLogger(myLogger)
 
     user = LaunchDarklyUser("user-key")
 

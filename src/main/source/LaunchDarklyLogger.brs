@@ -15,6 +15,7 @@ function LaunchDarklyLoggerPrint() as Object
                 end if
             end function
         },
+
         log: function(level as Integer, message as String)
             now = CreateObject("roDateTime").asSeconds()
             print "[LaunchDarkly, " m.private.levelToString(level) "," now "] " message
@@ -41,18 +42,23 @@ function LaunchDarklyLogger(backend=invalid as Object) as Object
             info: 3,
             debug: 4
         },
+
         setLogLevel: function(level as Integer) as Void
             m.private.logLevel = level
         end function,
+
         error: function(message as String) as Void
             m.private.maybeLog(m.levels.error, message)
         end function,
+
         warn: function(message as String) as Void
             m.private.maybeLog(m.levels.warn, message)
         end function,
+
         info: function(message as String) as Void
             m.private.maybeLog(m.levels.info, message)
         end function,
+
         debug: function(message as String) as Void
             m.private.maybeLog(m.levels.debug, message)
         end function

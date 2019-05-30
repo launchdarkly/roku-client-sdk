@@ -8,7 +8,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
 
             config: config,
             messagePort: messagePort,
-            store: {},
+            store: LaunchDarklyStore(config.private.storeBackend),
 
             pollingTransfer: createObject("roUrlTransfer"),
             pollingTimer: createObject("roTimeSpan"),
@@ -34,7 +34,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                     else
                         m.config.private.logger.debug("updating store")
 
-                        m.store = decoded
+                        m.store.putAll(decoded)
                     end if
                 end if
 
@@ -247,7 +247,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             if m.private.config.private.offline then
                 return fallback
             else
-                flag = m.private.store.lookup(flagKey)
+                flag = m.private.store.get(flagKey)
 
                 if flag = invalid then
                     m.private.config.private.logger.error("missing flag")
