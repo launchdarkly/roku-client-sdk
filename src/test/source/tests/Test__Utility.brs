@@ -29,6 +29,22 @@ function TestCase__Utility_MemCpy_Mid() as String
     return m.assertEqual(expected.toHexString(), destination.toHexString())
 end function
 
+function TestCase__Utility_HexToDecimal() as String
+    u = LaunchDarklyUtility()
+
+    a = m.assertEqual(u.hexToDecimal("7B"), 123)
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertEqual(u.hexToDecimal("5"), 5)
+    if a <> "" then
+        return a
+    end if
+
+    return m.assertEqual(u.hexToDecimal("1d4"), 468)
+end function
+
 function TestCase__Utility_Endian() as String
     encoded = createObject("roByteArray")
     encoded.fromHexString("6DC91200")
@@ -49,6 +65,32 @@ function TestCase__Utility_ByteArrayEq() as String
     return m.assertFalse(u.byteArrayEq(u.makeBytes("abcd"), u.makeBytes("1234")))
 end function
 
+function TestCase__Utility_IsValidHex() as String
+    u = LaunchDarklyUtility()
+
+    a = m.assertTrue(u.isValidHex("7B"))
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertTrue(u.isValidHex("5"))
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertTrue(u.isValidHex("1d4"))
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertFalse(u.isValidHex("hello world"))
+    if a <> "" then
+        return a
+    end if
+
+    return m.assertFalse(u.isValidHex(""))
+end function
+
 function TestSuite__Utility() as Object
     this = BaseTestSuite()
 
@@ -56,8 +98,10 @@ function TestSuite__Utility() as Object
 
     this.addTest("TestCase__Utility_MemCpy_Start", TestCase__Utility_MemCpy_Start)
     this.addTest("TestCase__Utility_MemCpy_Mid", TestCase__Utility_MemCpy_Mid)
+    this.addTest("TestCase__Utility_HexToDecimal", TestCase__Utility_HexToDecimal)
     this.addTest("TestCase__Utility_Endian", TestCase__Utility_Endian)
     this.addTest("TestCase__Utility_ByteArrayEq", TestCase__Utility_ByteArrayEq)
+    this.addTest("TestCase__Utility_IsValidHex", TestCase__Utility_IsValidHex)
 
     return this
 end function

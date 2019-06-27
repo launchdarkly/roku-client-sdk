@@ -27,6 +27,34 @@ function LaunchDarklyStream(init=invalid as Object) as Object
             m.offset += count
         end function
 
+        takeUntilSequence: function(sequence as Object, includeSequence=false as Boolean) as Object
+            for x = m.offset to m.buffer.count() - 1 step + 1
+                if m.buffer[x] = sequence[0] then
+                    match = true
+
+                    for y = 1 to sequence.count() - 1 step + 1
+                        if m.buffer[x + y] <> sequence[y] then
+                            match = false
+                            exit for
+                        end if
+                    end for
+
+                    if match = true then
+                        prefix = m.takeCount(x - m.offset)
+                        m.offset += sequence.count()
+
+                        if includeSequence = true then
+                            prefix.append(sequence)
+                        end if
+
+                        return prefix
+                    end if
+                end if
+            end for
+
+            return invalid
+        end function,
+
         shrink: function() as Void
             remaining = createObject("roByteArray")
             remainingCount = m.buffer.count() - m.offset
@@ -58,6 +86,31 @@ function LaunchDarklyUtility() as Object
             bytes = createObject("roByteArray")
             bytes.fromAsciiString(text)
             return bytes
+        end function,
+
+        regexHex: createObject("roRegex", "^[a-f0-9]+$", "i"),
+
+        isValidHex: function(text as String) as Boolean
+            return m.regexHex.isMatch(text)
+        end function,
+
+        REM Integer or Invalid
+        hexToDecimal: function(hex as String) as Dynamic
+            if m.isValidHex(hex) then
+                return val(hex, 16)
+            else
+                return invalid
+            end if
+        end function
+
+        isNatural: function(buffer as Object) as Boolean
+            for each char in buffer
+                if char < 48 OR char > 57 then
+                    return false
+                end if
+            end for
+
+            return buffer.count() > 0
         end function,
 
         littleEndianUnsignedToInteger: function(bytes as Object) as Integer
