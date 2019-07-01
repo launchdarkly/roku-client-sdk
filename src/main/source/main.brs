@@ -23,8 +23,9 @@ sub main(params as object)
     myLogger.setLogLevel(myLogger.levels.debug)
 
     config = LaunchDarklyConfig("mob-")
-    config.setAppURI("https://app.ld.catamorphic.com")
-    config.setEventsURI("https://events.ld.catamorphic.com")
+    config.setAppURI("https://ld-stg.launchdarkly.com")
+    config.setEventsURI("https://events-stg.launchdarkly.com")
+    config.setStreamURI("http://192.168.8.139:3400")
     config.setLogger(myLogger)
 
     user = LaunchDarklyUser("user-key")

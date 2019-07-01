@@ -1,15 +1,18 @@
 function LaunchDarklyClient(config as Object, user as Object, messagePort as Object) as Object
+    store = LaunchDarklyStore(config.private.storeBackend)
+
     this = {
         private: {
-            sdkVersion: "1.0.0-beta.1",
-
             user: user,
             encodedUser: user.private.encode(true, config),
 
             config: config,
             messagePort: messagePort,
-            store: LaunchDarklyStore(config.private.storeBackend),
+            store: store,
 
+            unauthorized: false,
+
+            pollingInitial: true,
             pollingTransfer: createObject("roUrlTransfer"),
             pollingTimer: createObject("roTimeSpan"),
             pollingActive: false,
@@ -20,6 +23,10 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             eventsFlushActive: false,
             eventsSummary: {},
             eventsSummaryStart: 0,
+
+            streamClient: LaunchDarklyStreamClient(config, store, messagePort, user),
+
+            util: LaunchDarklyUtility(),
 
             handlePollingMessage: function(message as Dynamic) as Void
                 responseCode = message.getResponseCode()
@@ -39,7 +46,9 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 end if
 
                 if responseCode = 401 OR responseCode = 403 then
-                    m.config.private.logger.error("not authorized")
+                    m.config.private.logger.error("polling not authorized")
+
+                    m.unauthorized = true
                 else
                     m.resetPollingTransfer()
                 end if
@@ -55,20 +64,12 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 end if
 
                 if responseCode = 401 OR responseCode = 403 then
-                    m.config.private.logger.error("not authorized")
+                    m.config.private.logger.error("events not authorized")
+
+                    m.unauthorized = true
                 else
                     m.resetEventsTransfer()
                 end if
-            end function,
-
-            getMilliseconds: function()
-                REM Clock is stopped on object creation
-                now = CreateObject("roDateTime")
-                REM Ensure double is used
-                creationDate# = now.asSeconds()
-                creationDate# *= 1000
-                creationDate# += now.getMilliseconds()
-                return creationDate#
             end function,
 
             getFlagVersion: function(flag as Object) as Integer
@@ -83,7 +84,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 return {
                     kind: kind,
                     user: m.encodedUser,
-                    creationDate: m.getMilliseconds()
+                    creationDate: m.util.getMilliseconds()
                 }
             end function,
 
@@ -101,7 +102,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             makeSummaryEvent: function() as Object
                 event = m.makeBaseEvent("summary")
                 event.startDate = m.eventsSummaryStart
-                event.endDate = m.getMilliseconds()
+                event.endDate = m.util.getMilliseconds()
                 event.features = {}
 
                 for each featureKey in m.eventsSummary
@@ -152,7 +153,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 end if
 
                 if m.eventsSummaryStart = 0 then
-                    m.eventsSummaryStart = m.getMilliseconds()
+                    m.eventsSummaryStart = m.util.getMilliseconds()
                 end if
 
                 counterKey = invalid
@@ -192,14 +193,6 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 end if
             end function,
 
-            prepareNetworkingCommon: function(transfer as Object) as Void
-                transfer.setPort(m.messagePort)
-                transfer.addHeader("User-Agent", "RokuClient/" + m.sdkVersion)
-                transfer.addHeader("Authorization", m.config.private.mobileKey)
-                transfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
-                transfer.InitClientCertificates()
-            end function,
-
             preparePolling: function() as Void
                 buffer = createObject("roByteArray")
                 buffer.fromAsciiString(FormatJSON(m.user.private.encode(false)))
@@ -208,7 +201,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
 
                 m.config.private.logger.debug("polling url: " + url)
 
-                m.prepareNetworkingCommon(m.pollingTransfer)
+                m.util.prepareNetworkingCommon(m.messagePort, m.config, m.pollingTransfer)
                 m.pollingTransfer.setURL(url)
             end function,
 
@@ -217,17 +210,16 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
 
                 m.config.private.logger.debug("events url: " + url)
 
-                m.prepareNetworkingCommon(m.eventsTransfer)
+                m.util.prepareNetworkingCommon(m.messagePort, m.config, m.eventsTransfer)
                 m.eventsTransfer.addHeader("Content-Type", "application/json")
                 m.eventsTransfer.addHeader("X-LaunchDarkly-Event-Schema", "3")
                 m.eventsTransfer.setURL(url)
             end function
 
             startPollingTransfer: function() as Void
-                if m.config.private.offline = false then
-                    m.pollingActive = true
-                    m.pollingTransfer.asyncGetToString()
-                end if
+                m.pollingActive = true
+                m.pollingTransfer.asyncGetToString()
+                m.pollingInitial = false
             end function,
 
             resetPollingTransfer: function() as Void
@@ -256,7 +248,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
 
                     return fallback
                 else
-                    now = m.private.getMilliseconds()
+                    now = m.private.util.getMilliseconds()
 
                     typeMatch = true
                     if strong <> invalid then
@@ -340,14 +332,44 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             m.private.encodedUser = m.private.user.private.encode(true, m.private.config)
             event = m.private.makeBaseEvent("identify")
             m.private.enqueueEvent(event)
+
+            m.private.streamClient.changeUser(user)
+            m.handleMessage(invalid)
+
             m.private.resetPollingTransfer()
             m.private.preparePolling()
-            m.private.startPollingTransfer()
         end function,
 
-        handleMessage: function(message as Dynamic) as Boolean
-            if type(message) = "roUrlEvent" then
+        handleMessage: function(message=invalid as Dynamic) as Boolean
+            if m.private.unauthorized = false AND m.private.config.private.offline = false then
+                REM start polling if timeout is hit
+                if m.private.config.private.streaming = false AND m.private.pollingActive = false then
+                    elapsed = m.private.pollingTimer.totalSeconds()
+
+                    if m.private.pollingInitial OR elapsed >= m.private.config.private.pollingIntervalSeconds then
+                        m.private.config.private.logger.debug("polling timeout hit")
+
+                        m.private.startPollingTransfer()
+                    end if
+                end if
+
+                REM flush events if timeout is hit
+                if m.private.eventsFlushActive = false then
+                    elapsed = m.private.eventsFlushTimer.totalSeconds()
+
+                    if elapsed >= m.private.config.private.eventsFlushIntervalSeconds then
+                        m.private.config.private.logger.debug("flush timeout hit")
+
+                        m.flush()
+                    end if
+                end if
+            end if
+
+            if m.private.streamClient.handleMessage(message) then
+                return true
+            else if type(message) = "roUrlEvent" then
                 eventId = message.getSourceIdentity()
+
                 pollingId = m.private.pollingTransfer.getIdentity()
                 eventsId = m.private.eventsTransfer.getIdentity()
 
@@ -362,33 +384,14 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 end if
             end if
 
-            if m.private.pollingActive = false then
-                elapsed = m.private.pollingTimer.totalSeconds()
-
-                if elapsed >= m.private.config.private.pollingIntervalSeconds then
-                    m.private.config.private.logger.debug("polling timeout hit")
-
-                    m.private.startPollingTransfer()
-                end if
-            end if
-
-            if m.private.eventsFlushActive = false then
-                elapsed = m.private.eventsFlushTimer.totalSeconds()
-
-                if elapsed >= m.private.config.private.eventsFlushIntervalSeconds then
-                    m.private.config.private.logger.debug("flush timeout hit")
-
-                    m.flush()
-                end if
-            end if
-
             return false
         end function
     }
 
     this.private.prepareEventTransfer()
     this.private.preparePolling()
-    this.private.startPollingTransfer()
+
+    this.handleMessage(invalid)
 
     return this
 end function

@@ -91,6 +91,30 @@ function TestCase__Utility_IsValidHex() as String
     return m.assertFalse(u.isValidHex(""))
 end function
 
+function TestCase__Utility_GetMilliseconds() as String
+    return m.assertTrue(LaunchDarklyUtility().getMilliseconds() > 0)
+end function
+
+function TestCase__Utility_Backoff() as String
+    backoff = LaunchDarklyBackoff()
+
+    a = m.assertFalse(backoff.shouldWait())
+    if a <> "" then
+        return a
+    end if
+
+    backoff.fail()
+
+    a = m.assertTrue(backoff.shouldWait())
+    if a <> "" then
+        return a
+    end if
+
+    backoff.success()
+
+    return m.assertFalse(backoff.shouldWait())
+end function
+
 function TestSuite__Utility() as Object
     this = BaseTestSuite()
 
@@ -102,6 +126,8 @@ function TestSuite__Utility() as Object
     this.addTest("TestCase__Utility_Endian", TestCase__Utility_Endian)
     this.addTest("TestCase__Utility_ByteArrayEq", TestCase__Utility_ByteArrayEq)
     this.addTest("TestCase__Utility_IsValidHex", TestCase__Utility_IsValidHex)
+    this.addTest("TestCase__Utility_GetMilliseconds", TestCase__Utility_GetMilliseconds)
+    this.addTest("TestCase__Utility_Backoff", TestCase__Utility_Backoff)
 
     return this
 end function

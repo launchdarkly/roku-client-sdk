@@ -1,3 +1,37 @@
+function LaunchDarklyBackoff() as Object
+    return {
+        private: {
+            u: LaunchDarklyUtility(),
+            attempts: 0,
+            waitUntil: 0
+        },
+        fail: function() as Void
+            m.private.attempts++
+
+            backoff = 1000 * (2 ^ m.private.attempts) / 2
+            backoffLimit = 3600 * 1000
+
+            if backoff > backoffLimit then
+                backoff = backoffLimit
+            end if
+
+            backoff /= 2
+
+            REM jitter random value between 0 and backoff
+            backoff += rnd(backoff)
+
+            m.private.waitUntil = backoff + m.private.u.getMilliseconds()
+        end function,
+        success: function() as Void
+            m.private.attempts = 0
+            m.private.waitUntil = 0
+        end function,
+        shouldWait: function() as Boolean
+            return m.private.waitUntil > m.private.u.getMilliseconds()
+        end function
+    }
+end function
+
 function LaunchDarklyStream(init=invalid as Object) as Object
     this = {
         offset: 0,
@@ -140,6 +174,24 @@ function LaunchDarklyUtility() as Object
             end for
 
             return true
+        end function,
+
+        getMilliseconds: function()
+            REM Clock is stopped on object creation
+            now = CreateObject("roDateTime")
+            REM Ensure double is used
+            creationDate# = now.asSeconds()
+            creationDate# *= 1000
+            creationDate# += now.getMilliseconds()
+            return creationDate#
+        end function,
+
+        prepareNetworkingCommon: function(messagePort as Object, config as Object, transfer as Object) as Void
+            transfer.setPort(messagePort)
+            transfer.addHeader("User-Agent", "RokuClient/" + config.private.sdkVersion)
+            transfer.addHeader("Authorization", config.private.mobileKey)
+            transfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
+            transfer.InitClientCertificates()
         end function
     }
 end function
