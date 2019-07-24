@@ -32,7 +32,7 @@ function LaunchDarklyBackoff() as Object
     }
 end function
 
-function LaunchDarklyStream(init=invalid as Object) as Object
+function LaunchDarklyStream(buffer=invalid as Object) as Object
     this = {
         offset: 0,
         buffer: invalid,
@@ -99,8 +99,8 @@ function LaunchDarklyStream(init=invalid as Object) as Object
         end function
     }
 
-    if init <> invalid then
-        this.buffer = init
+    if buffer <> invalid then
+        this.buffer = buffer
     else
         this.buffer = createObject("roByteArray")
     end if

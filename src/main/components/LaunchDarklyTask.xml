@@ -1,21 +1,18 @@
-<?xml version="1.0" encoding="utf-8" ?>
+<component name="LaunchDarklyTask" extends="Task">
+    <interface>
+        <field id="user" type="assocarray"/>
+        <field id="config" type="assocarray"/>
 
-<component name="AppScene" extends="Scene">
-    <children>
-        <LaunchDarklyTask id="launchDarkly"/>
+        <field id="flags" type="assocarray"/>
+        <field id="event" type="assocarray" alwaysNotify="true"/>
+        <field id="log" type="assocarray" alwaysNotify="true"/>
+        <!-- boolean but only used for signalling, value is ignored -->
+        <field id="flush" type="bool" alwaysNotify="true"/>
+        <field id="track" type="assocarray" alwaysNotify="true"/>
+    </interface>
 
-        <Label id="myLabel"
-            text="wait on label"
-          	width="1280"
-          	height="720"
-          	horizAlign="center"
-          	vertAlign="center"
-        />
-    </children>
+    <script type="text/brightscript" uri="pkg:/components/LaunchDarklyTask.brs"/>
 
-    <script type="text/brightscript" uri="pkg:/components/AppScene.brs"/>
-
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklySG.brs"/>
     <script type="text/brightscript" uri="pkg:/source/LaunchDarklyClient.brs"/>
     <script type="text/brightscript" uri="pkg:/source/LaunchDarklyConfig.brs"/>
     <script type="text/brightscript" uri="pkg:/source/LaunchDarklyCrypto.brs"/>

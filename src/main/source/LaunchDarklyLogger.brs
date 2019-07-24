@@ -1,3 +1,17 @@
+function LaunchDarklyLoggerSG(node) as Object
+    return {
+        private: {
+            node: node
+        }
+        log: function(level as Integer, message as String)
+            m.private.node.log = {
+                level: level,
+                message: message
+            }
+        end function
+    }
+end function
+
 function LaunchDarklyLoggerPrint() as Object
     return {
         private: {
@@ -23,11 +37,22 @@ function LaunchDarklyLoggerPrint() as Object
     }
 end function
 
-function LaunchDarklyLogger(backend=invalid as Object) as Object
+function LaunchDarklyLogLevels() as Object
+    return {
+        none: 0,
+        error: 1,
+        warn: 2,
+        info: 3,
+        debug: 4
+    }
+end function
+
+function LaunchDarklyLogger(config as Object, backend=invalid as Object) as Object
     return {
         private: {
-            logLevel: 2,
+            logLevel: config.private.logLevel,
             backend: backend,
+            levels: LaunchDarklyLogLevels(),
 
             maybeLog: function(level as Integer, message as String) as Void
                 if m.backend <> invalid AND level <= m.logLevel then
@@ -35,32 +60,21 @@ function LaunchDarklyLogger(backend=invalid as Object) as Object
                 end if
             end function
         },
-        levels: {
-            none: 0,
-            error: 1,
-            warn: 2,
-            info: 3,
-            debug: 4
-        },
-
-        setLogLevel: function(level as Integer) as Void
-            m.private.logLevel = level
-        end function,
 
         error: function(message as String) as Void
-            m.private.maybeLog(m.levels.error, message)
+            m.private.maybeLog(m.private.levels.error, message)
         end function,
 
         warn: function(message as String) as Void
-            m.private.maybeLog(m.levels.warn, message)
+            m.private.maybeLog(m.private.levels.warn, message)
         end function,
 
         info: function(message as String) as Void
-            m.private.maybeLog(m.levels.info, message)
+            m.private.maybeLog(m.private.levels.info, message)
         end function,
 
         debug: function(message as String) as Void
-            m.private.maybeLog(m.levels.debug, message)
+            m.private.maybeLog(m.private.levels.debug, message)
         end function
     }
 end function

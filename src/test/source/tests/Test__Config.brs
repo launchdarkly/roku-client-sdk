@@ -55,6 +55,19 @@ function TestCase__Config_Offline() as String
     return m.assertEqual(config.private.offline, true)
 end function
 
+function TestCase__Config_AllAttributesPrivate() as String
+    config = LaunchDarklyConfig("mob")
+
+    a = m.assertEqual(config.private.allAttributesPrivate, false)
+    if a <> "" then
+        return a
+    end if
+
+    config.setAllAttributesPrivate(true)
+
+    return m.assertEqual(config.private.allAttributesPrivate, true)
+end function
+
 function TestCase__Config_EventsCapacity() as String
     config = LaunchDarklyConfig("mob")
 
@@ -82,6 +95,20 @@ function TestCase__Config_EventsFlushIntervalSeconds() as String
     return m.assertEqual(config.private.eventsFlushIntervalSeconds, 90)
 end function
 
+function TestCase__Config_Streaming() as String
+    config = LaunchDarklyConfig("mob")
+
+    a = m.assertEqual(config.private.streaming, true)
+
+    if a <> "" then
+        return a
+    end if
+
+    config.setStreaming(false)
+
+    return m.assertEqual(config.private.streaming, false)
+end function
+
 function TestSuite__Config() as Object
     this = BaseTestSuite()
 
@@ -89,10 +116,13 @@ function TestSuite__Config() as Object
 
     this.addTest("TestCase__Config_Constructor", TestCase__Config_Constructor)
     this.addTest("TestCase__Config_AppURI", TestCase__Config_AppURI)
+    this.addTest("TestCase__Config_EventsURI", TestCase__Config_EventsURI)
     this.addTest("TestCase__Config_PollingIntervalSeconds", TestCase__Config_PollingIntervalSeconds)
     this.addTest("TestCase__Config_Offline", TestCase__Config_Offline)
+    this.addTest("TestCase__Config_AllAttributesPrivate", TestCase__Config_AllAttributesPrivate)
     this.addTest("TestCase__Config_EventsCapacity", TestCase__Config_EventsCapacity)
     this.addTest("TestCase__Config_FlushIntervalSeconds", TestCase__Config_EventsFlushIntervalSeconds)
+    this.addTest("TestCase__Config_Streaming", TestCase__Config_Streaming)
 
     return this
 end function

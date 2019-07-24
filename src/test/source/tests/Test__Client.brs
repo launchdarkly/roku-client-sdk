@@ -159,7 +159,6 @@ function TestCase__Client_Summary_Known() as String
     }))
 end function
 
-
 function TestCase__Client_Summary_Unknown() as String
     client = makeTestClientOnline()
 
@@ -322,6 +321,28 @@ function TestCase__Client_Variation_AA() as String
     return testVariation(m, "aaVariation", { b: 6 }, { a: 4 })
 end function
 
+function TestCase__Client_AllFlags() as String
+    client = makeTestClient()
+
+    flags = {
+        flag1: {
+            value: 3
+        },
+        flag2: {
+            value: 5
+        }
+    }
+
+    client.private.store.putAll(flags)
+
+    allFlags = client.allFlags()
+
+    return m.assertEqual(formatJSON(allFlags), formatJSON({
+        flag1: 3,
+        flag2: 5
+    }))
+end function
+
 function TestSuite__Client() as Object
     this = BaseTestSuite()
 
@@ -338,6 +359,7 @@ function TestSuite__Client() as Object
     this.addTest("TestCase__Client_Variation_Bool", TestCase__Client_Variation_Bool)
     this.addTest("TestCase__Client_Variation_String", TestCase__Client_Variation_String)
     this.addTest("TestCase__Client_Variation_AA", TestCase__Client_Variation_AA)
+    this.addTest("TestCase__Client_AllFlags", TestCase__Client_AllFlags)
 
     return this
 end function

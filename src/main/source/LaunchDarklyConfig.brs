@@ -1,5 +1,5 @@
-function LaunchDarklyConfig(mobileKey as String) as Object
-    return {
+function LaunchDarklyConfig(mobileKey as String, sceneGraphNode=invalid as Dynamic) as Object
+    this = {
         private: {
             appURI: "https://app.launchdarkly.com",
             eventsURI: "https://mobile.launchdarkly.com",
@@ -11,10 +11,14 @@ function LaunchDarklyConfig(mobileKey as String) as Object
             allAttributesPrivate: false,
             eventsCapacity: 100,
             eventsFlushIntervalSeconds: 30,
-            logger: LaunchDarklyLogger(LaunchDarklyLoggerPrint()),
+            logger: invalid,
+            loggerNode: sceneGraphNode,
             storeBackend: invalid,
+            storeBackendNode: sceneGraphNode,
             streaming: true,
-            sdkVersion: "1.0.0-beta.1"
+            sdkVersion: "1.0.0-beta.1",
+            logLevel: LaunchDarklyLogLevels().warn,
+            sceneGraphNode: sceneGraphNode
         },
 
         setAppURI: function(appURI as String) as Void
@@ -57,12 +61,28 @@ function LaunchDarklyConfig(mobileKey as String) as Object
             m.private.logger = newLogger
         end function,
 
+        setLoggerNode: function(loggerNode as Dynamic) as Void
+            m.private.loggerNode = loggerNode
+        end function,
+
         setStoreBackend: function(newStoreBackend as Object) as Void
             m.private.storeBackend = newStoreBackend
         end function,
 
+        setStoreBackendNode: function(storeBackendNode as Dynamic) as Void
+            m.private.storeBackendNode = storeBackendNode
+        end function,
+
         setStreaming: function(shouldStream as Boolean) as Void
             m.private.streaming = shouldStream
+        end function,
+
+        setLogLevel: function(logLevel as Integer) as Void
+            m.private.logLevel = logLevel
         end function
     }
+
+    this.private.logger = LaunchDarklyLogger(this, LaunchDarklyLoggerPrint())
+
+    return this
 end function

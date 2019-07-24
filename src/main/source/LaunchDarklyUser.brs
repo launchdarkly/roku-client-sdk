@@ -9,78 +9,7 @@ function LaunchDarklyUser(userKey as String) as Object
             name: invalid,
             avatar: invalid,
             custom: invalid,
-            privateAttributeNames: {},
-
-            isAttributePublic: function(attribute as String, config as Object) as Boolean
-                if config <> invalid then
-                    if config.private.allAttributesPrivate = true then
-                        return false
-                    end if
-
-                    if config.private.privateAttributeNames.lookup(attribute) <> invalid then
-                        return false
-                    end if
-                end if
-
-                if m.privateAttributeNames.lookup(attribute) <> invalid then
-                    return false
-                end if
-
-                return true
-            end function,
-
-            addField: function(result, context, field, config, privateAttrs) as Void
-                value = context.lookup(field)
-                if value <> invalid then
-                    if privateAttrs <> invalid then
-                        if m.isAttributePublic(field, config) = true then
-                            result.addReplace(field, value)
-                        else
-                            privateAttrs.push(field)
-                        end if
-                    else
-                        result.addReplace(field, value)
-                    end if
-                end if
-            end function,
-
-            encode: function(redact as Boolean, config=invalid as Object) as Object
-                encoded = {
-                    key: m.key
-                }
-
-                privateAttrs = invalid
-
-                if redact = true then
-                    privateAttrs = createObject("roArray", 0, true)
-                end if
-
-                if m.anonymous = true then
-                    encoded.anonymous = true
-                end if
-
-                m.addField(encoded, m, "firstName", config, privateAttrs)
-                m.addField(encoded, m, "lastName", config, privateAttrs)
-                m.addField(encoded, m, "email", config, privateAttrs)
-                m.addField(encoded, m, "name", config, privateAttrs)
-                m.addField(encoded, m, "avatar", config, privateAttrs)
-
-                if m.custom <> invalid then
-                    custom = {}
-
-                    for each attribute in m.custom
-                        m.addField(custom, m.custom, attribute, config, privateAttrs)
-                    end for
-
-                    encoded.custom = custom
-                end if
-
-                if redact = true AND privateAttrs.count() <> 0 then
-                    encoded.privateAttrs = privateAttrs
-                end if
-
-                return encoded
-            end function
+            privateAttributeNames: {}
         },
 
         setAnonymous: function(anonymous as Boolean) as Void
@@ -115,4 +44,77 @@ function LaunchDarklyUser(userKey as String) as Object
             m.private.privateAttributeNames.addReplace(privateAttribute, 1)
         end function
     }
+end function
+
+function LaunchDarklyUserEncode(user as Object, redact as Boolean, config=invalid as Object)
+    u = user.private
+
+    addField = function(user, result, context, field, config, privateAttrs) as Void
+        value = context.lookup(field)
+        if value <> invalid then
+            if privateAttrs <> invalid then
+                isAttributePublic = function(user, context as Object, attribute as String, config as Object) as Boolean
+                    if config <> invalid then
+                        if config.private.allAttributesPrivate = true then
+                            return false
+                        end if
+
+                        if config.private.privateAttributeNames.lookup(attribute) <> invalid then
+                            return false
+                        end if
+                    end if
+
+                    if user.privateAttributeNames.lookup(attribute) <> invalid then
+                        return false
+                    end if
+
+                    return true
+                end function
+
+                if isAttributePublic(user, context, field, config) = true then
+                    result.addReplace(field, value)
+                else
+                    privateAttrs.push(field)
+                end if
+            else
+                result.addReplace(field, value)
+            end if
+        end if
+    end function
+
+    encoded = {
+        key: u.key
+    }
+
+    privateAttrs = invalid
+
+    if redact = true then
+        privateAttrs = createObject("roArray", 0, true)
+    end if
+
+    if m.anonymous = true then
+        encoded.anonymous = true
+    end if
+
+    addField(u, encoded, u, "firstName", config, privateAttrs)
+    addField(u, encoded, u, "lastName", config, privateAttrs)
+    addField(u, encoded, u, "email", config, privateAttrs)
+    addField(u, encoded, u, "name", config, privateAttrs)
+    addField(u, encoded, u, "avatar", config, privateAttrs)
+
+    if u.custom <> invalid then
+        custom = {}
+
+        for each attribute in u.custom
+            addField(u, custom, u.custom, attribute, config, privateAttrs)
+        end for
+
+        encoded.custom = custom
+    end if
+
+    if redact = true AND privateAttrs.count() <> 0 then
+        encoded.privateAttrs = privateAttrs
+    end if
+
+    return encoded
 end function

@@ -1,14 +1,99 @@
+function LaunchDarklyClientSharedFunctions() as Object
+    return {
+        variation: function(flagKey as String, fallback as Dynamic, strong=invalid as Dynamic) as Dynamic
+            if m.private.isOffline() then
+                return fallback
+            else
+                flag = m.private.lookupFlag(flagKey)
+
+                if flag = invalid then
+                    m.private.logger.error("missing flag")
+
+                    s = {
+                        value: fallback,
+                        flagKey: flagKey,
+                        flag: invalid,
+                        fallback: fallback,
+                        typeMatch: true
+                    }
+
+                    m.private.handleEventsForEval(s)
+
+                    return fallback
+                else
+                    typeMatch = true
+                    if strong <> invalid then
+                        if getInterface(flag.value, strong) = invalid then
+                            m.private.logger.error("eval type mismatch")
+
+                            typeMatch = false
+                        end if
+                    end if
+
+                    value = invalid
+                    if typeMatch = true then
+                        value = flag.value
+                    else
+                        value = fallback
+                    end if
+
+                    s = {
+                        value: value,
+                        flagKey: flagKey,
+                        flag: flag,
+                        fallback: fallback,
+                        typeMatch: typeMatch
+                    }
+
+                    m.private.handleEventsForEval(s)
+
+                    return value
+                end if
+            end if
+        end function,
+
+        intVariation: function(flagKey as String, fallback as Integer) as Integer
+            return m.variation(flagKey, fallback, "ifInt")
+        end function,
+
+        boolVariation: function(flagKey as String, fallback as Boolean) as Boolean
+            return m.variation(flagKey, fallback, "ifBoolean")
+        end function,
+
+        stringVariation: function(flagKey as String, fallback as String) as String
+            return m.variation(flagKey, fallback, "ifString")
+        end function,
+
+        aaVariation: function(flagKey as String, fallback as Object) as Object
+            return m.variation(flagKey, fallback, "ifAssociativeArray")
+        end function,
+
+        allFlags: function() as Object
+            result = {}
+
+            allFlags = m.private.lookupAll()
+
+            for each key in allFlags
+                result[key] = allFlags[key].value
+            end for
+
+            return result
+        end function,
+    }
+end function
+
 function LaunchDarklyClient(config as Object, user as Object, messagePort as Object) as Object
     store = LaunchDarklyStore(config.private.storeBackend)
 
     this = {
         private: {
             user: user,
-            encodedUser: user.private.encode(true, config),
+            encodedUser: LaunchDarklyUserEncode(user, true, config),
 
             config: config,
             messagePort: messagePort,
             store: store,
+            logger: config.private.logger,
 
             unauthorized: false,
 
@@ -195,7 +280,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
 
             preparePolling: function() as Void
                 buffer = createObject("roByteArray")
-                buffer.fromAsciiString(FormatJSON(m.user.private.encode(false)))
+                buffer.fromAsciiString(FormatJSON(LaunchDarklyUserEncode(m.user, false)))
                 userBase64JSON = buffer.toBase64String()
                 url = m.config.private.appURI + "/msdk/evalx/users/" + userBase64JSON
 
@@ -232,71 +317,41 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
                 m.eventsFlushTimer.mark()
                 m.eventsFlushActive = false
                 m.eventsTransfer.asyncCancel()
-            end function
-        },
+            end function,
 
-        variation: function(flagKey as String, fallback as Dynamic, strong=invalid as Dynamic) as Dynamic
-            if m.private.config.private.offline then
-                return fallback
-            else
-                flag = m.private.store.get(flagKey)
+            REM used to abstract eval
+            lookupFlag: function(flagKey) as Object
+                return m.store.get(flagKey)
+            end function,
 
-                if flag = invalid then
-                    m.private.config.private.logger.error("missing flag")
+            REM used to abstract eval
+            isOffline: function() as Boolean
+                return m.config.private.offline
+            end function,
 
-                    m.private.summarizeEval(fallback, flagKey, invalid, fallback, true)
+            REM used to abstract eval
+            lookupAll: function() as Object
+                return m.store.getAll()
+            end function,
 
-                    return fallback
-                else
-                    now = m.private.util.getMilliseconds()
+            handleEventsForEval: function(bundle as Object) as Void
+                b = bundle
+                m.summarizeEval(b.value, b.flagKey, b.flag, b.fallback, b.typeMatch)
 
-                    typeMatch = true
-                    if strong <> invalid then
-                        if getInterface(flag.value, strong) = invalid then
-                            m.private.config.private.logger.error("eval type mismatch")
+                if b.flag <> invalid then
+                    now = m.util.getMilliseconds()
 
-                            typeMatch = false
-                        end if
-                    end if
-
-                    shouldTrack = flag.trackEvents <> invalid AND flag.trackEvents = true
-                    shouldDebug = flag.debugEventsUntilDate <> invalid AND flag.debugEventsUntilDate > now
+                    shouldTrack = b.flag.trackEvents <> invalid AND b.flag.trackEvents = true
+                    shouldDebug = b.flag.debugEventsUntilDate <> invalid AND b.flag.debugEventsUntilDate > now
 
                     if shouldTrack OR shouldDebug then
-                       event = m.private.makeFeatureEvent(flag, fallback)
+                       event = m.makeFeatureEvent(b.flag, b.fallback)
 
-                       m.private.enqueueEvent(event)
+                       m.enqueueEvent(event)
                     end if
-
-                    value = invalid
-                    if typeMatch = true then
-                        value = flag.value
-                    else
-                        value = fallback
-                    end if
-
-                    m.private.summarizeEval(value, flagKey, flag, fallback, typeMatch)
-
-                    return value
                 end if
-            end if
-        end function,
-
-        intVariation: function(flagKey as String, fallback as Integer) as Integer
-            return m.variation(flagKey, fallback, "ifInt")
-        end function,
-
-        boolVariation: function(flagKey as String, fallback as Boolean) as Boolean
-            return m.variation(flagKey, fallback, "ifBoolean")
-        end function,
-
-        stringVariation: function(flagKey as String, fallback as String) as String
-            return m.variation(flagKey, fallback, "ifString")
-        end function,
-
-        aaVariation: function(flagKey as String, fallback as Object) as Object
-            return m.variation(flagKey, fallback, "ifAssociativeArray")
-        end function,
+            end function,
+        },
 
         track: function(key as String, data=invalid as Object) as Void
             event = m.private.makeBaseEvent("custom")
@@ -329,7 +384,7 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
 
         identify: function(user as Object) as Void
             m.private.user = user
-            m.private.encodedUser = m.private.user.private.encode(true, m.private.config)
+            m.private.encodedUser = LaunchDarklyUserEncode(m.private.user, true, m.private.config)
             event = m.private.makeBaseEvent("identify")
             m.private.enqueueEvent(event)
 
@@ -387,6 +442,8 @@ function LaunchDarklyClient(config as Object, user as Object, messagePort as Obj
             return false
         end function
     }
+
+    this.append(LaunchDarklyClientSharedFunctions())
 
     this.private.prepareEventTransfer()
     this.private.preparePolling()

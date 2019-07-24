@@ -32,7 +32,7 @@ function LaunchDarklyStreamClient(config as Object, store as Object, messagePort
                 if m.config.private.offline = false then
                     m.config.private.logger.debug("stream client starting handshake transfer")
 
-                    user = FormatJSON(m.user.private.encode(false))
+                    user = FormatJSON(LaunchDarklyUserEncode(m.user, false))
                     m.handshakeTransfer.asyncPostFromString(user)
                     m.stage = m.stageMap.handshake
                 end if
@@ -290,9 +290,11 @@ function LaunchDarklyStreamClient(config as Object, store as Object, messagePort
                 bundle.fromBase64String(decoded.serverBundle)
 
                 requestText = ""
-                requestText += "POST /stream HTTP/1.1" + chr(13) + chr(10)
+                requestText += "POST /mevalalternate HTTP/1.1" + chr(13) + chr(10)
                 requestText += "User-Agent: RokuClient/" + m.config.private.sdkVersion + chr(13) + chr(10)
                 requestText += "Content-Length: " + bundle.count().toStr() + chr(13) + chr(10)
+                REM Has to be set to something other than the hostname for the dev environment. It will later pull from the config.
+                requestText += "Host: localhost:5050" + chr(13) + chr(10)
                 requestText += "Connection: close" + chr(13) + chr(10)
                 requestText += chr(13) + chr(10)
 

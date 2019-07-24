@@ -25,7 +25,7 @@ function TestCase__User_Encode_AllAttributes() as String
     user.setAvatar(avatar)
     user.setCustom(custom)
 
-    actual = user.private.encode(false)
+    actual = LaunchDarklyUserEncode(user, false)
     expected = {
         key: key,
         firstName: firstName,
@@ -66,7 +66,7 @@ function TestCase__User_Encode_RedactedAttributes() as String
     privateAttrs.push("magnitude")
     privateAttrs.push("cookie")
 
-    actual = user.private.encode(true, config)
+    actual = LaunchDarklyUserEncode(user, true, config)
     expected = {
         key: key,
         firstName: firstName,
