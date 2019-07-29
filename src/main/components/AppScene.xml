@@ -15,15 +15,5 @@
 
     <script type="text/brightscript" uri="pkg:/components/AppScene.brs"/>
 
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklySG.brs"/>
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklyClient.brs"/>
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklyConfig.brs"/>
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklyCrypto.brs"/>
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklyHTTP.brs"/>
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklyLogger.brs"/>
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklySSE.brs"/>
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklyStore.brs"/>
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklyStreamClient.brs"/>
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklyUser.brs"/>
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklyUtility.brs"/>
+    <script type="text/brightscript" uri="pkg:/source/LaunchDarkly.brs"/>
 </component>

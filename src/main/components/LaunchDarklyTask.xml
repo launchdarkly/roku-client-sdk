@@ -11,16 +11,7 @@
         <field id="track" type="assocarray" alwaysNotify="true"/>
     </interface>
 
+    <!-- you made need to update these paths depending on your project configuration -->
     <script type="text/brightscript" uri="pkg:/components/LaunchDarklyTask.brs"/>
-
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklyClient.brs"/>
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklyConfig.brs"/>
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklyCrypto.brs"/>
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklyHTTP.brs"/>
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklyLogger.brs"/>
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklySSE.brs"/>
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklyStore.brs"/>
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklyStreamClient.brs"/>
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklyUser.brs"/>
-    <script type="text/brightscript" uri="pkg:/source/LaunchDarklyUtility.brs"/>
+    <script type="text/brightscript" uri="pkg:/source/LaunchDarkly.brs"/>
 </component>
