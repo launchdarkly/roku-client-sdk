@@ -304,7 +304,7 @@ function LaunchDarklyStreamClient(config as Object, store as Object, messagePort
                 m.streamRequestContent.fromAsciiString(requestText)
                 m.streamRequestContent.append(bundle)
 
-                address = mid(m.config.private.streamURI, 8)
+                address = m.util.stripHTTPProtocol(m.config.private.streamURI)
                 sendAddress = createObject("roSocketAddress")
                 sendAddress.SetAddress(address)
                 socket = createObject("roStreamSocket")

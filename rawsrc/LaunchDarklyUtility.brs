@@ -192,6 +192,20 @@ function LaunchDarklyUtility() as Object
             transfer.addHeader("Authorization", config.private.mobileKey)
             transfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
             transfer.InitClientCertificates()
+        end function,
+
+        stripHTTPProtocol: function(rawURI as String) as String
+            https = "https://"
+            http = "http://"
+
+            if left(rawURI, len(https)) = https then
+                return mid(rawURI, len(https) + 1)
+            else if left(rawURI, len(http)) = http then
+                return mid(rawURI, len(http) + 1)
+            else
+                REM impossible in usage
+                return ""
+            end if
         end function
     }
 end function

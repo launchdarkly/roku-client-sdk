@@ -18,19 +18,44 @@ function LaunchDarklyConfig(mobileKey as String, sceneGraphNode=invalid as Dynam
             streaming: true,
             sdkVersion: "1.0.0-beta.1",
             logLevel: LaunchDarklyLogLevels().warn,
-            sceneGraphNode: sceneGraphNode
+            sceneGraphNode: sceneGraphNode,
+
+            validateURI: function(rawURI as String) as Boolean
+                https = "https://"
+                http = "http://"
+
+                return left(rawURI, len(https)) = https OR left(rawURI, len(http)) = http
+            end function
         },
 
-        setAppURI: function(appURI as String) as Void
-            m.private.appURI = appURI
+        setAppURI: function(appURI as String) as Boolean
+            if m.private.validateURI(appURI) then
+                m.private.appURI = appURI
+
+                return true
+            else
+                return false
+            end if
         end function,
 
-        setEventsURI: function(eventsURI as String) as Void
-            m.private.eventsURI = eventsURI
+        setEventsURI: function(eventsURI as String) as Boolean
+            if m.private.validateURI(eventsURI) then
+                m.private.eventsURI = eventsURI
+
+                return true
+            else
+                return false
+            end if
         end function,
 
-        setStreamURI: function(streamURI as String) as Void
-            m.private.streamURI = streamURI
+        setStreamURI: function(streamURI as String) as Boolean
+            if m.private.validateURI(streamURI) then
+                m.private.streamURI = streamURI
+
+                return true
+            else
+                return false
+            end if
         end function
 
         setPollingIntervalSeconds: function(pollingIntervalSeconds as Integer) as Void

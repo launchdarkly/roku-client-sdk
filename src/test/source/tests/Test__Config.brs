@@ -109,6 +109,23 @@ function TestCase__Config_Streaming() as String
     return m.assertEqual(config.private.streaming, false)
 end function
 
+function TestCase__Config_URI_Validation() as String
+    config = LaunchDarklyConfig("mob")
+
+    a = m.assertTrue(config.setAppURI("https://test.com"))
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertTrue(config.setAppURI("http://test.com"))
+    if a <> "" then
+        return a
+    end if
+
+    return m.assertFalse(config.setAppURI("test.com"))
+end function
+
+
 function TestSuite__Config() as Object
     this = BaseTestSuite()
 
@@ -123,6 +140,7 @@ function TestSuite__Config() as Object
     this.addTest("TestCase__Config_EventsCapacity", TestCase__Config_EventsCapacity)
     this.addTest("TestCase__Config_FlushIntervalSeconds", TestCase__Config_EventsFlushIntervalSeconds)
     this.addTest("TestCase__Config_Streaming", TestCase__Config_Streaming)
+    this.addTest("TestCase__Config_URI_Validation", TestCase__Config_URI_Validation)
 
     return this
 end function
