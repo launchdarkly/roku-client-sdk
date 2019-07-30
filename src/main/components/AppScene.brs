@@ -13,9 +13,6 @@ function init() as Void
     launchDarklyNode = m.top.findNode("launchDarkly")
 
     config = LaunchDarklyConfig("mob-", launchDarklyNode)
-    config.setAppURI("https://ld-stg.launchdarkly.com")
-    config.setEventsURI("https://events-stg.launchdarkly.com")
-    config.setStreamURI("http://192.168.8.139:5050")
     config.setLogLevel(LaunchDarklyLogLevels().debug)
 
     user = LaunchDarklyUser("user-key")
