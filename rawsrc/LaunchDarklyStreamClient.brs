@@ -289,12 +289,13 @@ function LaunchDarklyStreamClient(config as Object, store as Object, messagePort
                 bundle = createObject("roByteArray")
                 bundle.fromBase64String(decoded.serverBundle)
 
+                hostname = m.util.stripHTTPProtocol(m.config.private.streamURI)
+
                 requestText = ""
                 requestText += "POST /mevalalternate HTTP/1.1" + chr(13) + chr(10)
                 requestText += "User-Agent: RokuClient/" + m.config.private.sdkVersion + chr(13) + chr(10)
                 requestText += "Content-Length: " + bundle.count().toStr() + chr(13) + chr(10)
-                REM Has to be set to something other than the hostname for the dev environment. It will later pull from the config.
-                requestText += "Host: localhost:5050" + chr(13) + chr(10)
+                requestText += "Host: " + hostname + chr(13) + chr(10)
                 requestText += "Connection: close" + chr(13) + chr(10)
                 requestText += chr(13) + chr(10)
 
@@ -304,9 +305,8 @@ function LaunchDarklyStreamClient(config as Object, store as Object, messagePort
                 m.streamRequestContent.fromAsciiString(requestText)
                 m.streamRequestContent.append(bundle)
 
-                address = m.util.stripHTTPProtocol(m.config.private.streamURI)
                 sendAddress = createObject("roSocketAddress")
-                sendAddress.SetAddress(address)
+                sendAddress.SetAddress(hostname)
                 socket = createObject("roStreamSocket")
                 socket.setSendToAddress(sendAddress)
                 socket.setMessagePort(m.messagePort)
