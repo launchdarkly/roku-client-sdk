@@ -3,7 +3,7 @@ function LaunchDarklyConfig(mobileKey as String, sceneGraphNode=invalid as Dynam
         private: {
             appURI: "https://app.launchdarkly.com",
             eventsURI: "https://mobile.launchdarkly.com",
-            streamURI: "http://stream.launchdarkly.com",
+            streamURI: "https://clientstream.launchdarkly.com",
             pollingIntervalSeconds: 15,
             mobileKey: mobileKey,
             offline: false,
