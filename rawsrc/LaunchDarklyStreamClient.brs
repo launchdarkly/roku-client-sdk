@@ -257,6 +257,12 @@ function LaunchDarklyStreamClient(config as Object, store as Object, messagePort
                     m.status = m.stageMap.unauthorized
 
                     return
+                else if responseCode = 404 then
+                    m.config.private.logger.error("handshake endpoint not found switching to polling")
+
+                    m.config.private.streaming = false
+
+                    return
                 else if responseCode < 200 OR responseCode >= 300 then
                     m.config.private.logger.error("streaming handshake not successful")
 
@@ -333,6 +339,10 @@ function LaunchDarklyStreamClient(config as Object, store as Object, messagePort
         },
 
         handleMessage: function(message=invalid as Dynamic) as Boolean
+            if m.private.config.private.streaming = false then
+                return false
+            end if
+
             if m.private.streamTCPTimer.totalSeconds() > 60 * 5 then
                 m.private.killStream()
             end if
