@@ -1,0 +1,17 @@
+<component name="LaunchDarklyTask" extends="Task">
+    <interface>
+        <field id="user" type="assocarray"/>
+        <field id="config" type="assocarray"/>
+
+        <field id="flags" type="assocarray"/>
+        <field id="event" type="assocarray" alwaysNotify="true"/>
+        <field id="log" type="assocarray" alwaysNotify="true"/>
+        <!-- boolean but only used for signalling, value is ignored -->
+        <field id="flush" type="bool" alwaysNotify="true"/>
+        <field id="track" type="assocarray" alwaysNotify="true"/>
+    </interface>
+
+    <!-- you made need to update these paths depending on your project configuration -->
+    <script type="text/brightscript" uri="pkg:/components/LaunchDarklyTask.brs"/>
+    <script type="text/brightscript" uri="pkg:/source/LaunchDarkly.brs"/>
+</component>

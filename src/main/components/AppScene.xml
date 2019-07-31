@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<component name="AppScene" extends="Scene">
+    <children>
+        <LaunchDarklyTask id="launchDarkly"/>
+
+        <Label id="myLabel"
+            text="wait on label"
+          	width="1280"
+          	height="720"
+          	horizAlign="center"
+          	vertAlign="center"
+        />
+    </children>
+
+    <script type="text/brightscript" uri="pkg:/components/AppScene.brs"/>
+
+    <script type="text/brightscript" uri="pkg:/source/LaunchDarkly.brs"/>
+</component>
