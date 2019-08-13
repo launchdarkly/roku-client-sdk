@@ -34,7 +34,7 @@ function LaunchDarklyBackoff() as Object
     }
 end function
 
-function LaunchDarklyStream(buffer=invalid as Object) as Object
+function LaunchDarklyStream(launchDarklyParamBuffer=invalid as Object) as Object
     this = {
         offset: 0,
         buffer: invalid,
@@ -45,45 +45,45 @@ function LaunchDarklyStream(buffer=invalid as Object) as Object
             return m.buffer.count() - m.offset
         end function,
 
-        addBytes: function(bytes as Object) as Void
-            m.buffer.append(bytes)
+        addBytes: function(launchDarklyParamBytes as Object) as Void
+            m.buffer.append(launchDarklyParamBytes)
         end function,
 
-        takeCount: function(count as Integer) as Object
-            result = createObject("roByteArray")
-            result.setResize(count, true)
+        takeCount: function(launchDarklyParamCount as Integer) as Object
+            launchDarklyLocalResult = createObject("roByteArray")
+            launchDarklyLocalResult.setResize(count, true)
 
-            m.util.memcpy(m.buffer, m.offset, result, 0, count)
-            m.offset += count
+            m.util.memcpy(m.buffer, m.offset, launchDarklyLocalResult, 0, launchDarklyParamCount)
+            m.offset += launchDarklyParamCount
 
-            return result
+            return launchDarklyLocalResult
         end function,
 
-        skipCount: function(count as Integer) as Object
-            m.offset += count
+        skipCount: function(launchDarklyParamCount as Integer) as Object
+            m.offset += launchDarklyParamCount
         end function
 
-        takeUntilSequence: function(sequence as Object, includeSequence=false as Boolean) as Object
-            for x = m.offset to m.buffer.count() - 1 step + 1
-                if m.buffer[x] = sequence[0] then
-                    match = true
+        takeUntilSequence: function(launchDarklyParamSequence as Object, launchDarklyParamIncludeSequence=false as Boolean) as Object
+            for launchDarklyLocalX = m.offset to m.buffer.count() - 1 step + 1
+                if m.buffer[x] = launchDarklyParamSequence[0] then
+                    launchDarklyLocalMatch = true
 
-                    for y = 1 to sequence.count() - 1 step + 1
-                        if m.buffer[x + y] <> sequence[y] then
-                            match = false
+                    for launchDarklyLocalY = 1 to launchDarklyParamSequence.count() - 1 step + 1
+                        if m.buffer[launchDarklyLocalX + launchDarklyLocalY] <> sequence[launchDarklyLocalY] then
+                            launchDarklyLocalMatch = false
                             exit for
                         end if
                     end for
 
-                    if match = true then
-                        prefix = m.takeCount(x - m.offset)
-                        m.offset += sequence.count()
+                    if launchDarklyLocalMatch = true then
+                        launchDarklyLocalPrefix = m.takeCount(launchDarklyLocalX - m.offset)
+                        m.offset += launchDarklyParamSequence.count()
 
-                        if includeSequence = true then
-                            prefix.append(sequence)
+                        if launchDarklyParamIncludeSequence = true then
+                            prefix.append(launchdarklyParamSequence)
                         end if
 
-                        return prefix
+                        return launchDarklyLocalPrefix
                     end if
                 end if
             end for
@@ -92,17 +92,19 @@ function LaunchDarklyStream(buffer=invalid as Object) as Object
         end function,
 
         shrink: function() as Void
-            remaining = createObject("roByteArray")
-            remainingCount = m.buffer.count() - m.offset
-            remaining.setResize(remainingCount, true)
-            m.util.memcpy(m.buffer, m.offset, remaining, 0, remainingCount)
+            launchDarklyLocalRemainingCount = m.buffer.count() - m.offset
+
+            launchDarklyLocalRemaining = createObject("roByteArray")
+            launchDarklyLocalRemaining.setResize(launchDarklyLocalRemainingCount, true)
+
+            m.util.memcpy(m.buffer, m.offset, launchDarklyLocalRemaining, 0, launchDarklyLocalRemainingCount)
             m.buffer = remaining
             m.offset = 0
         end function
     }
 
-    if buffer <> invalid then
-        this.buffer = buffer
+    if launchDarklyParamBuffer <> invalid then
+        this.buffer = launchDarklyParamBuffer
     else
         this.buffer = createObject("roByteArray")
     end if
