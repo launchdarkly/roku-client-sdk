@@ -40,7 +40,7 @@ function LaunchDarklyUser(launcDarklyParamUserKey as String) as Object
             m.private.custom = launchdarklyParamCustom
         end function,
 
-        addPrivateAttribute: function(launchdarklyParamPrivateAttribute as String) as Void
+        addPrivateAttribute: function(launchDarklyParamPrivateAttribute as String) as Void
             m.private.privateAttributeNames.addReplace(launchDarklyParamPrivateAttribute, 1)
         end function
     }
