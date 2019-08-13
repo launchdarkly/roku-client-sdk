@@ -8,24 +8,26 @@ function LaunchDarklyBackoff() as Object
         fail: function() as Void
             m.private.attempts++
 
-            backoff = 1000 * (2 ^ m.private.attempts) / 2
-            backoffLimit = 3600 * 1000
+            launchDarklyLocalBackoff = 1000 * (2 ^ m.private.attempts) / 2
+            launchDarklyLocalBackoffLimit = 3600 * 1000
 
-            if backoff > backoffLimit then
-                backoff = backoffLimit
+            if launchDarklyLocalBackoff > launchDarklyLocalBackoffLimit then
+                launchDarklyLocalBackoff = launchdarklyLocalBackoffLimit
             end if
 
-            backoff /= 2
+            launchDarklyLocalBackoff /= 2
 
             REM jitter random value between 0 and backoff
-            backoff += rnd(backoff)
+            launchDarklyLocalBackoff += rnd(launchDarklyLocalBackoff)
 
-            m.private.waitUntil = backoff + m.private.u.getMilliseconds()
+            m.private.waitUntil = launchDarklyLocalBackoff + m.private.u.getMilliseconds()
         end function,
+
         success: function() as Void
             m.private.attempts = 0
             m.private.waitUntil = 0
         end function,
+
         shouldWait: function() as Boolean
             return m.private.waitUntil > m.private.u.getMilliseconds()
         end function
