@@ -1,10 +1,10 @@
-function LaunchDarklyStreamClient(config as Object, store as Object, messagePort as Object, user as Object) as Object
-    this = {
+function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarklyParamStore as Object, launchDarklyParamMessagePort as Object, launchDarklyParamUser as Object) as Object
+    launchDarklyLocalThis = {
         private: {
-            config: config,
-            store: store,
-            messagePort: messagePort,
-            user: user,
+            config: launchDarklyParamConfig,
+            store: launchDarklyParamStore,
+            messagePort: launchDarklyParamMessagePort,
+            user: LaunchDarklyParamUser,
             util: LaunchDarklyUtility(),
 
             stageMap: {
@@ -32,20 +32,20 @@ function LaunchDarklyStreamClient(config as Object, store as Object, messagePort
                 if m.config.private.offline = false then
                     m.config.private.logger.debug("stream client starting handshake transfer")
 
-                    user = FormatJSON(LaunchDarklyUserEncode(m.user, false))
-                    m.handshakeTransfer.asyncPostFromString(user)
+                    launchDarklyLocalUser = FormatJSON(LaunchDarklyUserEncode(m.user, false))
+                    m.handshakeTransfer.asyncPostFromString(launchDarklyLocalUser)
                     m.stage = m.stageMap.handshake
                 end if
             end function,
 
             prepareHandshakeTransfer: function() as Void
-                url = m.config.private.streamURI + "/handshake"
+                launchDarklyLocalUrl = m.config.private.streamURI + "/handshake"
 
-                m.config.private.logger.debug("handshake url: " + url)
+                m.config.private.logger.debug("handshake url: " + launchDarklyLocalUrl)
 
                 m.util.prepareNetworkingCommon(m.messagePort, m.config, m.handshakeTransfer)
                 m.handshakeTransfer.addHeader("Content-Type", "application/json")
-                m.handshakeTransfer.setURL(url)
+                m.handshakeTransfer.setURL(launchDarklyLocalUrl)
             end function,
 
             killStream: function() as Void
@@ -63,32 +63,32 @@ function LaunchDarklyStreamClient(config as Object, store as Object, messagePort
                     m.config.private.logger.debug("socket readable")
 
                     while true
-                        responseBinary = createObject("roByteArray")
-                        responseBinary[512] = 0
+                        launchDarklyLocalResponseBinary = createObject("roByteArray")
+                        launchDarklyLocalResponseBinary[512] = 0
 
-                        status = m.streamSocket.receive(responseBinary, 0, 512)
+                        launchDarklyLocalStatus = m.streamSocket.receive(launchDarklyLocalResponseBinary, 0, 512)
 
-                        if status = -1 then
+                        if launchDarklyLocalStatus = -1 then
                             m.config.private.logger.debug("socket must wait to read")
 
                             exit while
-                        else if status = 0 then
+                        else if launchDarklyLocalStatus = 0 then
                             m.killFailedStream()
 
                             m.config.private.logger.debug("socket closed")
 
                             return
-                        else if status > 0 then
-                            m.config.private.logger.debug("socket received bytes " + status.toStr())
+                        else if launchDarklyLocalStatus > 0 then
+                            m.config.private.logger.debug("socket received bytes " + launchDarklyLocalStatus.toStr())
 
                             m.streamTCPTimer.mark()
 
-                            responseBinaryCopy = createObject("roByteArray")
-                            responseBinaryCopy.setResize(status, false)
+                            launchDarklyLocalResponseBinaryCopy = createObject("roByteArray")
+                            launchDarklyLocalResponseBinaryCopy.setResize(launchDarklyLocalStatus, false)
 
-                            m.util.memcpy(responseBinary, 0, responseBinaryCopy, 0, status)
+                            m.util.memcpy(launchDarklyLocalResponseBinary, 0, launchDarklyLocalResponseBinaryCopy, 0, launchDarklyLocalStatus)
 
-                            m.streamHTTP.addBytes(responseBinaryCopy)
+                            m.streamHTTP.addBytes(launchDarklyLocalResponseBinaryCopy)
 
                             if m.runHTTPStep() = false then
                                 return
@@ -100,27 +100,27 @@ function LaunchDarklyStreamClient(config as Object, store as Object, messagePort
 
             runHTTPStep: function() as Boolean
                 while true
-                    chunk = m.streamHTTP.streamHTTP()
+                    launchDarklyLocalChunk = m.streamHTTP.streamHTTP()
 
                     if m.streamHTTP.responseStatus < 0 then
-                        errorText = m.streamCrypto.responseStatusText()
-                        m.config.private.logger.error("http stream: " + errorText)
+                        launchDarklyLocalErrorText = m.streamCrypto.responseStatusText()
+                        m.config.private.logger.error("http stream: " + launchDarklyLocalErrorText)
                         m.killFailedStream()
 
                         return false
                     else if m.streamHTTP.responseStatus >= 1 AND m.stage = m.stageMap.readingHeader then
-                        code = m.streamHTTP.responseCode
+                        launchDarklyLocalCode = m.streamHTTP.responseCode
 
-                        m.config.private.logger.debug("stream response code: " + code.toStr())
+                        m.config.private.logger.debug("stream response code: " + launchDarklyLocalCode.toStr())
 
-                        if code = 401 OR code = 403 then
+                        if launchDarklyLocalCode = 401 OR launchDarklyLocalCode = 403 then
                             m.config.private.logger.error("streaming not authorized")
 
                             m.killStream()
                             m.status = m.stageMap.unauthorized
 
                             return false
-                        else if code < 200 OR code >= 300 then
+                        else if launchDarklyLocalCode < 200 OR launchDarklyLocalCode >= 300 then
                             m.config.private.logger.warn("stream http request fail")
 
                             m.killFailedStream()
@@ -133,12 +133,12 @@ function LaunchDarklyStreamClient(config as Object, store as Object, messagePort
                         m.stage = m.stageMap.readingBody
                     end if
 
-                    if chunk = invalid then
+                    if launchDarklyLocalChunk = invalid then
                         m.config.private.logger.debug("http stream no chunk")
                         return true
                     else
                         m.config.private.logger.debug("http stream got chunk")
-                        m.streamCrypto.addBytes(chunk)
+                        m.streamCrypto.addBytes(launchDarklyLocalChunk)
 
                         if m.runCryptoStep() = false then
                             return false
@@ -149,23 +149,23 @@ function LaunchDarklyStreamClient(config as Object, store as Object, messagePort
 
             runCryptoStep: function() as Boolean
                 while true
-                    plainText = m.streamCrypto.consumeEvent()
+                    launchDarklyLocalPlainText = m.streamCrypto.consumeEvent()
 
                     if m.streamCrypto.getErrorCode() <> 0 then
-                        errorText = m.streamCrypto.getErrorString()
-                        m.config.private.logger.error("crypto stream error: " + errorText)
+                        launchDarklyLocalErrorText = m.streamCrypto.getErrorString()
+                        m.config.private.logger.error("crypto stream error: " + launchDarklyLocalErrorText)
                         m.killFailedStream()
 
                         return false
                     end if
 
-                    if plainText = invalid then
+                    if launchDarklyLocalPlainText = invalid then
                         m.config.private.logger.debug("crypto stream no plaintext")
                         return true
                     else
                         m.config.private.logger.debug("crypto stream got plaintext")
 
-                        m.streamSSE.addChunk(plainText.toAsciiString())
+                        m.streamSSE.addChunk(launchDarklyLocalPlainText.toAsciiString())
 
                         if m.runSSEStep() = false then
                             return false
@@ -176,32 +176,32 @@ function LaunchDarklyStreamClient(config as Object, store as Object, messagePort
 
             runSSEStep: function() as Boolean
                 while true
-                    event = m.streamSSE.consumeEvent()
+                    launchDarklyLocalEvent = m.streamSSE.consumeEvent()
 
-                    if event = invalid then
+                    if launchDarklyLocalEvent = invalid then
                         m.config.private.logger.debug("SSE stream no event")
                         return true
                     else
-                        m.config.private.logger.debug("SSE stream got event: " + event.name)
+                        m.config.private.logger.debug("SSE stream got event: " + launchDarklyLocalEvent.name)
 
-                        body = parseJSON(event.value)
+                        launchDarklyLocalBody = parseJSON(event.value)
 
-                        if body = invalid then
+                        if launchDarklyLocalBody = invalid then
                             m.config.private.logger.error("SSE stream failed to parse JSON")
                             m.killFailedStream()
                             return false
                         end if
 
-                        if event.name = "put" then
-                            m.store.putAll(body)
-                        else if event.name = "patch" then
-                            m.store.upsert(body)
+                        if launchDarklyLocalEvent.name = "put" then
+                            m.store.putAll(launchDarklyLocalBody)
+                        else if launchDarklyLocalEvent.name = "patch" then
+                            m.store.upsert(launchDarklyLocalBody)
                         end if
                     end if
                 end while
             end function
 
-            handleStreamMessage: function(message as Dynamic) as Void
+            handleStreamMessage: function(launchDarklyParamMessage as Dynamic) as Void
                 m.config.private.logger.debug("socket event")
 
                 if m.streamSocket = invalid then
@@ -221,21 +221,21 @@ function LaunchDarklyStreamClient(config as Object, store as Object, messagePort
                                 exit while
                             end if
 
-                            status = m.streamSocket.send(m.streamRequestContent, m.streamRequestSent, m.streamRequestContent.count() - m.streamRequestSent)
+                            launchDarklyLocalStatus = m.streamSocket.send(m.streamRequestContent, m.streamRequestSent, m.streamRequestContent.count() - m.streamRequestSent)
 
-                            if status = -1 then
+                            if launchDarklyLocalStatus = -1 then
                                 m.config.private.logger.debug("socket must wait to write")
                                 exit while
-                            else if status = 0 then
+                            else if launchDarklyLocalStatus = 0 then
                                 m.config.private.logger.debug("socket closed")
                                 m.killFailedStream()
                                 return
-                            else if status > 0 then
-                                m.config.private.logger.debug("socket sent bytes " + status.toStr())
+                            else if launchDarklyLocalStatus > 0 then
+                                m.config.private.logger.debug("socket sent bytes " + launchDarklyLocalStatus.toStr())
 
                                 m.streamTCPTimer.mark()
 
-                                m.streamRequestSent += status
+                                m.streamRequestSent += launchDarklyLocalStatus
                             end if
                         end while
                     end if
@@ -246,24 +246,24 @@ function LaunchDarklyStreamClient(config as Object, store as Object, messagePort
                 end if
             end function,
 
-            handleHandshakeMessage: function(message as Dynamic) as Void
-                responseCode = message.getResponseCode()
+            handleHandshakeMessage: function(launchDarklyParamMessage as Dynamic) as Void
+                launchDarklyLocalResponseCode = message.getResponseCode()
 
-                m.config.private.logger.debug("handshake response code: " + responseCode.toStr())
+                m.config.private.logger.debug("handshake response code: " + launchDarklyLocalResponseCode.toStr())
 
-                if responseCode = 401 OR responseCode = 403 then
+                if launchDarklyLocalResponseCode = 401 OR launchDarklyLocalResponseCode = 403 then
                     m.config.private.logger.error("streaming handshake not authorized")
 
                     m.status = m.stageMap.unauthorized
 
                     return
-                else if responseCode = 404 then
+                else if launchDarklyLocalResponseCode = 404 then
                     m.config.private.logger.error("handshake endpoint not found switching to polling")
 
                     m.config.private.streaming = false
 
                     return
-                else if responseCode < 200 OR responseCode >= 300 then
+                else if launchDarklyLocalResponseCode < 200 OR launchDarklyLocalResponseCode >= 300 then
                     m.config.private.logger.error("streaming handshake not successful")
 
                     m.killFailedStream()
@@ -271,9 +271,9 @@ function LaunchDarklyStreamClient(config as Object, store as Object, messagePort
                     return
                 end if
 
-                decoded = parseJSON(message.getString())
+                launchDarklyLocalDecoded = parseJSON(launchDarklyParamMessage.getString())
 
-                if decoded = invalid then
+                if launchDarklyLocalDecoded = invalid then
                     m.config.private.logger.error("failed json decoding")
 
                     m.killFailedStream()
@@ -283,52 +283,52 @@ function LaunchDarklyStreamClient(config as Object, store as Object, messagePort
 
                 m.config.private.logger.debug("got shared secret")
 
-                cipherKeyBuffer = decoded.cipherKey
-                authKeyBuffer = decoded.authenticationKey
+                launchDarklyLocalCipherKeyBuffer = launchDarklyLocalDecoded.cipherKey
+                launchdarklyLocalAuthKeyBuffer = launchDarklyDecoded.authenticationKey
 
-                cipherKey = createObject("roByteArray")
-                cipherKey.fromBase64String(decoded.cipherKey)
+                launchDarklyLocalCipherKey = createObject("roByteArray")
+                launchDarklyLocalCipherKey.fromBase64String(launchDarklyLocalDecoded.cipherKey)
 
-                authKey = createObject("roByteArray")
-                authKey.fromBase64String(decoded.authenticationKey)
+                launchDarklyLocalAuthKey = createObject("roByteArray")
+                launchDarklyLocalAuthKey.fromBase64String(launchDarklyLocalDecoded.authenticationKey)
 
-                bundle = createObject("roByteArray")
-                bundle.fromBase64String(decoded.serverBundle)
+                launchDarklyLocalBundle = createObject("roByteArray")
+                launchdarklyLocalBundle.fromBase64String(launchDarklyLocalDecoded.serverBundle)
 
-                hostname = m.util.stripHTTPProtocol(m.config.private.streamURI)
+                launchDarklyLocalHostname = m.util.stripHTTPProtocol(m.config.private.streamURI)
 
-                requestText = ""
-                requestText += "POST /mevalalternate HTTP/1.1" + chr(13) + chr(10)
-                requestText += "User-Agent: RokuClient/" + m.config.private.sdkVersion + chr(13) + chr(10)
-                requestText += "Content-Length: " + bundle.count().toStr() + chr(13) + chr(10)
-                requestText += "Host: " + hostname + chr(13) + chr(10)
-                requestText += "Connection: close" + chr(13) + chr(10)
-                requestText += chr(13) + chr(10)
+                launchDarklyLocalRequestText = ""
+                launchDarklyLocalRequestText += "POST /mevalalternate HTTP/1.1" + chr(13) + chr(10)
+                launchDarklyLocalRequestText += "User-Agent: RokuClient/" + m.config.private.sdkVersion + chr(13) + chr(10)
+                launchDarklyLocalRequestText += "Content-Length: " + launchDarklyLocalBundle.count().toStr() + chr(13) + chr(10)
+                launchDarklyLocalRequestText += "Host: " + launchDarklyLocalHostname + chr(13) + chr(10)
+                launchDarklyLocalRequestText += "Connection: close" + chr(13) + chr(10)
+                launchDarklyLocalRequestText += chr(13) + chr(10)
 
-                m.streamCrypto = LaunchDarklyCryptoReader(cipherKey, authKey)
+                m.streamCrypto = LaunchDarklyCryptoReader(launchDarklyLocalCipherKey, launchDarklyLocalAuthKey)
 
                 m.streamRequestContent = createObject("roByteArray")
-                m.streamRequestContent.fromAsciiString(requestText)
-                m.streamRequestContent.append(bundle)
+                m.streamRequestContent.fromAsciiString(launchDarklyLocalRequestText)
+                m.streamRequestContent.append(launchDarklyLocalBundle)
 
-                sendAddress = createObject("roSocketAddress")
-                sendAddress.setHostname(hostname)
-                sendAddress.setPort(80)
+                launchDarklyLocalSendAddress = createObject("roSocketAddress")
+                launchDarklyLocalSendAddress.setHostname(launchDarklyLocalHostname)
+                launchDarklyLocalSendAddress.setPort(80)
 
-                socket = createObject("roStreamSocket")
-                socket.setSendToAddress(sendAddress)
-                socket.setMessagePort(m.messagePort)
-                socket.notifyReadable(true)
-                socket.notifyWritable(true)
-                socket.setKeepAlive(true)
+                launchDarklyLocalSocket = createObject("roStreamSocket")
+                launchDarklyLocalSocket.setSendToAddress(launchDarklyLocalSendAddress)
+                launchDarklyLocalSocket.setMessagePort(m.messagePort)
+                launchDarklyLocalSocket.notifyReadable(true)
+                launchDarklyLocalSocket.notifyWritable(true)
+                launchDarklyLocalSocket.setKeepAlive(true)
 
-                m.streamSocket = socket
+                m.streamSocket = launchDarklyLocalSocket
                 m.streamHTTP = LaunchDarklyHTTPResponse()
                 m.streamSSE = LaunchDarklySSE()
                 m.streamRequestSent = 0
                 m.streamTCPTimer.mark()
 
-                if socket.connect() then
+                if launchDarklyLocalSocket.connect() then
                     m.config.private.logger.debug("streaming socket connection success")
                     m.stage = m.stageMap.sendingRequest
                 else
@@ -338,7 +338,7 @@ function LaunchDarklyStreamClient(config as Object, store as Object, messagePort
             end function,
         },
 
-        handleMessage: function(message=invalid as Dynamic) as Boolean
+        handleMessage: function(launchDarklyParamMessage=invalid as Dynamic) as Boolean
             if m.private.config.private.streaming = false then
                 return false
             end if
@@ -358,18 +358,18 @@ function LaunchDarklyStreamClient(config as Object, store as Object, messagePort
                 end if
             end if
 
-            if type(message) = "roUrlEvent" then
-                eventId = message.getSourceIdentity()
-                handshakeId = m.private.handshakeTransfer.getIdentity()
+            if type(launchDarklyParamMessage) = "roUrlEvent" then
+                launchDarklyLocalEventId = launchDarklyParamMessage.getSourceIdentity()
+                launchDarklyLocalHandshakeId = m.private.handshakeTransfer.getIdentity()
 
-                if eventId = handshakeId then
-                    m.private.handleHandshakeMessage(message)
+                if launchDarklyLocalEventId = launchDarklyLocalHandshakeId then
+                    m.private.handleHandshakeMessage(launchDarklyParamMessage)
 
                     return true
                 end if
-            else if type(message) = "roSocketEvent" then
-                if message.getSocketID() = m.private.streamSocket.getID() then
-                    m.private.handleStreamMessage(message)
+            else if type(launchDarklyParamMessage) = "roSocketEvent" then
+                if launchDarklyParamMessage.getSocketID() = m.private.streamSocket.getID() then
+                    m.private.handleStreamMessage(launchDarklyParamMessage)
 
                     return true
                 end if
@@ -378,17 +378,17 @@ function LaunchDarklyStreamClient(config as Object, store as Object, messagePort
             return false
         end function,
 
-        changeUser: function(user as Object)
+        changeUser: function(launchDarklyParamUser as Object)
             m.private.config.private.logger.debug("stream client switching user")
 
-            m.private.user = user
+            m.private.user = launchDarklyParamUser
             m.private.killStream()
             m.handleMessage(invalid)
         end function
     }
 
-    this.private.prepareHandshakeTransfer()
-    this.handleMessage(invalid)
+    launchDarklyLocalThis.private.prepareHandshakeTransfer()
+    launchDarklyLocalThis.handleMessage(invalid)
 
-    return this
+    return launchDarklyLocalThis
 end function
