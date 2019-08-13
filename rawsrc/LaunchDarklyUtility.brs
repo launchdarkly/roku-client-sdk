@@ -110,65 +110,65 @@ end function
 
 function LaunchDarklyUtility() as Object
     return {
-        memcpy: function(source as Object, sourceOffset as Integer, destination as Object, destinationOffset as Integer, count as Integer) as Void
-            for i = 0 to count - 1 step + 1
-                destination.setEntry(destinationOffset + i, source.getEntry(sourceOffset + i))
+        memcpy: function(launchDarklyParamSource as Object, launchDarklyParamSourceOffset as Integer, launchDarklyParamDestination as Object, launchDarklyParamDestinationOffset as Integer, launchDarklyParamCount as Integer) as Void
+            for launchDarklyLocalI = 0 to launchDarklyParamCount - 1 step + 1
+                destination.setEntry(launchDarklyParamDestinationOffset + launchDarklyLocalI, launchDarklyParamSource.getEntry(launchDarklyParamSourceOffset + launchDarklyLocalI))
             end for
         end function
 
-        makeBytes: function(text as String) as Object
-            bytes = createObject("roByteArray")
-            bytes.fromAsciiString(text)
-            return bytes
+        makeBytes: function(launchDarklyParamText as String) as Object
+            launchDarklyLocalBytes = createObject("roByteArray")
+            launchDarklyLocalBytes.fromAsciiString(launchDarklyParamText)
+            return launchDarklyLocalBytes
         end function,
 
         regexHex: createObject("roRegex", "^[a-f0-9]+$", "i"),
 
-        isValidHex: function(text as String) as Boolean
-            return m.regexHex.isMatch(text)
+        isValidHex: function(launchDarklyParamText as String) as Boolean
+            return m.regexHex.isMatch(launchDarklyParamText)
         end function,
 
         REM Integer or Invalid
-        hexToDecimal: function(hex as String) as Dynamic
-            if m.isValidHex(hex) then
-                return val(hex, 16)
+        hexToDecimal: function(launchDarklyParamHex as String) as Dynamic
+            if m.isValidHex(launchDarklyParamHex) then
+                return val(launchDarklyParamHex, 16)
             else
                 return invalid
             end if
         end function
 
-        isNatural: function(buffer as Object) as Boolean
-            for each char in buffer
-                if char < 48 OR char > 57 then
+        isNatural: function(launchDarklyParamBuffer as Object) as Boolean
+            for each launchDarklyLocalChar in launchDarklyParamBuffer
+                if launchDarklyLocalChar < 48 OR launchDarklyLocalChar > 57 then
                     return false
                 end if
             end for
 
-            return buffer.count() > 0
+            return launchDarklyParamBuffer.count() > 0
         end function,
 
-        littleEndianUnsignedToInteger: function(bytes as Object) as Integer
-            counter = 0
-            output = 0
+        littleEndianUnsignedToInteger: function(launchDarklyParamBytes as Object) as Integer
+            launchDarklyLocalCounter = 0
+            launchDarklyLocalOutput = 0
 
-            for x = 0 to bytes.count() - 1 step + 1
-                if x = 0 then
-                    output = bytes.getEntry(x)
+            for launchDarklyLocalX = 0 to launchDarklyParamBytes.count() - 1 step + 1
+                if launchDarklyLocalX = 0 then
+                    launchDarklyLocalOutput = launchDarklyParamBytes.getEntry(launchDarklyLocalX)
                 else
-                    output = output + (bytes.getEntry(x) * (2 ^ (x * 8)))
+                    launchDarklyLocalOutput = launchDarklyLocalOutput + (launchDarklyParamBytes.getEntry(launchDarklyLocalX) * (2 ^ (launchDarklyLocalX * 8)))
                 end if
             end for
 
-            return output
+            return launchDarklyLocalOutput
         end function,
 
-        byteArrayEq: function(left as Object, right as Object) as Boolean
-            if left.count() <> right.count() then
+        byteArrayEq: function(launchDarklyParamLeft as Object, launchDarklyParamRight as Object) as Boolean
+            if launchDarklyParamLeft.count() <> launchDarklyParamRight.count() then
                 return false
             end if
 
-            for x = 0 to left.count() - 1 step + 1
-                if left.getEntry(x) <> right.getEntry(x) then
+            for x = 0 to launchDarklyParamLeft.count() - 1 step + 1
+                if launchDarklyParamLeft.getEntry(x) <> launchDarklyParamRight.getEntry(x) then
                     return false
                 end if
             end for
@@ -178,30 +178,30 @@ function LaunchDarklyUtility() as Object
 
         getMilliseconds: function()
             REM Clock is stopped on object creation
-            now = CreateObject("roDateTime")
+            launchDarklyLocalNow = createObject("roDateTime")
             REM Ensure double is used
-            creationDate# = now.asSeconds()
-            creationDate# *= 1000
-            creationDate# += now.getMilliseconds()
-            return creationDate#
+            launchDarklyLocalCreationDate# = launchDarklyLocalNow.asSeconds()
+            launchDarklyLocalCreationDate# *= 1000
+            launchDarklyLocalCreationDate# += launchDarklyLocalNow.getMilliseconds()
+            return launchDarklyLocalCreationDate#
         end function,
 
-        prepareNetworkingCommon: function(messagePort as Object, config as Object, transfer as Object) as Void
-            transfer.setPort(messagePort)
-            transfer.addHeader("User-Agent", "RokuClient/" + config.private.sdkVersion)
-            transfer.addHeader("Authorization", config.private.mobileKey)
-            transfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
-            transfer.InitClientCertificates()
+        prepareNetworkingCommon: function(launchDarklyParamMessagePort as Object, launchDarklyParamConfig as Object, launchDarklyParamTransfer as Object) as Void
+            launchDarklyParamTransfer.setPort(launchDarklyParamMessagePort)
+            launchDarklyParamTransfer.addHeader("User-Agent", "RokuClient/" + launchDarklyParamConfig.private.sdkVersion)
+            launchDarklyParamTransfer.addHeader("Authorization", launchDarklyParamConfig.private.mobileKey)
+            launchDarklyParamTransfer.setCertificatesFile("common:/certs/ca-bundle.crt")
+            launchDarklyParamTransfer.initClientCertificates()
         end function,
 
-        stripHTTPProtocol: function(rawURI as String) as String
-            https = "https://"
-            http = "http://"
+        stripHTTPProtocol: function(launchDarklyParamRawURI as String) as String
+            launchDarklyLocalHTTPS = "https://"
+            launchDarklyLocalHTTP = "http://"
 
-            if left(rawURI, len(https)) = https then
-                return mid(rawURI, len(https) + 1)
-            else if left(rawURI, len(http)) = http then
-                return mid(rawURI, len(http) + 1)
+            if left(launchDarklyParamRawURI, len(launchDarklyLocalHTTPS)) = launchdarklyLocalHTTPS then
+                return mid(launchDarklyParamRawURI, len(launchDarklyLocalHTTPS) + 1)
+            else if left(launchDarklyParamRawURI, len(launchDarklyLocalHTTP)) = http then
+                return mid(launchDarklyParamRawURI, len(launchDarklyLocalHTTP) + 1)
             else
                 REM impossible in usage
                 return ""
