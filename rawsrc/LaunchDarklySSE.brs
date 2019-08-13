@@ -5,30 +5,30 @@ function LaunchDarklySSE() as Object
             eventName: "",
             eventBuffer: "",
 
-            processField: function(field as String, value as String) as Void
-                if Left(value, 1) = chr(32) then
-                    value = Mid(value, 2)
+            processField: function(launchDarklyParamField as String, launchDarlyParamValue as String) as Void
+                if left(launchDarklyParamValue, 1) = chr(32) then
+                    launchDarklyParamValue = mid(launchDarklyParamValue, 2)
                 end if
 
-                if field = "event" then
-                    m.eventName = value
-                else if field = "data" then
+                if launchDarklyParamField = "event" then
+                    m.eventName = launchDarklyParamValue
+                else if launchDarklyParamField = "data" then
                     if m.eventBuffer.len() <> 0 then
                         m.eventBuffer = m.eventBuffer + chr(10)
                     end if
 
-                    m.eventBuffer = m.eventBuffer + value
+                    m.eventBuffer = m.eventBuffer + launchDarklyParamValue
                 else
                     REM unknown field
                 end if
             end function,
 
-            parseLine: function(line as String) as Object
-                if line.len() = 0 then
-                    event = invalid
+            parseLine: function(launchDarklyParamLine as String) as Object
+                if launchDarklyParamLine.len() = 0 then
+                    launchDarklyLocalEvent = invalid
 
                     if m.eventBuffer <> "" then
-                        event = {
+                        launchDarklyLocalEvent = {
                             name: m.eventName,
                             value: m.eventBuffer
                         }
@@ -37,20 +37,20 @@ function LaunchDarklySSE() as Object
                     m.eventName = ""
                     m.eventBuffer = ""
 
-                    return event
+                    return launchDarklyLocalEvent
                 else
-                    colonPosition = Instr(1, line, chr(58))
+                    launchDarklyLocalColonPosition = instr(1, launchDarklyParamLine, chr(58))
 
-                    if colonPosition = 1 then
+                    if launchDarklyLocalColonPosition = 1 then
                         REM comment
-                    else if colonPosition = 0 then
-                        m.processField(line, "")
+                    else if launchDarklyLocalColonPosition = 0 then
+                        m.processField(launchDarklyParamLine, "")
                     else
-                        field = Left(line, colonPosition - 1)
+                        launchDarklyLocalField = left(launchDarklyParamLine, launchDarklyLocalColonPosition - 1)
 
-                        value = Mid(line, colonPosition + 1)
+                        launchDarklyLocalValue = mid(launchDarklyParamLine, launchDarklyLocalColonPosition + 1)
 
-                        m.processField(field, value)
+                        m.processField(launchDarklyLocalField, launchDarklyLocalValue)
                     end if
 
                     return invalid
@@ -58,26 +58,26 @@ function LaunchDarklySSE() as Object
             end function
         },
 
-        addChunk: function(chunk as String) as Void
-            m.private.lineBuffer = m.private.lineBuffer + chunk
+        addChunk: function(launchDarklyParamChunk as String) as Void
+            m.private.lineBuffer = m.private.lineBuffer + launchDarklyParamChunk
         end function,
 
         consumeEvent: function() as Object
             while true
-                lineEndPosition = Instr(1, m.private.lineBuffer, chr(10))
+                lauchDarklyLocalLineEndPosition = Instr(1, m.private.lineBuffer, chr(10))
 
-                if lineEndPosition = 0 then
+                if launchDarklyLocalLineEndPosition = 0 then
                     return invalid
                 end if
 
-                line = Left(m.private.lineBuffer, lineEndPosition - 1)
+                launchDarklyLocalLine = left(m.private.lineBuffer, launchDarklyLocalLineEndPosition - 1)
 
-                result = m.private.parseLine(line)
+                launchDarklyLocalResult = m.private.parseLine(launchDarklyLocalLine)
 
-                m.private.lineBuffer = Mid(m.private.lineBuffer, lineEndPosition + 1)
+                m.private.lineBuffer = mid(m.private.lineBuffer, launchDarklyLocalLineEndPosition + 1)
 
-                if result <> invalid then
-                    return result
+                if launchDarklyLocalResult <> invalid then
+                    return launchDarklyLocalResult
                 end if
             end while
         end function
