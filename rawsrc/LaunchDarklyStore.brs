@@ -66,89 +66,89 @@ function LaunchDarklyStoreRegistry(launchDarklyParamSectionName as String) as Ob
     }
 end function
 
-function LaunchDarklyStore(backend=invalid as Object) as Object
-    this = {
+function LaunchDarklyStore(launchDarklyParamBackend=invalid as Object) as Object
+    launchDarklyLocalThis = {
         private: {
             cache: {},
-            backend: backend,
+            backend: launchDarklyParamBackend,
             bypassReadCache: false
         },
 
-        get: function(key as String) as Object
-            flag = invalid
+        get: function(launchDarklyParamKey as String) as Object
+            launchDarklyLocalFlag = invalid
 
             if m.private.bypassReadCache = true then
-                flag = m.private.backend.get(key)
+                launchDarklyLocalFlag = m.private.backend.get(launchDarklyParamKey)
             else
-                flag = m.private.cache.lookup(key)
+                launchDarklyLocalFlag = m.private.cache.lookup(launchDarklyParamKey)
             end if
 
-            if flag = invalid OR flag.deleted = true then
+            if launchDarklyLocalFlag = invalid OR launchDarklyLocalFlag.deleted = true then
                 return invalid
             else
-                return flag
+                return launchDarklyLocalFlag
             end if
         end function,
 
         getAll: function() as Object
-            result = {}
-            items = invalid
+            launchDarklyLocalResult = {}
+            launchDarklyLocalItems = invalid
 
             if m.private.bypassReadCache = true then
-                items = m.private.backend.getAll()
+                launchDarklyLocalItems = m.private.backend.getAll()
             else
-                items = m.private.cache
+                launchDarklyLocalItems = m.private.cache
             end if
 
-            for each flagKey in items
-                flag = items.lookup(flagKey)
+            for each launchDarklyLocalFlagKey in launchDarklyLocalItems
+                launchDarklyLocalFlag = items.lookup(launchDarklyLocalFlagKey)
 
-                if flag.deleted <> true then
-                    result[flagKey] = flag
+                if launchDarklyLocalFlag.deleted <> true then
+                    launchDarklyLocalResult[launchDarklyLocalFlagKey] = launchDarklyLocalFLag
                 end if
             end for
 
-            return result
+            return launchDarklyLocalResult
         end function,
 
-        upsert: function(replacementFlag as Object) as Void
-            existing = invalid
+        upsert: function(launchDarklyParamReplacementFlag as Object) as Void
+            launchDarklyLocalExisting = invalid
 
             if m.private.bypassReadCache = true then
-                existing = m.private.backend.get(replacementFlag.key)
+                launchDarklyLocalExisting = m.private.backend.get(launchDarklyParamReplacementFlag.key)
             else
-                existing = m.private.cache.lookup(replacementFlag.key)
+                launchDarklyLocalExisting = m.private.cache.lookup(launchDarklyParamReplacementFlag.key)
             end if
 
-            if existing = invalid OR replacementFlag.version > existing.version then
-                m.private.cache[replacementFlag.key] = replacementFlag
+            if launchDarklyLocalExisting = invalid OR launchDarklyParamReplacementFlag.version > launchDarklyLocalExisting.version then
+                m.private.cache[launchDarklyParamReplacementFlag.key] = launchdarklyParamReplacementFlag
 
                 if m.private.backend <> invalid then
-                    m.private.backend.put(replacementFlag)
+                    m.private.backend.put(launchDarklyParamReplacementFlag)
                 end if
             end if
         end function,
 
-        putAll: function(flags as Object) as Void
-            m.private.cache = flags
+        putAll: function(launchDarklyParamFlags as Object) as Void
+            m.private.cache = launchDarklyParamFlags
 
             if m.private.backend <> invalid then
-                m.private.backend.putAll(flags)
+                m.private.backend.putAll(launchDarklyParamFlags)
             end if
         end function,
 
-        delete: function(flagKey as String, flagVersion as Integer) as Void
+        delete: function(launchDarklyParamFlagKey as String, launchDarklyParamFlagVersion as Integer) as Void
             m.upsert({
-                key: flagKey,
-                version: flagVersion,
+                key: launchDarklyParamFlagKey,
+                version: launchDarklyParamFlagVersion,
                 deleted: true
             })
         end function
     }
 
-    if backend <> invalid then
-        this.private.cache = backend.getAll()
+    if launchDarklyParamBackend <> invalid then
+        launchDarklyLocalThis.private.cache = launchDarklyParamBackend.getAll()
     end if
 
-    return this
+    return launchDarklyLocalThis
 end function
