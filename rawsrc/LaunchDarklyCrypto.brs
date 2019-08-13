@@ -1,4 +1,4 @@
-function LaunchDarklyCryptoReader(cipherKey as Object, authKey as Object) as Object
+function LaunchDarklyCryptoReader(launchDarklyParamCipherKey as Object, launchDarklyParamAuthKey as Object) as Object
     return {
         private: {
             stream: LaunchDarklyStream(),
@@ -9,8 +9,8 @@ function LaunchDarklyCryptoReader(cipherKey as Object, authKey as Object) as Obj
             REM defaults to zero, see getErrorString for details
             errorCode: 0,
 
-            cipherKey: cipherKey.toHexString(),
-            authKey: authKey,
+            cipherKey: launchDarklyParamCipherKey.toHexString(),
+            authKey: launchDarklyParamAuthKey,
             REM auth code of the previous packet
             lastMAC: invalid,
 
@@ -34,58 +34,58 @@ function LaunchDarklyCryptoReader(cipherKey as Object, authKey as Object) as Obj
                 end if
 
                 REM split up packet
-                iv = m.stream.takeCount(m.initVectorSize).toHexString()
-                authCode = m.stream.takeCount(m.authCodeSize)
-                cipherText = m.stream.takeCount(m.bodySize)
+                launchDarklyLocalIv = m.stream.takeCount(m.initVectorSize).toHexString()
+                launchDarklyLocalAuthCode = m.stream.takeCount(m.authCodeSize)
+                launchDarklyLocalCipherText = m.stream.takeCount(m.bodySize)
                 m.bodySize = invalid
 
                 REM prepare authentication of packet
-                authContext = createObject("roHMAC")
-                if authContext.setup("sha256", m.authKey) <> 0 then
+                launchDarklyLocalAuthContext = createObject("roHMAC")
+                if launchDarklyLocalAuthContext.setup("sha256", m.authKey) <> 0 then
                     m.errorCode = 1
                     return invalid
                 end if
                 REM if not the first packet include the last packets auth code
                 if m.lastMAC <> invalid then
-                    authContext.update(m.lastMAC)
+                    launchDarklyLocalAuthContext.update(m.lastMAC)
                 end if
-                authContext.update(cipherText)
+                launchDarklyLocalAuthContext.update(launchDarklyLocalCipherText)
 
                 REM generate mac from cipher text and maybe last mac
-                computedAuthCode = authContext.final()
+                launchDarklyLocalComputedAuthCode = launchDarklyLocalAuthContext.final()
 
                 REM ensure the mac is as expected if not this may be an attack
-                if m.util.byteArrayEq(authCode, computedAuthCode) = false then
+                if m.util.byteArrayEq(launchDarklyLocalAuthCode, launchDarklyLocalComputedAuthCode) = false then
                     m.errorCode = 2
                     return invalid
                 end if
 
                 REM prepare decryption
-                cipherContext = createObject("roEVPCipher")
-                if cipherContext.setup(false, "aes-256-cbc", m.cipherKey, iv, 1) <> 0 then
+                launchDarklyLocalCipherContext = createObject("roEVPCipher")
+                if launchDarklyLocalCipherContext.setup(false, "aes-256-cbc", m.cipherKey, iv, 1) <> 0 then
                     m.errorCode = 3
                     return invalid
                 end if
 
                 REM record this packets mac to be used in the next auth check
-                m.lastMAC = authCode
+                m.lastMAC = launchDarklyLocalAuthCode
 
                 REM ensure we cleanup now unused memory
                 m.stream.shrink()
 
                 REM finish with the actual decryption
-                return cipherContext.process(cipherText)
+                return launchDarklyLocalCipherContext.process(launchDarklyLocalCipherText)
             end function
         },
 
         getErrorString: function() as String
-            code = m.private.errorCode
+            launchDarklyLocalCode = m.private.errorCode
 
-            if code = 1 then
+            if launchDarklyLocalCode = 1 then
                 return "failed to create HMAC context"
-            else if code = 2 then
+            else if launchDarklyLocalCode = 2 then
                 return "failed to verify HMAC"
-            else if code = 3 then
+            else if launchDarklyLocalCode = 3 then
                 return "failed to create cipher context"
             end if
 
@@ -96,8 +96,8 @@ function LaunchDarklyCryptoReader(cipherKey as Object, authKey as Object) as Obj
             return m.private.errorCode
         end function,
 
-        addBytes: function(bytes as Object) as Void
-            m.private.stream.addBytes(bytes)
+        addBytes: function(launchDarklyParamBytes as Object) as Void
+            m.private.stream.addBytes(launchdarklyParamBytes)
         end function,
 
         consumeEvent: function() as Object
