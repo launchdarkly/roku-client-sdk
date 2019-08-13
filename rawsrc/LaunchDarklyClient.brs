@@ -1,83 +1,83 @@
 function LaunchDarklyClientSharedFunctions() as Object
     return {
-        variation: function(flagKey as String, fallback as Dynamic, strong=invalid as Dynamic) as Dynamic
+        variation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Dynamic, launchDarklyParamStrong=invalid as Dynamic) as Dynamic
             if m.private.isOffline() then
-                return fallback
+                return launchDarklyParamFallback
             else
-                flag = m.private.lookupFlag(flagKey)
+                launchDarklyLocalFlag = m.private.lookupFlag(launchDarklyParamFlagKey)
 
-                if flag = invalid then
+                if launchDarklyLocalFlag = invalid then
                     m.private.logger.error("missing flag")
 
-                    s = {
-                        value: fallback,
-                        flagKey: flagKey,
+                    launchDarklyLocalState = {
+                        value: launchDarklyParamFallback,
+                        flagKey: launchDarklyParamFlagKey,
                         flag: invalid,
-                        fallback: fallback,
+                        fallback: launchDarklyParamFallback,
                         typeMatch: true
                     }
 
-                    m.private.handleEventsForEval(s)
+                    m.private.handleEventsForEval(launchDarklyLocalState)
 
-                    return fallback
+                    return launchDarklyParamsFallback
                 else
-                    typeMatch = true
-                    if strong <> invalid then
-                        if getInterface(flag.value, strong) = invalid then
+                    launchDarklyLocalTypeMatch = true
+                    if launchDarklyParamStrong <> invalid then
+                        if getInterface(launchDarklyLocalFlag.value, launchDarklyParamStrong) = invalid then
                             m.private.logger.error("eval type mismatch")
 
-                            typeMatch = false
+                            launchDarklyLocalTypeMatch = false
                         end if
                     end if
 
-                    value = invalid
-                    if typeMatch = true then
-                        value = flag.value
+                    launchDarklyLocalValue = invalid
+                    if launchDarklyLocalTypeMatch = true then
+                        launchDarklyLocalValue = launchDarklyLocalFlag.value
                     else
-                        value = fallback
+                        launchDarklyLocalValue = launchDarklyParamFallback
                     end if
 
-                    s = {
-                        value: value,
-                        flagKey: flagKey,
-                        flag: flag,
-                        fallback: fallback,
-                        typeMatch: typeMatch
+                    launchDarklyLocalState = {
+                        value: launchDarklyLocalValue,
+                        flagKey: launchDarklyParamFlagKey,
+                        flag: launchDarklyLocalFlag,
+                        fallback: launchDarklyLocalFallback,
+                        typeMatch: launchDarklyLocalTypeMatch
                     }
 
-                    m.private.handleEventsForEval(s)
+                    m.private.handleEventsForEval(launchDarklyLocalState)
 
-                    return value
+                    return launchDarklyLocalValue
                 end if
             end if
         end function,
 
-        intVariation: function(flagKey as String, fallback as Integer) as Integer
-            return m.variation(flagKey, fallback, "ifInt")
+        intVariation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Integer) as Integer
+            return m.variation(launchDarklyParamFlagKey, launchDarklyParamFallback, "ifInt")
         end function,
 
         boolVariation: function(flagKey as String, fallback as Boolean) as Boolean
-            return m.variation(flagKey, fallback, "ifBoolean")
+            return m.variation(launchDarklyParamFlagKey, launchDarklyParamFallback, "ifBoolean")
         end function,
 
-        stringVariation: function(flagKey as String, fallback as String) as String
-            return m.variation(flagKey, fallback, "ifString")
+        stringVariation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as String) as String
+            return m.variation(launchDarklyParamFlagKey, launchDarklyParamFallback, "ifString")
         end function,
 
-        aaVariation: function(flagKey as String, fallback as Object) as Object
-            return m.variation(flagKey, fallback, "ifAssociativeArray")
+        aaVariation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Object) as Object
+            return m.variation(launchDarklyParamFlagKey, launchDarklyParamFallback, "ifAssociativeArray")
         end function,
 
         allFlags: function() as Object
-            result = {}
+            launchDarklyLocalResult = {}
 
-            allFlags = m.private.lookupAll()
+            launchDarklyLocalAllFlags = m.private.lookupAll()
 
-            for each key in allFlags
-                result[key] = allFlags[key].value
+            for each launchDarklyLocalKey in launchDarklyLocalAllFlags
+                launchDarklyLocalResult[launchDarklyLocalKey] = launchDarklyLocalAllFlags[launchDarklyLocalKey].value
             end for
 
-            return result
+            return launchDarklyLocalResult
         end function,
     }
 end function
