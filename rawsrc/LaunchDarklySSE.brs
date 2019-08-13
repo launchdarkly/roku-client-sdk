@@ -64,7 +64,7 @@ function LaunchDarklySSE() as Object
 
         consumeEvent: function() as Object
             while true
-                lauchDarklyLocalLineEndPosition = Instr(1, m.private.lineBuffer, chr(10))
+                lauchDarklyLocalLineEndPosition = instr(1, m.private.lineBuffer, chr(10))
 
                 if launchDarklyLocalLineEndPosition = 0 then
                     return invalid
