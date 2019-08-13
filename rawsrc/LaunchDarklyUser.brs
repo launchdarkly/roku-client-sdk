@@ -46,75 +46,74 @@ function LaunchDarklyUser(launcDarklyParamUserKey as String) as Object
     }
 end function
 
-function LaunchDarklyUserEncode(user as Object, redact as Boolean, config=invalid as Object)
-    u = user.private
+function LaunchDarklyUserEncode(launchDarklyParamUser as Object, launchDarklyParamRedact as Boolean, launchDarklyParamConfig=invalid as Object)
+    launchDarklyLocalAddField = function(launchDarklyParamUser, launchDarklyParamResult, launchDarklyParamContext, launchDarklyParamField, launchDarklyParamConfig, launchDarklyParamPrivateAttrs) as Void
+        launchDarklyLocalValue = launchDarklyParamContext.lookup(launchDarklyParamField)
 
-    addField = function(user, result, context, field, config, privateAttrs) as Void
-        value = context.lookup(field)
-        if value <> invalid then
-            if privateAttrs <> invalid then
-                isAttributePublic = function(user, context as Object, attribute as String, config as Object) as Boolean
-                    if config <> invalid then
-                        if config.private.allAttributesPrivate = true then
+        if launchDarklyLocalValue <> invalid then
+            if launchDarklyParamPrivateAttrs <> invalid then
+                isAttributePublic = function(launchDarklyParamUser as Object, launchDarklyParamContext as Object, launchDarklyParamAttribute as String, launchDarklyParamConfig as Object) as Boolean
+                    if launchDarklyParamConfig <> invalid then
+                        if launchDarklyParamConfig.private.allAttributesPrivate = true then
                             return false
                         end if
 
-                        if config.private.privateAttributeNames.lookup(attribute) <> invalid then
+                        if launchDarklyParamConfig.private.privateAttributeNames.lookup(launchDarklyParamAttribute) <> invalid then
                             return false
                         end if
                     end if
 
-                    if user.privateAttributeNames.lookup(attribute) <> invalid then
+                    if launchDarklyParamUser.privateAttributeNames.lookup(launchDarklyParamAttribute) <> invalid then
                         return false
                     end if
 
                     return true
                 end function
 
-                if isAttributePublic(user, context, field, config) = true then
-                    result.addReplace(field, value)
+                if isAttributePublic(launchDarklyParamUser, launchDarklyParamContext, launchDarklyParamField, launchDarklyParamConfig) = true then
+                    launchDarklyParamResult.addReplace(launchdarklyParamField, launchDarklyLocalValue)
                 else
-                    privateAttrs.push(field)
+                    launchDarklyParamPrivateAttrs.push(launchDarklyParamField)
                 end if
             else
-                result.addReplace(field, value)
+                launchDarklyParamResult.addReplace(launchDarklyParamField, launchDarklyLocalValue)
             end if
         end if
     end function
 
-    encoded = {
-        key: u.key
+    launchDarklyLocalEncoded = {
+        key: launchDarklyParamUser.private.key
     }
 
-    privateAttrs = invalid
+    launchDarklyLocalPrivateAttrs = invalid
 
-    if redact = true then
-        privateAttrs = createObject("roArray", 0, true)
+    if launchDarklyLocalRedact = true then
+        launchDarklyLocalPrivateAttrs = createObject("roArray", 0, true)
     end if
 
-    if m.anonymous = true then
-        encoded.anonymous = true
+    if launchDarklyParamUser.private.anonymous = true then
+        launchDarklyLocalEncoded.anonymous = true
     end if
 
-    addField(u, encoded, u, "firstName", config, privateAttrs)
-    addField(u, encoded, u, "lastName", config, privateAttrs)
-    addField(u, encoded, u, "email", config, privateAttrs)
-    addField(u, encoded, u, "name", config, privateAttrs)
-    addField(u, encoded, u, "avatar", config, privateAttrs)
+    launchDarklyLocalAddField(launchDarklyParamUser.private, launchDarklyLocalEncoded, launchDarklyParamUser.private, "firstName", launchDarklyParamConfig, launchDarklyLocalPrivateAttrs)
+    launchDarklyLocalAddField(launchDarklyParamUser.private, launchDarklyLocalEncoded, launchDarklyParamUser.private, "lastName", launchDarklyParamConfig, launchDarklyLocalPrivateAttrs)
+    launchDarklyLocalAddField(launchDarklyParamUser.private, launchDarklyLocalEncoded, launchDarklyParamUser.private, "email", launchDarklyParamConfig, launchDarklyLocalPrivateAttrs)
+    launchDarklyLocalAddField(launchDarklyParamUser.private, launchDarklyLocalEncoded, launchDarklyParamUser.private, "name", launchDarklyParamConfig, launchDarklyLocalPrivateAttrs)
+    launchDarklyLocalAddField(launchDarklyParamUser.private, launchDarklyLocalEncoded, launchDarklyParamUser.private, "avatar", launchDarklyParamConfig, launchDarklyLocalPrivateAttrs)
 
-    if u.custom <> invalid then
-        custom = {}
+    if launchDarklyParamUser.private.custom <> invalid then
+        launchDarklyLocalCustom = {}
 
-        for each attribute in u.custom
-            addField(u, custom, u.custom, attribute, config, privateAttrs)
+        for each launchDarklyLocalAttribute in launchDarklyParamUser.private.custom
+            launchDarklyLocalAddField(launchDarklyParamUser.private, launchDarklyLocalCustom, launchDarklyParamUser.private.custom, launchDarklyLocalAttribute, launchDarklyParamConfig, launchDarklyLocalPrivateAttrs)
         end for
 
-        encoded.custom = custom
+        launchDarklyLocalEncoded.custom = launchDarklyLocalCustom
     end if
 
-    if redact = true AND privateAttrs.count() <> 0 then
-        encoded.privateAttrs = privateAttrs
+    if launchDarklyLocalRedact = true AND launchDarklyLocalPrivateAttrs.count() <> 0 then
+        encoded.privateAttrs = launchDarklyLocalPrivateAttrs
     end if
 
-    return encoded
+    return launchDarklyLocalEncoded
 end function
