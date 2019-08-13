@@ -52,7 +52,7 @@ function LaunchDarklyUserEncode(launchDarklyParamUser as Object, launchDarklyPar
 
         if launchDarklyLocalValue <> invalid then
             if launchDarklyParamPrivateAttrs <> invalid then
-                isAttributePublic = function(launchDarklyParamUser as Object, launchDarklyParamContext as Object, launchDarklyParamAttribute as String, launchDarklyParamConfig as Object) as Boolean
+                launchDarklyLocalIsAttributePublic = function(launchDarklyParamUser as Object, launchDarklyParamContext as Object, launchDarklyParamAttribute as String, launchDarklyParamConfig as Object) as Boolean
                     if launchDarklyParamConfig <> invalid then
                         if launchDarklyParamConfig.private.allAttributesPrivate = true then
                             return false
@@ -70,7 +70,7 @@ function LaunchDarklyUserEncode(launchDarklyParamUser as Object, launchDarklyPar
                     return true
                 end function
 
-                if isAttributePublic(launchDarklyParamUser, launchDarklyParamContext, launchDarklyParamField, launchDarklyParamConfig) = true then
+                if launchDarklyLocalIsAttributePublic(launchDarklyParamUser, launchDarklyParamContext, launchDarklyParamField, launchDarklyParamConfig) = true then
                     launchDarklyParamResult.addReplace(launchdarklyParamField, launchDarklyLocalValue)
                 else
                     launchDarklyParamPrivateAttrs.push(launchDarklyParamField)
