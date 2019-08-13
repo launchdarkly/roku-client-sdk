@@ -24,43 +24,43 @@ function LaunchDarklyStoreSG(launchDarklyParamNode) as Object
     }
 end function
 
-function LaunchDarklyStoreRegistry(sectionName as String) as Object
+function LaunchDarklyStoreRegistry(launchDarklyParamSectionName as String) as Object
     return {
         private: {
-            section: createObject("roRegistrySection", sectionName)
+            section: createObject("roRegistrySection", launchDarklyParamSectionName)
         },
 
-        get: function(key as String) as Object
-            serialized = m.private.section.read(key)
+        get: function(launchDarklyParamKey as String) as Object
+            launchDarklyLocalSerialized = m.private.section.read(launchDarklyParamKey)
 
-            if serialized <> "" then
-                return parseJSON(serialized)
+            if launchDarklyLocalSerialized <> "" then
+                return parseJSON(launchDarklyLocalSerialized)
             end if
 
             return invalid
         end function,
 
         getAll: function() as Object
-            result = {}
+            launchDarklyLocalResult = {}
 
-            for each flagKey in m.private.section.getKeyList()
-                result[flagKey] = m.get(flagKey)
+            for each launchDarklyLocalFlagKey in m.private.section.getKeyList()
+                launchDarklyLocalResult[launchDarklyLocalFlagKey] = m.get(launchDarklyLocalFlagKey)
             end for
 
-            return result
+            return launchDarklyLocalResult
         end function,
 
-        put: function(flag as Object) as Void
-            m.private.section.write(flag.key, formatJSON(flag))
+        put: function(launchDarklyParamFlag as Object) as Void
+            m.private.section.write(launchDarklyParamFlag.key, formatJSON(launchDarklyParamFlag))
         end function,
 
-        putAll: function(nextFlags as Object) as Void
-            for each flagKey in m.private.section.getKeyList()
-                m.private.section.delete(flagKey)
+        putAll: function(launchDarklyParamNextFlags as Object) as Void
+            for each launchDarklyLocalFlagKey in m.private.section.getKeyList()
+                m.private.section.delete(launchDarklyLocalFlagKey)
             end for
 
-            for each flagKey in nextFlags
-                m.put(nextFlags[flagKey])
+            for each launchDarklyLocalFlagKey in launchDarklyParamNextFlags
+                m.put(launchDarklyParamNextFlags[launchDarklyLocalFlagKey])
             end for
         end function
     }
