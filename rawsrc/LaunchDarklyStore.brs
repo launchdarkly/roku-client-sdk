@@ -1,25 +1,25 @@
-function LaunchDarklyStoreSG(node) as Object
+function LaunchDarklyStoreSG(launchDarklyParamNode) as Object
     return {
         private: {
-            node: node
+            node: launchDarklyParamNode
         },
 
-        get: function(key as String) as Object
-            return m.private.node.flags.lookup(key)
+        get: function(launchDarklyParamKey as String) as Object
+            return m.private.node.flags.lookup(launchDarklyParamKey)
         end function,
 
         getAll: function() as Object
             return m.private.node.flags
         end function,
 
-        put: function(flag as Object) as Void
-            flags = m.private.node.flags
-            flags[flag.key] = flag
-            m.private.node.flags = flags
+        put: function(launchDarklyParamFlag as Object) as Void
+            launchDarklyLocalFlags = m.private.node.flags
+            launchDarklyLocalFlags[launchdarklyParamFlag.key] = launchDarklyParamFlag
+            m.private.node.flags = launchDarklyLocalFlags
         end function,
 
-        putAll: function(nextFlags as Object) as Void
-            m.private.node.flags = nextFlags
+        putAll: function(launchDarklyParamNextFlags as Object) as Void
+            m.private.node.flags = launchDarklyParamNextFlags
         end function
     }
 end function
