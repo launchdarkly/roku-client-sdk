@@ -1,12 +1,12 @@
-function LaunchDarklyLoggerSG(node) as Object
+function LaunchDarklyLoggerSG(launchDarklyParamNode) as Object
     return {
         private: {
-            node: node
+            node: launchDarklyParamNode
         }
-        log: function(level as Integer, message as String)
+        log: function(launchDarklyParamLevel as Integer, launchDarklyParamMessage as String)
             m.private.node.log = {
-                level: level,
-                message: message
+                level: launchDarklyParamLevel,
+                message: launchDarklyParamMessage
             }
         end function
     }
@@ -15,14 +15,14 @@ end function
 function LaunchDarklyLoggerPrint() as Object
     return {
         private: {
-            levelToString: function(level as Integer) as String
-                if level = 1 then
+            levelToString: function(launchDarklyParamLevel as Integer) as String
+                if launchDarklyParamLevel = 1 then
                     return "Error"
-                else if level = 2 then
+                else if launchDarklyParamLevel = 2 then
                     return "Warn"
-                else if level = 3 then
+                else if launchDarklyParamLevel = 3 then
                     return "Info"
-                else if level = 4 then
+                else if launchDarklyParamLevel = 4 then
                     return "Debug"
                 else
                     return invalid
@@ -30,9 +30,9 @@ function LaunchDarklyLoggerPrint() as Object
             end function
         },
 
-        log: function(level as Integer, message as String)
-            now = CreateObject("roDateTime").asSeconds()
-            print "[LaunchDarkly, " m.private.levelToString(level) "," now "] " message
+        log: function(launchDarklyParamLevel as Integer, launchDarklyParamMessage as String)
+            launchDarklyLocalNow = createObject("roDateTime").asSeconds()
+            print "[LaunchDarkly, " m.private.levelToString(launchDarklyParamLevel) "," launchDarklyLocalNow "] " launchDarklyParamMessage
         end function
     }
 end function
@@ -47,34 +47,34 @@ function LaunchDarklyLogLevels() as Object
     }
 end function
 
-function LaunchDarklyLogger(config as Object, backend=invalid as Object) as Object
+function LaunchDarklyLogger(launchDarklyParamConfig as Object, launchDarklyParamBackend=invalid as Object) as Object
     return {
         private: {
             logLevel: config.private.logLevel,
-            backend: backend,
+            backend: launchDarklyParamBackend,
             levels: LaunchDarklyLogLevels(),
 
-            maybeLog: function(level as Integer, message as String) as Void
-                if m.backend <> invalid AND level <= m.logLevel then
-                    m.backend.log(level, message)
+            maybeLog: function(launchDarklyParamLevel as Integer, launchDarklyParamMessage as String) as Void
+                if m.backend <> invalid AND launchDarklyParamLevel <= m.logLevel then
+                    m.backend.log(launchDarklyParamLevel, launchDarklyParamMessage)
                 end if
             end function
         },
 
-        error: function(message as String) as Void
-            m.private.maybeLog(m.private.levels.error, message)
+        error: function(launchDarklyParamMessage as String) as Void
+            m.private.maybeLog(m.private.levels.error, launchDarklyParamMessage)
         end function,
 
-        warn: function(message as String) as Void
-            m.private.maybeLog(m.private.levels.warn, message)
+        warn: function(launchDarklyParamMessage as String) as Void
+            m.private.maybeLog(m.private.levels.warn, launchDarklyParamMessage)
         end function,
 
-        info: function(message as String) as Void
-            m.private.maybeLog(m.private.levels.info, message)
+        info: function(launchDarklyParamMessage as String) as Void
+            m.private.maybeLog(m.private.levels.info, launchDarklyParamMessage)
         end function,
 
-        debug: function(message as String) as Void
-            m.private.maybeLog(m.private.levels.debug, message)
+        debug: function(launchDarklyParamMessage as String) as Void
+            m.private.maybeLog(m.private.levels.debug, launchDarklyParamMessage)
         end function
     }
 end function
