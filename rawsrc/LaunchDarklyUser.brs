@@ -1,7 +1,7 @@
-function LaunchDarklyUser(userKey as String) as Object
+function LaunchDarklyUser(launcDarklyParamUserKey as String) as Object
     return {
         private: {
-            key: userKey,
+            key: launchDarklyParamUserKey,
             anonymous: false,
             firstName: invalid,
             lastName: invalid,
@@ -12,36 +12,36 @@ function LaunchDarklyUser(userKey as String) as Object
             privateAttributeNames: {}
         },
 
-        setAnonymous: function(anonymous as Boolean) as Void
-            m.private.anonymous = anonymous
+        setAnonymous: function(launchDarklyParamAnonymous as Boolean) as Void
+            m.private.anonymous = launchDarklyParamAnonymous
         end function,
 
-        setFirstName: function(firstName as String) as Void
-            m.private.firstName = firstName
+        setFirstName: function(launchDarklyParamFirstName as String) as Void
+            m.private.firstName = launchDarklyParamFirstName
         end function,
 
-        setLastName: function(lastName as String) as Void
-            m.private.lastName = lastName
+        setLastName: function(launchDarklyParamLastName as String) as Void
+            m.private.lastName = launchDarklyParamLastName
         end function,
 
-        setEmail: function(email as String) as Void
-            m.private.email = email
+        setEmail: function(launchDarklyParamEmail as String) as Void
+            m.private.email = launchDarklyParamEmail
         end function,
 
-        setName: function(name as String) as Void
-            m.private.name = name
+        setName: function(launchDarklyParamName as String) as Void
+            m.private.name = launchDarklyParamName
         end function,
 
-        setAvatar: function(avatar as String) as Void
-            m.private.avatar = avatar
+        setAvatar: function(launchDarklyParamAvatar as String) as Void
+            m.private.avatar = launchdarklyParamAvatar
         end function,
 
-        setCustom: function(custom as Object) as Void
-            m.private.custom = custom
+        setCustom: function(launchDarklyParamCustom as Object) as Void
+            m.private.custom = launchdarklyParamCustom
         end function,
 
-        addPrivateAttribute: function(privateAttribute as String) as Void
-            m.private.privateAttributeNames.addReplace(privateAttribute, 1)
+        addPrivateAttribute: function(launchdarklyParamPrivateAttribute as String) as Void
+            m.private.privateAttributeNames.addReplace(launchDarklyParamPrivateAttribute, 1)
         end function
     }
 end function
