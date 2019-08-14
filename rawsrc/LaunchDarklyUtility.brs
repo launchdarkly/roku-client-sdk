@@ -35,7 +35,7 @@ function LaunchDarklyBackoff() as Object
 end function
 
 function LaunchDarklyStream(launchDarklyParamBuffer=invalid as Object) as Object
-    this = {
+    launchDarklyLocalThis = {
         offset: 0,
         buffer: invalid,
 
@@ -104,12 +104,12 @@ function LaunchDarklyStream(launchDarklyParamBuffer=invalid as Object) as Object
     }
 
     if launchDarklyParamBuffer <> invalid then
-        this.buffer = launchDarklyParamBuffer
+        launchDarklyLocalThis.buffer = launchDarklyParamBuffer
     else
-        this.buffer = createObject("roByteArray")
+        launchDarklyLocalThis.buffer = createObject("roByteArray")
     end if
 
-    return this
+    return launchDarklyLocalThis
 end function
 
 function LaunchDarklyUtility() as Object
@@ -171,8 +171,8 @@ function LaunchDarklyUtility() as Object
                 return false
             end if
 
-            for x = 0 to launchDarklyParamLeft.count() - 1 step + 1
-                if launchDarklyParamLeft.getEntry(x) <> launchDarklyParamRight.getEntry(x) then
+            for launchDarklyLocalX = 0 to launchDarklyParamLeft.count() - 1 step + 1
+                if launchDarklyParamLeft.getEntry(launchDarklyLocalX) <> launchDarklyParamRight.getEntry(launchDarklyLocalThis) then
                     return false
                 end if
             end for
