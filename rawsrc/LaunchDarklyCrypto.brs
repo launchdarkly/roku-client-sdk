@@ -62,7 +62,7 @@ function LaunchDarklyCryptoReader(launchDarklyParamCipherKey as Object, launchDa
 
                 REM prepare decryption
                 launchDarklyLocalCipherContext = createObject("roEVPCipher")
-                if launchDarklyLocalCipherContext.setup(false, "aes-256-cbc", m.cipherKey, iv, 1) <> 0 then
+                if launchDarklyLocalCipherContext.setup(false, "aes-256-cbc", m.cipherKey, launchDarklyLocalIv, 1) <> 0 then
                     m.errorCode = 3
                     return invalid
                 end if
