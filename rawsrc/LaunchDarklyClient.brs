@@ -374,7 +374,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
                     end if
 
                     m.private.eventsFlushActive = true
-                    launchDarklySerialized = formatJSON(m.private.events)
+                    launchDarklyLocalSerialized = formatJSON(m.private.events)
                     m.private.events.clear()
                     m.private.eventsTransfer.asyncPostFromString(launchDarklyLocalSerialized)
                 end if
