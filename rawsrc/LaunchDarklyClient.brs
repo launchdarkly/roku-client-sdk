@@ -19,7 +19,7 @@ function LaunchDarklyClientSharedFunctions() as Object
 
                     m.private.handleEventsForEval(launchDarklyLocalState)
 
-                    return launchDarklyParamsFallback
+                    return launchDarklyParamFallback
                 else
                     launchDarklyLocalTypeMatch = true
                     if launchDarklyParamStrong <> invalid then
@@ -56,7 +56,7 @@ function LaunchDarklyClientSharedFunctions() as Object
             return m.variation(launchDarklyParamFlagKey, launchDarklyParamFallback, "ifInt")
         end function,
 
-        boolVariation: function(flagKey as String, fallback as Boolean) as Boolean
+        boolVariation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Boolean) as Boolean
             return m.variation(launchDarklyParamFlagKey, launchDarklyParamFallback, "ifBoolean")
         end function,
 
@@ -221,7 +221,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
                         launchDarklyLocalFeatureNode.counters.push(launchDarklyLocalCounterNode)
                     end for
 
-                    launchDarklyLocalEvent.features.addReplace(featureKey, featureNode)
+                    launchDarklyLocalEvent.features.addReplace(launchDarklyLocalFeatureKey, launchDarklyLocalFeatureNode)
                 end for
 
                 return launchDarklyLocalEvent
