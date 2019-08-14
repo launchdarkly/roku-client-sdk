@@ -422,7 +422,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
             if m.private.streamClient.handleMessage(launchDarklyParamMessage) then
                 return true
             else if type(launchDarklyParamMessage) = "roUrlEvent" then
-                launchDarklyLocalEventId = message.getSourceIdentity()
+                launchDarklyLocalEventId = launchDarklyParamMessage.getSourceIdentity()
 
                 launchDarklyLocalPollingId = m.private.pollingTransfer.getIdentity()
                 launchDarklyLocalEventsId = m.private.eventsTransfer.getIdentity()
