@@ -1,36 +1,36 @@
-function LaunchDarklyConfig(mobileKey as String, sceneGraphNode=invalid as Dynamic) as Object
-    this = {
+function LaunchDarklyConfig(launchDarklyParamMobileKey as String, launchDarklyParamSceneGraphNode=invalid as Dynamic) as Object
+    launchDarklyLocalThis = {
         private: {
             appURI: "https://app.launchdarkly.com",
             eventsURI: "https://mobile.launchdarkly.com",
             streamURI: "https://clientstream.launchdarkly.com",
             pollingIntervalSeconds: 15,
-            mobileKey: mobileKey,
+            mobileKey: launchDarklyParamMobileKey,
             offline: false,
             privateAttributeNames: {},
             allAttributesPrivate: false,
             eventsCapacity: 100,
             eventsFlushIntervalSeconds: 30,
             logger: invalid,
-            loggerNode: sceneGraphNode,
+            loggerNode: launchDarklyParamSceneGraphNode,
             storeBackend: invalid,
-            storeBackendNode: sceneGraphNode,
+            storeBackendNode: launchDarklyParamSceneGraphNode,
             streaming: true,
             sdkVersion: "1.0.0-beta.1",
             logLevel: LaunchDarklyLogLevels().warn,
-            sceneGraphNode: sceneGraphNode,
+            sceneGraphNode: launchDarklyParamSceneGraphNode,
 
-            validateURI: function(rawURI as String) as Boolean
-                https = "https://"
-                http = "http://"
+            validateURI: function(launchDarklyParamRawURI as String) as Boolean
+                launchDarklyLocalHTTPS = "https://"
+                launchDarklyLocalHTTP = "http://"
 
-                return left(rawURI, len(https)) = https OR left(rawURI, len(http)) = http
+                return left(launchDarklyParamRawURI, len(launchDarklyLocalHTTPS)) = launchDarklyLocalHTTPS OR left(launchDarklyParamRawURI, len(launchDarklyLocalHTTP)) = launchDarklyLocalHTTP
             end function
         },
 
-        setAppURI: function(appURI as String) as Boolean
-            if m.private.validateURI(appURI) then
-                m.private.appURI = appURI
+        setAppURI: function(launchDarklyParamAppURI as String) as Boolean
+            if m.private.validateURI(launchDarklyParamAppURI) then
+                m.private.appURI = launchDarklyParamAppURI
 
                 return true
             else
@@ -38,9 +38,9 @@ function LaunchDarklyConfig(mobileKey as String, sceneGraphNode=invalid as Dynam
             end if
         end function,
 
-        setEventsURI: function(eventsURI as String) as Boolean
-            if m.private.validateURI(eventsURI) then
-                m.private.eventsURI = eventsURI
+        setEventsURI: function(launchDarklyParamEventsURI as String) as Boolean
+            if m.private.validateURI(launchDarklyParamEventsURI) then
+                m.private.eventsURI = launchDarklyParamEventsURI
 
                 return true
             else
@@ -48,9 +48,9 @@ function LaunchDarklyConfig(mobileKey as String, sceneGraphNode=invalid as Dynam
             end if
         end function,
 
-        setStreamURI: function(streamURI as String) as Boolean
-            if m.private.validateURI(streamURI) then
-                m.private.streamURI = streamURI
+        setStreamURI: function(launchDarklyParamStreamURI as String) as Boolean
+            if m.private.validateURI(launchDarklyParamStreamURI) then
+                m.private.streamURI = launchDarklyParamStreamURI
 
                 return true
             else
@@ -58,56 +58,56 @@ function LaunchDarklyConfig(mobileKey as String, sceneGraphNode=invalid as Dynam
             end if
         end function
 
-        setPollingIntervalSeconds: function(pollingIntervalSeconds as Integer) as Void
-            m.private.pollingIntervalSeconds = pollingIntervalSeconds
+        setPollingIntervalSeconds: function(launchdarklyParamPollingIntervalSeconds as Integer) as Void
+            m.private.pollingIntervalSeconds = launchDarklyParamPollingIntervalSeconds
         end function,
 
-        setOffline: function(offline as Boolean) as Void
-            m.private.offline = offline
+        setOffline: function(launchDarklyParamOffline as Boolean) as Void
+            m.private.offline = launchDarklyParamOffline
         end function,
 
-        addPrivateAttribute: function(privateAttribute as String) as Void
-            m.private.privateAttributeNames.addReplace(privateAttribute, 1)
+        addPrivateAttribute: function(launchDarklyParamPrivateAttribute as String) as Void
+            m.private.privateAttributeNames.addReplace(launchDarklyParamPrivateAttribute, 1)
         end function,
 
-        setAllAttributesPrivate: function(allAttributesPrivate as Boolean) as Void
-            m.private.allAttributesPrivate = allAttributesPrivate
+        setAllAttributesPrivate: function(launchDarklyParamAllAttributesPrivate as Boolean) as Void
+            m.private.allAttributesPrivate = launchDarklyParamAllAttributesPrivate
         end function,
 
-        setEventsCapacity: function(capacity as Integer) as Void
-            m.private.eventsCapacity = capacity
+        setEventsCapacity: function(launchDarklyParamCapacity as Integer) as Void
+            m.private.eventsCapacity = launchDarklyParamCapacity
         end function,
 
-        setEventsFlushIntervalSeconds: function(intervalSeconds as Integer) as Void
-            m.private.eventsFlushIntervalSeconds = intervalSeconds
+        setEventsFlushIntervalSeconds: function(launchDarklyParamIntervalSeconds as Integer) as Void
+            m.private.eventsFlushIntervalSeconds = launchDarklyParamIntervalSeconds
         end function,
 
-        setLogger: function(newLogger as Object) as Void
-            m.private.logger = newLogger
+        setLogger: function(launchDarklyParamNewLogger as Object) as Void
+            m.private.logger = launchDarklyParamNewLogger
         end function,
 
-        setLoggerNode: function(loggerNode as Dynamic) as Void
-            m.private.loggerNode = loggerNode
+        setLoggerNode: function(launchDarklyParamLoggerNode as Dynamic) as Void
+            m.private.loggerNode = launchDarklyParamLoggerNode
         end function,
 
-        setStoreBackend: function(newStoreBackend as Object) as Void
-            m.private.storeBackend = newStoreBackend
+        setStoreBackend: function(launchDarklyParamNewStoreBackend as Object) as Void
+            m.private.storeBackend = launchDarklyParamNewStoreBackend
         end function,
 
-        setStoreBackendNode: function(storeBackendNode as Dynamic) as Void
-            m.private.storeBackendNode = storeBackendNode
+        setStoreBackendNode: function(launchDarklyParamStoreBackendNode as Dynamic) as Void
+            m.private.storeBackendNode = launchDarklyParamStoreBackendNode
         end function,
 
-        setStreaming: function(shouldStream as Boolean) as Void
-            m.private.streaming = shouldStream
+        setStreaming: function(launchDarklyParamShouldStream as Boolean) as Void
+            m.private.streaming = launchDarklyParamShouldStream
         end function,
 
-        setLogLevel: function(logLevel as Integer) as Void
-            m.private.logLevel = logLevel
+        setLogLevel: function(launchDarklyParamLogLevel as Integer) as Void
+            m.private.logLevel = launchDarklyParamLogLevel
         end function
     }
 
-    this.private.logger = LaunchDarklyLogger(this, LaunchDarklyLoggerPrint())
+    launchDarklyLocalThis.private.logger = LaunchDarklyLogger(launchDarklyLocalThis, LaunchDarklyLoggerPrint())
 
-    return this
+    return launchDarklyLocalThis
 end function
