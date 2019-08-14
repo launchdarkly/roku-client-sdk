@@ -112,7 +112,7 @@ function LaunchDarklyUserEncode(launchDarklyParamUser as Object, launchDarklyPar
     end if
 
     if launchDarklyParamRedact = true AND launchDarklyLocalPrivateAttrs.count() <> 0 then
-        encoded.privateAttrs = launchDarklyLocalPrivateAttrs
+        launchDarklyLocalEncoded.privateAttrs = launchDarklyLocalPrivateAttrs
     end if
 
     return launchDarklyLocalEncoded

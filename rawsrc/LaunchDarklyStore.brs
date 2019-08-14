@@ -101,7 +101,7 @@ function LaunchDarklyStore(launchDarklyParamBackend=invalid as Object) as Object
             end if
 
             for each launchDarklyLocalFlagKey in launchDarklyLocalItems
-                launchDarklyLocalFlag = items.lookup(launchDarklyLocalFlagKey)
+                launchDarklyLocalFlag = launchDarklyLocalItems.lookup(launchDarklyLocalFlagKey)
 
                 if launchDarklyLocalFlag.deleted <> true then
                     launchDarklyLocalResult[launchDarklyLocalFlagKey] = launchDarklyLocalFLag

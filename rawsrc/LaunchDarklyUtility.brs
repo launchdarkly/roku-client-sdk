@@ -172,7 +172,7 @@ function LaunchDarklyUtility() as Object
             end if
 
             for launchDarklyLocalX = 0 to launchDarklyParamLeft.count() - 1 step + 1
-                if launchDarklyParamLeft.getEntry(launchDarklyLocalX) <> launchDarklyParamRight.getEntry(launchDarklyLocalThis) then
+                if launchDarklyParamLeft.getEntry(launchDarklyLocalX) <> launchDarklyParamRight.getEntry(launchDarklyLocalX) then
                     return false
                 end if
             end for
@@ -204,7 +204,7 @@ function LaunchDarklyUtility() as Object
 
             if left(launchDarklyParamRawURI, len(launchDarklyLocalHTTPS)) = launchdarklyLocalHTTPS then
                 return mid(launchDarklyParamRawURI, len(launchDarklyLocalHTTPS) + 1)
-            else if left(launchDarklyParamRawURI, len(launchDarklyLocalHTTP)) = http then
+            else if left(launchDarklyParamRawURI, len(launchDarklyLocalHTTP)) = launchDarklyLocalHTTP then
                 return mid(launchDarklyParamRawURI, len(launchDarklyLocalHTTP) + 1)
             else
                 REM impossible in usage
