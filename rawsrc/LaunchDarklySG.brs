@@ -1,5 +1,5 @@
 function LaunchDarklySGInit(launchDarklyParamConfig as Object, launchDarklyParamUser as Object) as Void
-    launchDarklyLocalNode = config.private.sceneGraphNode
+    launchDarklyLocalNode = launchDarklyParamConfig.private.sceneGraphNode
     launchDarklyLocalNode.user = launchDarklyParamUser
     launchDarklyLocalNode.config = launchDarklyParamConfig
 end function
@@ -10,7 +10,7 @@ function LaunchDarklySG(launchDarklyParamClientNode as Dynamic) as Object
 
     launchDarklyLocalThis = {
         private: {
-            clientNode: launchDarklpParamClientNode,
+            clientNode: launchDarklyParamClientNode,
             logger: launchDarklyLocalLogger,
             offline: launchDarklyParamClientNode.config.private.offline,
             storeNode: launchDarklyParamClientNode.config.private.storeBackendNode,

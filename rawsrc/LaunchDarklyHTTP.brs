@@ -31,7 +31,7 @@ function LaunchDarklyHTTPResponse() as Object
             },
 
             colon: launchDarklyLocalUtil.makeBytes(":"),
-            space: launchDarklyLocalUtil.lmakeBytes(" "),
+            space: launchDarklyLocalUtil.makeBytes(" "),
             crlf: launchDarklyLocalUtil.makeBytes(chr(13) + chr(10)),
             crlfcrlf: launchDarklyLocalUtil.makeBytes(chr(13) + chr(10) + chr(13) + chr(10)),
             slash: launchDarklyLocalUtil.makeBytes("/"),
@@ -79,7 +79,7 @@ function LaunchDarklyHTTPResponse() as Object
                 end if
                 launchDarklyLocalMinorVersion = launchDarklyLocalMinorVersion.toAsciiString().toInt()
 
-                launchDarklyLocalResponseCode = statusLineStream.takeUntilSequence(m.space)
+                launchDarklyLocalResponseCode = launchDarklyLocalStatusLineStream.takeUntilSequence(m.space)
                 if m.util.isNatural(launchDarklyLocalResponseCode) then
                     if launchDarklyLocalResponseCode.count() = 3 then
                         launchDarklyLocalResponseCode = launchDarklyLocalResponseCode.toAsciiString().toInt()
@@ -137,11 +137,11 @@ function LaunchDarklyHTTPResponse() as Object
                     end if
                 end if
 
-                launchDarklyParamCtx.responseCode = responseCode
-                launchDarklyParamCtx.responseMessage = responseMessage
-                launchDarklyParamCtx.responseHeaders = responseHeaders
-                launchDarklyParamCtx.responseMajorVersion = majorVersion
-                launchDarklyParamCtx.responseMinorVersion = minorVersion
+                launchDarklyParamCtx.responseCode = launchDarklyLocalResponseCode
+                launchDarklyParamCtx.responseMessage = launchDarklyLocalResponseMessage
+                launchDarklyParamCtx.responseHeaders = launchDarklyLocalResponseHeaders
+                launchDarklyParamCtx.responseMajorVersion = launchDarklyLocalMajorVersion
+                launchDarklyParamCtx.responseMinorVersion = launchDarklyLocalMinorVersion
 
                 return m.responseStatusMap.bodyPending
             end function,
@@ -197,7 +197,7 @@ function LaunchDarklyHTTPResponse() as Object
                             if launchDarklyLocalChunkSize = invalid then
                                 launchDarklyParamCtx.responseStatus = m.responseStatusMap.chunkLengthInvalidHex
                                 return invalid
-                            else if chunkSize = 0 then
+                            else if launchDarklyLocalChunkSize = 0 then
                                 launchDarklyParamCtx.responseStatus = m.responseStatusMap.responseDone
 
                                 exit while
@@ -214,7 +214,7 @@ function LaunchDarklyHTTPResponse() as Object
 
                         m.stream.takeCount(2)
 
-                        responseBody.append(launchDarklyLocalChunk)
+                        launchDarklyLocalResponseBody.append(launchDarklyLocalChunk)
 
                         m.currentChunkSize = invalid
                     end while
@@ -228,12 +228,12 @@ function LaunchDarklyHTTPResponse() as Object
             end function
 
             tryParseHTTP: function(launchDarklyParamCtx as Object) as Object
-                if ctx.responseStatus = m.responseStatusMap.headerPending then
-                    ctx.responseStatus = m.tryParseHeader(launchDarklyLocalCtx)
+                if launchDarklyParamCtx.responseStatus = m.responseStatusMap.headerPending then
+                    launchDarklyParamCtx.responseStatus = m.tryParseHeader(launchDarklyParamCtx)
                 end if
 
-                if ctx.responseStatus = m.responseStatusMap.bodyPending then
-                    return m.tryParseBody(launchDarklyLocalCtx)
+                if launchDarklyParamCtx.responseStatus = m.responseStatusMap.bodyPending then
+                    return m.tryParseBody(launchDarklyParamCtx)
                 end if
 
                 return invalid

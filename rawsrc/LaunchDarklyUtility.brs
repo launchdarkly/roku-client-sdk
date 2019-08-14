@@ -51,7 +51,7 @@ function LaunchDarklyStream(launchDarklyParamBuffer=invalid as Object) as Object
 
         takeCount: function(launchDarklyParamCount as Integer) as Object
             launchDarklyLocalResult = createObject("roByteArray")
-            launchDarklyLocalResult.setResize(count, true)
+            launchDarklyLocalResult.setResize(launchDarklyParamCount, true)
 
             m.util.memcpy(m.buffer, m.offset, launchDarklyLocalResult, 0, launchDarklyParamCount)
             m.offset += launchDarklyParamCount
@@ -65,11 +65,11 @@ function LaunchDarklyStream(launchDarklyParamBuffer=invalid as Object) as Object
 
         takeUntilSequence: function(launchDarklyParamSequence as Object, launchDarklyParamIncludeSequence=false as Boolean) as Object
             for launchDarklyLocalX = m.offset to m.buffer.count() - 1 step + 1
-                if m.buffer[x] = launchDarklyParamSequence[0] then
+                if m.buffer[launchDarklyLocalX] = launchDarklyParamSequence[0] then
                     launchDarklyLocalMatch = true
 
                     for launchDarklyLocalY = 1 to launchDarklyParamSequence.count() - 1 step + 1
-                        if m.buffer[launchDarklyLocalX + launchDarklyLocalY] <> sequence[launchDarklyLocalY] then
+                        if m.buffer[launchDarklyLocalX + launchDarklyLocalY] <> launchDarklyParamSequence[launchDarklyLocalY] then
                             launchDarklyLocalMatch = false
                             exit for
                         end if
@@ -80,7 +80,7 @@ function LaunchDarklyStream(launchDarklyParamBuffer=invalid as Object) as Object
                         m.offset += launchDarklyParamSequence.count()
 
                         if launchDarklyParamIncludeSequence = true then
-                            prefix.append(launchdarklyParamSequence)
+                            launchDarklyLocalPrefix.append(launchDarklyParamSequence)
                         end if
 
                         return launchDarklyLocalPrefix
@@ -98,7 +98,7 @@ function LaunchDarklyStream(launchDarklyParamBuffer=invalid as Object) as Object
             launchDarklyLocalRemaining.setResize(launchDarklyLocalRemainingCount, true)
 
             m.util.memcpy(m.buffer, m.offset, launchDarklyLocalRemaining, 0, launchDarklyLocalRemainingCount)
-            m.buffer = remaining
+            m.buffer = launchDarklyLocalRemaining
             m.offset = 0
         end function
     }
@@ -116,7 +116,7 @@ function LaunchDarklyUtility() as Object
     return {
         memcpy: function(launchDarklyParamSource as Object, launchDarklyParamSourceOffset as Integer, launchDarklyParamDestination as Object, launchDarklyParamDestinationOffset as Integer, launchDarklyParamCount as Integer) as Void
             for launchDarklyLocalI = 0 to launchDarklyParamCount - 1 step + 1
-                destination.setEntry(launchDarklyParamDestinationOffset + launchDarklyLocalI, launchDarklyParamSource.getEntry(launchDarklyParamSourceOffset + launchDarklyLocalI))
+                launchDarklyParamDestination.setEntry(launchDarklyParamDestinationOffset + launchDarklyLocalI, launchDarklyParamSource.getEntry(launchDarklyParamSourceOffset + launchDarklyLocalI))
             end for
         end function
 

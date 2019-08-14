@@ -41,7 +41,7 @@ function LaunchDarklyClientSharedFunctions() as Object
                         value: launchDarklyLocalValue,
                         flagKey: launchDarklyParamFlagKey,
                         flag: launchDarklyLocalFlag,
-                        fallback: launchDarklyLocalFallback,
+                        fallback: launchDarklyParamFallback,
                         typeMatch: launchDarklyLocalTypeMatch
                     }
 

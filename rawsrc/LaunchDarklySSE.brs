@@ -5,7 +5,7 @@ function LaunchDarklySSE() as Object
             eventName: "",
             eventBuffer: "",
 
-            processField: function(launchDarklyParamField as String, launchDarlyParamValue as String) as Void
+            processField: function(launchDarklyParamField as String, launchDarklyParamValue as String) as Void
                 if left(launchDarklyParamValue, 1) = chr(32) then
                     launchDarklyParamValue = mid(launchDarklyParamValue, 2)
                 end if
@@ -64,7 +64,7 @@ function LaunchDarklySSE() as Object
 
         consumeEvent: function() as Object
             while true
-                lauchDarklyLocalLineEndPosition = instr(1, m.private.lineBuffer, chr(10))
+                launchDarklyLocalLineEndPosition = instr(1, m.private.lineBuffer, chr(10))
 
                 if launchDarklyLocalLineEndPosition = 0 then
                     return invalid

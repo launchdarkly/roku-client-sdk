@@ -50,7 +50,7 @@ end function
 function LaunchDarklyLogger(launchDarklyParamConfig as Object, launchDarklyParamBackend=invalid as Object) as Object
     return {
         private: {
-            logLevel: config.private.logLevel,
+            logLevel: launchDarklyParamConfig.private.logLevel,
             backend: launchDarklyParamBackend,
             levels: LaunchDarklyLogLevels(),
 

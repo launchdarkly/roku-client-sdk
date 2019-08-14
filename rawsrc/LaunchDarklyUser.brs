@@ -1,4 +1,4 @@
-function LaunchDarklyUser(launcDarklyParamUserKey as String) as Object
+function LaunchDarklyUser(launchDarklyParamUserKey as String) as Object
     return {
         private: {
             key: launchDarklyParamUserKey,
@@ -87,7 +87,7 @@ function LaunchDarklyUserEncode(launchDarklyParamUser as Object, launchDarklyPar
 
     launchDarklyLocalPrivateAttrs = invalid
 
-    if launchDarklyLocalRedact = true then
+    if launchDarklyParamRedact = true then
         launchDarklyLocalPrivateAttrs = createObject("roArray", 0, true)
     end if
 
@@ -111,7 +111,7 @@ function LaunchDarklyUserEncode(launchDarklyParamUser as Object, launchDarklyPar
         launchDarklyLocalEncoded.custom = launchDarklyLocalCustom
     end if
 
-    if launchDarklyLocalRedact = true AND launchDarklyLocalPrivateAttrs.count() <> 0 then
+    if launchDarklyParamRedact = true AND launchDarklyLocalPrivateAttrs.count() <> 0 then
         encoded.privateAttrs = launchDarklyLocalPrivateAttrs
     end if
 

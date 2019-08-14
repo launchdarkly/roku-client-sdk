@@ -184,7 +184,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                     else
                         m.config.private.logger.debug("SSE stream got event: " + launchDarklyLocalEvent.name)
 
-                        launchDarklyLocalBody = parseJSON(event.value)
+                        launchDarklyLocalBody = parseJSON(launchDarklyLocalEvent.value)
 
                         if launchDarklyLocalBody = invalid then
                             m.config.private.logger.error("SSE stream failed to parse JSON")
@@ -247,7 +247,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
             end function,
 
             handleHandshakeMessage: function(launchDarklyParamMessage as Dynamic) as Void
-                launchDarklyLocalResponseCode = message.getResponseCode()
+                launchDarklyLocalResponseCode = launchDarklyParamMessage.getResponseCode()
 
                 m.config.private.logger.debug("handshake response code: " + launchDarklyLocalResponseCode.toStr())
 
@@ -284,7 +284,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                 m.config.private.logger.debug("got shared secret")
 
                 launchDarklyLocalCipherKeyBuffer = launchDarklyLocalDecoded.cipherKey
-                launchdarklyLocalAuthKeyBuffer = launchDarklyDecoded.authenticationKey
+                launchDarklyLocalAuthKeyBuffer = launchDarklyLocalDecoded.authenticationKey
 
                 launchDarklyLocalCipherKey = createObject("roByteArray")
                 launchDarklyLocalCipherKey.fromBase64String(launchDarklyLocalDecoded.cipherKey)
