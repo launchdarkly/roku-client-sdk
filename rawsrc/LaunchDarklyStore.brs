@@ -121,7 +121,7 @@ function LaunchDarklyStore(launchDarklyParamBackend=invalid as Object) as Object
             end if
 
             if launchDarklyLocalExisting = invalid OR launchDarklyParamReplacementFlag.version > launchDarklyLocalExisting.version then
-                m.private.cache[launchDarklyParamReplacementFlag.key] = launchdarklyParamReplacementFlag
+                m.private.cache[launchDarklyParamReplacementFlag.key] = launchDarklyParamReplacementFlag
 
                 if m.private.backend <> invalid then
                     m.private.backend.put(launchDarklyParamReplacementFlag)
