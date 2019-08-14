@@ -4,8 +4,8 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
             config: launchDarklyParamConfig,
             store: launchDarklyParamStore,
             messagePort: launchDarklyParamMessagePort,
-            user: LaunchDarklyParamUser,
-            util: LaunchDarklyUtility(),
+            user: launchDarklyParamUser,
+            util: launchDarklyUtility(),
 
             stageMap: {
                 notStarted: 0,

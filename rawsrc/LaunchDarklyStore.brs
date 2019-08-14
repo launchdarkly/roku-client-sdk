@@ -14,7 +14,7 @@ function LaunchDarklyStoreSG(launchDarklyParamNode) as Object
 
         put: function(launchDarklyParamFlag as Object) as Void
             launchDarklyLocalFlags = m.private.node.flags
-            launchDarklyLocalFlags[launchdarklyParamFlag.key] = launchDarklyParamFlag
+            launchDarklyLocalFlags[launchDarklyParamFlag.key] = launchDarklyParamFlag
             m.private.node.flags = launchDarklyLocalFlags
         end function,
 

@@ -74,7 +74,7 @@ function LaunchDarklyHTTPResponse() as Object
                 launchDarklyLocalMajorVersion = launchDarklyLocalMajorVersion.toAsciiString().toInt()
 
                 launchDarklyLocalMinorVersion = launchDarklyLocalResponseVersionStream.takeUntilSequence(m.space)
-                if launchDarklyLocalMinorversion = invalid OR m.util.isNatural(launchdarklyLocalMinorVersion) = false then
+                if launchDarklyLocalMinorVersion = invalid OR m.util.isNatural(launchdarklyLocalMinorVersion) = false then
                     return m.responseStatusMap.badVersionFormat
                 end if
                 launchDarklyLocalMinorVersion = launchDarklyLocalMinorVersion.toAsciiString().toInt()

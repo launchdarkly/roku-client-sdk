@@ -33,11 +33,11 @@ function LaunchDarklyUser(launchDarklyParamUserKey as String) as Object
         end function,
 
         setAvatar: function(launchDarklyParamAvatar as String) as Void
-            m.private.avatar = launchdarklyParamAvatar
+            m.private.avatar = launchDarklyParamAvatar
         end function,
 
         setCustom: function(launchDarklyParamCustom as Object) as Void
-            m.private.custom = launchdarklyParamCustom
+            m.private.custom = launchDarklyParamCustom
         end function,
 
         addPrivateAttribute: function(launchDarklyParamPrivateAttribute as String) as Void
