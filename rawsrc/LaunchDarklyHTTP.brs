@@ -1,6 +1,14 @@
 REM https://tools.ietf.org/html/rfc7230
 
+function LaunchDarklyHTTPRequest() as Object
+    return LaunchDarklyHTTPBase(true)
+end function
+
 function LaunchDarklyHTTPResponse() as Object
+    return LaunchDarklyHTTPBase(false)
+end function
+
+function LaunchDarklyHTTPBase(launchDarklyParamMessageType as Boolean) as Object
     launchDarklyLocalUtil = LaunchDarklyUtility()
 
     return {
@@ -21,7 +29,8 @@ function LaunchDarklyHTTPResponse() as Object
                 chunkLengthInvalidHex: -5,
                 statusCodeNot3Digits: -6,
                 unknownTransferEncoding: -7,
-                badVersionFormat: -8
+                badVersionFormat: -8,
+                badRequestLineFormat: -9
             },
 
             bodyStreamTypeMap: {
@@ -30,12 +39,99 @@ function LaunchDarklyHTTPResponse() as Object
                 unknown: 3
             },
 
+            REM true for request
+            REM false for response
+            messageType: launchDarklyParamMessageType,
+
             colon: launchDarklyLocalUtil.makeBytes(":"),
             space: launchDarklyLocalUtil.makeBytes(" "),
             crlf: launchDarklyLocalUtil.makeBytes(chr(13) + chr(10)),
             crlfcrlf: launchDarklyLocalUtil.makeBytes(chr(13) + chr(10) + chr(13) + chr(10)),
             slash: launchDarklyLocalUtil.makeBytes("/"),
             period: launchDarklyLocalUtil.makeBytes("."),
+
+            consumeHTTPVersion: function(launchDarklyParamCtx as Object, launchDarklyParamStream as Object) as Integer
+                launchDarklyLocalResponseVersionPrefix = launchDarklyParamStream.takeCount(5)
+                if launchDarklyLocalResponseVersionPrefix = invalid OR launchDarklyLocalResponseVersionPrefix.toAsciiString() <> "HTTP/" then
+                    return m.responseStatusMap.badVersionFormat
+                end if
+
+                launchDarklyLocalMajorVersion = launchDarklyParamStream.takeByte()
+                if launchDarklyLocalMajorVersion = invalid OR m.util.isNaturalASCIIByte(launchDarklyLocalMajorVersion) = false then
+                    return m.responseStatusMap.badVersionFormat
+                end if
+                launchDarklyLocalMajorVersion = m.util.convertASCIIByteToInteger(launchDarklyLocalMajorVersion)
+
+                launchDarklyLocalDot = launchDarklyParamStream.takeByte()
+                if launchDarklyLocalDot <> 46 then
+                    return m.responseStatusMap.badVersionFormat
+                end if
+
+                launchDarklyLocalMinorVersion = launchDarklyParamStream.takeByte()
+                if launchDarklyLocalMinorVersion = invalid OR m.util.isNaturalASCIIByte(launchDarklyLocalMinorVersion) = false then
+                    return m.responseStatusMap.badVersionFormat
+                end if
+                launchDarklyLocalMinorVersion = m.util.convertASCIIByteToInteger(launchDarklyLocalMinorVersion)
+
+                launchDarklyParamCtx.majorVersion = launchDarklyLocalMajorVersion
+                launchDarklyParamCtx.minorVersion = launchDarklyLocalMinorVersion
+
+                return 0
+            end function
+
+            consumeStatusLine: function(launchDarklyParamCtx as Object, launchDarklyParamStream as Object) as Integer
+                launchDarklyHTTPVersionStatus = m.consumeHTTPVersion(launchDarklyParamCtx, launchDarklyParamStream)
+                if launchDarklyHTTPVersionStatus <> 0 then
+                    return launchDarklyHTTPVersionStatus
+                end if
+
+                launchDarklyLocalSpace = launchDarklyParamStream.takeByte()
+                if launchDarklyLocalSpace <> 32 then
+                    return m.responseStatusMap.badVersionFormat
+                end if
+
+                launchDarklyLocalResponseCode = launchDarklyParamStream.takeUntilSequence(m.space)
+                if m.util.isNatural(launchDarklyLocalResponseCode) then
+                    if launchDarklyLocalResponseCode.count() = 3 then
+                        launchDarklyLocalResponseCode = launchDarklyLocalResponseCode.toAsciiString().toInt()
+                    else
+                        return m.responseStatusMap.statusCodeNot3Digits
+                    end if
+                else
+                    return m.responseStatusMap.statusNotAValidNumber
+                end if
+
+                launchDarklyLocalResponseMessage = launchDarklyParamStream.takeUntilSequence(m.crlf).toAsciiString()
+
+                launchDarklyParamCtx.responseCode = launchDarklyLocalResponseCode
+                launchDarklyParamCtx.responseMessage = launchDarklyLocalResponseMessage
+
+                return 0
+            end function,
+
+            consumeRequestLine: function(launchDarklyParamCtx as Object, launchDarklyParamStream as Object) as Integer
+                launchDarklyLocalVerb = launchDarklyParamStream.takeUntilSequence(m.space)
+                if launchDarklyLocalVerb = invalid then
+                    return m.responseStatusMap.badRequestLineFormat
+                end if
+
+                launchDarklyLocalPath = launchDarklyParamStream.takeUntilSequence(m.space)
+                if launchDarklyLocalPath = invalid then
+                    return m.responseStatusMap.badRequestLineFormat
+                end if
+
+                launchDarklyHTTPVersionStatus = m.consumeHTTPVersion(launchDarklyParamCtx, launchDarklyParamStream)
+                if launchDarklyHTTPVersionStatus <> 0 then
+                    return launchDarklyHTTPVersionStatus
+                end if
+
+                launchDarklyParamStream.skipCount(2)
+
+                launchDarklyParamCtx.requestVerb = launchDarklyLocalVerb.toAsciiString()
+                launchDarklyParamCtx.requestPath = launchDarklyLocalPath.toAsciiString()
+
+                return 0
+            end function
 
             tryParseHeader: function(launchDarklyParamCtx as Object) as Integer
                 launchDarklyLocalHeader = m.stream.takeUntilSequence(m.crlfcrlf, true)
@@ -49,48 +145,23 @@ function LaunchDarklyHTTPResponse() as Object
 
                 launchDarklyLocalHeaderStream = LaunchDarklyStream(launchDarklyLocalHeader)
 
-                launchDarklyLocalStatusLine = launchDarklyLocalHeaderStream.takeUntilSequence(m.crlf, true)
-                if launchDarklyLocalStatusLine = invalid then
+                launchDarklyLocalStartLine = launchDarklyLocalHeaderStream.takeUntilSequence(m.crlf, true)
+                if launchDarklyLocalStartLine = invalid then
+                    REM should be impossible
                     return m.responseStatusMap.badVersionFormat
                 end if
 
-                launchDarklyLocalStatusLineStream = LaunchDarklyStream(launchDarklyLocalStatusLine)
-
-                launchDarklyLocalResponseVersion = launchDarklyLocalStatusLineStream.takeUntilSequence(m.space, true)
-                if launchDarklyLocalResponseVersion = invalid then
-                    return m.responseStatusMap.badVersionFormat
-                end if
-                launchDarklyLocalResponseVersionStream = LaunchDarklyStream(launchDarklyLocalResponseVersion)
-
-                launchDarklyLocalResponseVersionPrefix = launchDarklyLocalResponseVersionStream.takeUntilSequence(m.slash)
-                if launchDarklyLocalResponseVersionPrefix = invalid OR launchDarklyLocalResponseVersionPrefix.toAsciiString() <> "HTTP" then
-                    return m.responseStatusMap.badVersionFormat
-                end if
-
-                launchDarklyLocalMajorVersion = launchDarklyLocalResponseVersionStream.takeUntilSequence(m.period)
-                if launchDarklyLocalMajorVersion = invalid OR m.util.isNatural(launchDarklyLocalMajorVersion) = false then
-                    return m.responseStatusMap.badVersionFormat
-                end if
-                launchDarklyLocalMajorVersion = launchDarklyLocalMajorVersion.toAsciiString().toInt()
-
-                launchDarklyLocalMinorVersion = launchDarklyLocalResponseVersionStream.takeUntilSequence(m.space)
-                if launchDarklyLocalMinorVersion = invalid OR m.util.isNatural(launchdarklyLocalMinorVersion) = false then
-                    return m.responseStatusMap.badVersionFormat
-                end if
-                launchDarklyLocalMinorVersion = launchDarklyLocalMinorVersion.toAsciiString().toInt()
-
-                launchDarklyLocalResponseCode = launchDarklyLocalStatusLineStream.takeUntilSequence(m.space)
-                if m.util.isNatural(launchDarklyLocalResponseCode) then
-                    if launchDarklyLocalResponseCode.count() = 3 then
-                        launchDarklyLocalResponseCode = launchDarklyLocalResponseCode.toAsciiString().toInt()
-                    else
-                        return m.responseStatusMap.statusCodeNot3Digits
+                if m.messageType = true then
+                    launchDarklyLocalRequestLineResult = m.consumeRequestLine(launchDarklyParamCtx, LaunchDarklyStream(launchDarklyLocalStartLine))
+                    if launchDarklyLocalRequestLineResult <> 0 then
+                        return launchDarklyLocalRequestLineResult
                     end if
                 else
-                    return m.responseStatusMap.statusNotAValidNumber
+                    launchDarklyLocalStatusLineResult = m.consumeStatusLine(launchDarklyParamCtx, LaunchDarklyStream(launchDarklyLocalStartLine))
+                    if launchDarklyLocalStatusLineResult <> 0 then
+                        return launchDarklyLocalStatusLineResult
+                    end if
                 end if
-
-                launchDarklyLocalResponseMessage = launchDarklyLocalStatusLineStream.takeUntilSequence(m.crlf).toAsciiString()
 
                 launchDarklyLocalResponseHeaders = {}
                 while true
@@ -137,11 +208,7 @@ function LaunchDarklyHTTPResponse() as Object
                     end if
                 end if
 
-                launchDarklyParamCtx.responseCode = launchDarklyLocalResponseCode
-                launchDarklyParamCtx.responseMessage = launchDarklyLocalResponseMessage
-                launchDarklyParamCtx.responseHeaders = launchDarklyLocalResponseHeaders
-                launchDarklyParamCtx.responseMajorVersion = launchDarklyLocalMajorVersion
-                launchDarklyParamCtx.responseMinorVersion = launchDarklyLocalMinorVersion
+                launchDarklyParamCtx.headers = launchDarklyLocalResponseHeaders
 
                 return m.responseStatusMap.bodyPending
             end function,
@@ -157,7 +224,10 @@ function LaunchDarklyHTTPResponse() as Object
             tryParseBody: function(launchDarklyParamCtx as Object) as Object
                 launchDarklyLocalResponseBody = invalid
 
-                if launchDarklyParamCtx.responseCode = 204 then
+                if m.bodyStreamType = m.bodyStreamTypeMap.unknown and m.messageType = true then
+                    launchDarklyParamCtx.responseStatus = m.responseStatusMap.responseDone
+                    return invalid
+                else if launchDarklyParamCtx.responseCode = 204 then
                     launchDarklyParamCtx.responseStatus = m.responseStatusMap.responseDone
                     return invalid
                 else if m.bodyStreamType = m.bodyStreamTypeMap.unknown then
@@ -267,6 +337,8 @@ function LaunchDarklyHTTPResponse() as Object
                 return "unknown transfer encoding"
             else if launchDarklyLocalS = -8 then
                 return "bad version format"
+            else if launchDarklyLocalS = -9 then
+                return "bad request line format"
             end if
 
             return "unknown status"
@@ -274,9 +346,11 @@ function LaunchDarklyHTTPResponse() as Object
 
         responseCode: invalid,
         responseMessage: invalid,
-        responseHeaders: invalid,
-        responseMajorVersion: invalid,
-        responseMinorVersion: invalid,
+        headers: invalid,
+        majorVersion: invalid,
+        minorVersion: invalid,
+        requestPath: invalid,
+        requestVerb: invalid,
 
         addBytes: function(launchDarklyParamBytes as Object) as Void
             m.private.stream.addBytes(launchDarklyParamBytes)

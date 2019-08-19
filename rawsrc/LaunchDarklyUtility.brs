@@ -50,11 +50,27 @@ function LaunchDarklyStream(launchDarklyParamBuffer=invalid as Object) as Object
         end function,
 
         takeCount: function(launchDarklyParamCount as Integer) as Object
+            if m.count() < launchDarklyParamCount then
+                return invalid
+            end if
+
             launchDarklyLocalResult = createObject("roByteArray")
             launchDarklyLocalResult.setResize(launchDarklyParamCount, true)
 
             m.util.memcpy(m.buffer, m.offset, launchDarklyLocalResult, 0, launchDarklyParamCount)
             m.offset += launchDarklyParamCount
+
+            return launchDarklyLocalResult
+        end function,
+
+        REM Invalid or Integer
+        takeByte: function() as Dynamic
+            if m.count() = 0 then
+                return invalid
+            end if
+
+            launchDarklyLocalResult = m.buffer[m.offset]
+            m.offset += 1
 
             return launchDarklyLocalResult
         end function,
@@ -141,9 +157,17 @@ function LaunchDarklyUtility() as Object
             end if
         end function
 
+        isNaturalASCIIByte: function(launchDarklyParamByte as Integer) as Boolean
+            return launchDarklyParamByte >= 48 AND launchDarklyParamByte <= 57
+        end function,
+
+        convertASCIIByteToInteger: function(launchDarklyParamByte as Integer) as Integer
+            return launchDarklyParamByte - 48
+        end function,
+
         isNatural: function(launchDarklyParamBuffer as Object) as Boolean
             for each launchDarklyLocalChar in launchDarklyParamBuffer
-                if launchDarklyLocalChar < 48 OR launchDarklyLocalChar > 57 then
+                if not m.isNaturalASCIIByte(launchDarklyLocalChar)
                     return false
                 end if
             end for
