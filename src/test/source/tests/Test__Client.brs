@@ -287,14 +287,14 @@ function TestCase__Client_Identify() as String
     }))
 end function
 
-function testVariation(ctx as Object, functionName as String, expectedValue as Dynamic, fallback as Dynamic) as String
+function testVariation(ctx as Object, functionName as String, flagValue as Dynamic, fallback as Dynamic, expectedValue as Dynamic) as String
     client = makeTestClientOnline()
 
     flagKey = "flag1"
 
     client.private.store.putAll({
         flag1: {
-            value: expectedValue,
+            value: flagValue,
             variation: 3,
             version: 4
         }
@@ -306,19 +306,31 @@ function testVariation(ctx as Object, functionName as String, expectedValue as D
 end function
 
 function TestCase__Client_Variation_Int() as String
-    return testVariation(m, "intVariation", 13, 5)
+    return testVariation(m, "intVariation", 13, 5, 13)
 end function
 
 function TestCase__Client_Variation_Bool() as String
-    return testVariation(m, "boolVariation", true, false)
+    return testVariation(m, "boolVariation", true, false, true)
 end function
 
 function TestCase__Client_Variation_String() as String
-    return testVariation(m, "stringVariation", "abc", "def")
+    return testVariation(m, "stringVariation", "abc", "def", "abc")
 end function
 
 function TestCase__Client_Variation_AA() as String
-    return testVariation(m, "aaVariation", { b: 6 }, { a: 4 })
+    return testVariation(m, "aaVariation", { b: 6 }, { a: 4 }, { b: 6 })
+end function
+
+function TestCase__Client_Variation_Double() as String
+    return testVariation(m, "doubleVariation", 12.5, 6.2, 12.5)
+end function
+
+function TestCase__Client_Variation_IntVariationDoubleFlag() as String
+    return testVariation(m, "intVariation", 12.5, 5, 12)
+end function
+
+function TestCase__Client_Variation_DoubleVariationIntFlag() as String
+    return testVariation(m, "doubleVariation", 6, 3.5, 6.0)
 end function
 
 function TestCase__Client_AllFlags() as String
@@ -359,6 +371,9 @@ function TestSuite__Client() as Object
     this.addTest("TestCase__Client_Variation_Bool", TestCase__Client_Variation_Bool)
     this.addTest("TestCase__Client_Variation_String", TestCase__Client_Variation_String)
     this.addTest("TestCase__Client_Variation_AA", TestCase__Client_Variation_AA)
+    this.addTest("TestCase__Client_Variation_Double", TestCase__Client_Variation_Double)
+    this.addTest("TestCase__Client_Variation_IntVariationDoubleFlag", TestCase__Client_Variation_IntVariationDoubleFlag)
+    this.addTest("TestCase__Client_Variation_DoubleVariationIntFlag", TestCase__Client_Variation_DoubleVariationIntFlag)
     this.addTest("TestCase__Client_AllFlags", TestCase__Client_AllFlags)
 
     return this

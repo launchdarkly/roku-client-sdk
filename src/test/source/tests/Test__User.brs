@@ -15,6 +15,7 @@ function TestCase__User_Encode_AllAttributes() as String
     custom = {
         cookie: "abc123"
     }
+    ip = "127.0.0.1"
 
     user = LaunchDarklyUser(key)
     user.setAnonymous(anonymous)
@@ -23,6 +24,7 @@ function TestCase__User_Encode_AllAttributes() as String
     user.setEmail(email)
     user.setName(name)
     user.setAvatar(avatar)
+    user.setIP(ip)
     user.setCustom(custom)
 
     actual = LaunchDarklyUserEncode(user, false)
@@ -33,7 +35,8 @@ function TestCase__User_Encode_AllAttributes() as String
         email: email,
         name: name,
         avatar: avatar,
-        custom: custom
+        custom: custom,
+        ip: ip
     }
 
     return m.assertEqual(actual, expected)

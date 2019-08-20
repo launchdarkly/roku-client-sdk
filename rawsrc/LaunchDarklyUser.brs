@@ -8,6 +8,7 @@ function LaunchDarklyUser(launchDarklyParamUserKey as String) as Object
             email: invalid,
             name: invalid,
             avatar: invalid,
+            ip: invalid,
             custom: invalid,
             privateAttributeNames: {}
         },
@@ -38,6 +39,10 @@ function LaunchDarklyUser(launchDarklyParamUserKey as String) as Object
 
         setCustom: function(launchDarklyParamCustom as Object) as Void
             m.private.custom = launchDarklyParamCustom
+        end function,
+
+        setIP: function(launchDarklyParamIP as String) as Void
+            m.private.ip = launchDarklyParamIP
         end function,
 
         addPrivateAttribute: function(launchDarklyParamPrivateAttribute as String) as Void
@@ -100,6 +105,7 @@ function LaunchDarklyUserEncode(launchDarklyParamUser as Object, launchDarklyPar
     launchDarklyLocalAddField(launchDarklyParamUser.private, launchDarklyLocalEncoded, launchDarklyParamUser.private, "email", launchDarklyParamConfig, launchDarklyLocalPrivateAttrs)
     launchDarklyLocalAddField(launchDarklyParamUser.private, launchDarklyLocalEncoded, launchDarklyParamUser.private, "name", launchDarklyParamConfig, launchDarklyLocalPrivateAttrs)
     launchDarklyLocalAddField(launchDarklyParamUser.private, launchDarklyLocalEncoded, launchDarklyParamUser.private, "avatar", launchDarklyParamConfig, launchDarklyLocalPrivateAttrs)
+    launchDarklyLocalAddField(launchDarklyParamUser.private, launchDarklyLocalEncoded, launchDarklyParamUser.private, "ip", launchDarklyParamConfig, launchDarklyLocalPrivateAttrs)
 
     if launchDarklyParamUser.private.custom <> invalid then
         launchDarklyLocalCustom = {}

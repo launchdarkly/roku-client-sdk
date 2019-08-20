@@ -23,7 +23,7 @@ function LaunchDarklyClientSharedFunctions() as Object
                 else
                     launchDarklyLocalTypeMatch = true
                     if launchDarklyParamStrong <> invalid then
-                        if getInterface(launchDarklyLocalFlag.value, launchDarklyParamStrong) = invalid then
+                        if not launchDarklyParamStrong(launchDarklyLocalFlag.value) then
                             m.private.logger.error("eval type mismatch")
 
                             launchDarklyLocalTypeMatch = false
@@ -53,19 +53,39 @@ function LaunchDarklyClientSharedFunctions() as Object
         end function,
 
         intVariation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Integer) as Integer
-            return m.variation(launchDarklyParamFlagKey, launchDarklyParamFallback, "ifInt")
+            return int(m.doubleVariation(launchDarklyParamFlagKey, launchDarklyParamFallback))
         end function,
 
         boolVariation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Boolean) as Boolean
-            return m.variation(launchDarklyParamFlagKey, launchDarklyParamFallback, "ifBoolean")
+            return m.variation(launchDarklyParamFlagKey, launchDarklyParamFallback, function(launchDarklyParamValue as Dynamic) as Boolean
+                return getInterface(launchDarklyParamValue, "ifBoolean") <> invalid
+            end function)
         end function,
 
         stringVariation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as String) as String
-            return m.variation(launchDarklyParamFlagKey, launchDarklyParamFallback, "ifString")
+            return m.variation(launchDarklyParamFlagKey, launchDarklyParamFallback, function(launchDarklyParamValue as Dynamic) as Boolean
+                return getInterface(launchDarklyParamValue, "ifString") <> invalid
+            end function)
         end function,
 
         aaVariation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Object) as Object
-            return m.variation(launchDarklyParamFlagKey, launchDarklyParamFallback, "ifAssociativeArray")
+            return m.variation(launchDarklyParamFlagKey, launchDarklyParamFallback, function(launchDarklyParamValue as Dynamic) as Boolean
+                return getInterface(launchDarklyParamValue, "ifAssociativeArray") <> invalid
+            end function)
+        end function,
+
+        doubleVariation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Double) as Double
+            return m.variation(launchDarklyParamFlagKey, launchDarklyParamFallback, function(launchDarklyParamValue as Dynamic) as Boolean
+                if getInterface(launchDarklyParamValue, "ifFloat") <> invalid then
+                    return true
+                else if getInterface(launchDarklyParamValue, "ifDouble") <> invalid then
+                    return true
+                else if getInterface(launchDarklyParamValue, "ifInt") <> invalid then
+                    return true
+                else
+                    return false
+                end if
+            end function)
         end function,
 
         allFlags: function() as Object
