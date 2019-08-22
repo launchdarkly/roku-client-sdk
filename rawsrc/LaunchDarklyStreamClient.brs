@@ -197,6 +197,8 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                             m.store.putAll(launchDarklyLocalBody)
                         else if launchDarklyLocalEvent.name = "patch" then
                             m.store.upsert(launchDarklyLocalBody)
+                        else if launchDarklyLocalEvent.name = "delete" then
+                            m.store.delete(launchDarklyLocalBody["key"], launchDarklyLocalBody["version"])
                         end if
                     end if
                 end while
