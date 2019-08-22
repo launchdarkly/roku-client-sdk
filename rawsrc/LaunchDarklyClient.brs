@@ -186,28 +186,32 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
             end function,
 
             makeBaseEvent: function(launchDarklyParamKind as String) as Object
-                return {
+                launchDarklyLocalBaseEvent = {
                     kind: launchDarklyParamKind,
-                    user: m.encodedUser,
-                    creationDate: m.util.getMilliseconds()
+                    user: m.encodedUser
                 }
+
+                launchDarklyLocalBaseEvent["creationDate"] = m.util.getMilliseconds()
+
+                return launchDarklyLocalBaseEvent
             end function,
 
-            makeFeatureEvent: function(launchDarklyParamFlag as Object, launchDarklyParamFallback as Dynamic) as Object
+            makeFeatureEvent: function(launchDarklyParamBundle as Object) as Object
                 launchDarklyLocalEvent = m.makeBaseEvent("feature")
 
-                launchDarklyLocalEvent.version = m.getFlagVersion(launchDarklyParamFlag)
-                launchDarklyLocalEvent.variation = launchDarklyParamFlag.variation
-                launchDarklyLocalEvent.value = launchDarklyParamFlag.value
-                launchDarklyLocalEvent.default = launchDarklyParamFallback
+                launchDarklyLocalEvent.key = launchDarklyParamBundle.flagKey
+                launchDarklyLocalEvent.version = m.getFlagVersion(launchDarklyParamBundle.flag)
+                launchDarklyLocalEvent.variation = launchDarklyParamBundle.flag.variation
+                launchDarklyLocalEvent.value = launchDarklyParamBundle.value
+                launchDarklyLocalEvent.default = launchDarklyParamBundle.fallback
 
                 return launchDarklyLocalEvent
             end function,
 
             makeSummaryEvent: function() as Object
                 launchDarklyLocalEvent = m.makeBaseEvent("summary")
-                launchDarklyLocalEvent.startDate = m.eventsSummaryStart
-                launchDarklyLocalEvent.endDate = m.util.getMilliseconds()
+                launchDarklyLocalEvent["startDate"] = m.eventsSummaryStart
+                launchDarklyLocalEvent["endDate"] = m.util.getMilliseconds()
                 launchDarklyLocalEvent.features = {}
 
                 for each launchDarklyLocalFeatureKey in m.eventsSummary
@@ -364,7 +368,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
                     launchDarklyLocalShouldDebug = launchDarklyParamBundle.flag.debugEventsUntilDate <> invalid AND launchDarklyParamBundle.flag.debugEventsUntilDate > launchDarklyLocalNow
 
                     if launchDarklyLocalShouldTrack OR launchDarklyLocalShouldDebug then
-                       launchDarklyLocalEvent = m.makeFeatureEvent(launchDarklyParamBundle.flag, launchDarklyParamBundle.fallback)
+                       launchDarklyLocalEvent = m.makeFeatureEvent(launchDarklyParamBundle)
 
                        m.enqueueEvent(launchDarklyLocalEvent)
                     end if
@@ -405,6 +409,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
             m.private.user = launchDarklyParamUser
             m.private.encodedUser = LaunchDarklyUserEncode(m.private.user, true, m.private.config)
             launchDarklyLocalEvent = m.private.makeBaseEvent("identify")
+            launchDarklyLocalEvent.key = launchDarklyParamUser.private.key
             m.private.enqueueEvent(launchDarklyLocalEvent)
 
             m.private.streamClient.changeUser(launchDarklyParamUser)

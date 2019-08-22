@@ -4,6 +4,9 @@ function init()
 
     m.top.observeField("event", m.messagePort)
     m.top.observeField("log", m.messagePort)
+    m.top.observeField("flush", m.messagePort)
+    m.top.observeField("user", m.messagePort)
+    m.top.observeField("track", m.messagePort)
     m.top.observeField("config", "startThread")
 end function
 

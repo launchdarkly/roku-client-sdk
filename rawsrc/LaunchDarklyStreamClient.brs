@@ -51,6 +51,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
             killStream: function() as Void
                 m.stage = m.stageMap.notStarted
                 m.streamSocket = invalid
+                m.handshakeTransfer.asyncCancel()
             end function,
 
             killFailedStream: function() as Void

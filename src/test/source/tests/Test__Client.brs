@@ -87,6 +87,7 @@ function TestCase__Client_Eval_Tracked() as String
         user: {
             key: "user-key"
         },
+        key: "flag1",
         value: expectedValue,
         variation: expectedVariation,
         default: expectedFallback,
@@ -281,6 +282,7 @@ function TestCase__Client_Identify() as String
 
     return m.assertEqual(FormatJSON(event), FormatJSON({
         kind: "identify",
+        key: "user-key2",
         user: {
             key: "user-key2"
         }
