@@ -1,4 +1,4 @@
-function LaunchDarklyClientSharedFunctions() as Object
+function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Object) as Object
     return {
         variation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Dynamic, launchDarklyParamStrong=invalid as Dynamic) as Dynamic
             if m.private.isOffline() then
@@ -99,6 +99,52 @@ function LaunchDarklyClientSharedFunctions() as Object
 
             return launchDarklyLocalResult
         end function,
+
+        status: {
+            private: {
+                status: 0,
+
+                sceneGraphNode: launchDarklyParamSceneGraphNode,
+
+                setStatus: function(launchDarklyParamStatus as Integer) as Void
+                    if m.sceneGraphNode <> invalid then
+                        m.sceneGraphNode.status = launchDarklyParamStatus
+                    else
+                        m.status = launchDarklyParamStatus
+                    end if
+                end function,
+
+                getStatus: function() as Integer
+                    if m.sceneGraphNode <> invalid then
+                        return m.sceneGraphNode.status
+                    else
+                        return m.status
+                    end if
+                end function
+            },
+
+            map: {
+                uninitialized: 0,
+                unauthorized: 1,
+                initialized: 2
+            },
+
+            getStatusAsString: function() as String
+                launchDarklyLocalStatus = m.private.getStatus()
+
+                if launchDarklyLocalStatus = m.map.uninitialized then
+                    return "uninitialized"
+                else if launchDarklyLocalStatus = m.map.unauthorized then
+                    return "unauthorized"
+                else if launchDarklyLocalStatus = m.map.initialized then
+                    return "initialized"
+                end if
+            end function
+
+            getStatus: function() as Integer
+                return m.private.getStatus()
+            end function
+        }
     }
 end function
 
@@ -115,8 +161,6 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
             store: launchDarklyLocalStore,
             logger: launchDarklyParamConfig.private.logger,
 
-            unauthorized: false,
-
             pollingInitial: true,
             pollingTransfer: createObject("roUrlTransfer"),
             pollingTimer: createObject("roTimeSpan"),
@@ -129,11 +173,11 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
             eventsSummary: {},
             eventsSummaryStart: 0,
 
-            streamClient: LaunchDarklyStreamClient(launchDarklyParamConfig, launchDarklyLocalStore, launchDarklyParamMessagePort, launchDarklyParamUser),
+            streamClient: invalid,
 
             util: LaunchDarklyUtility(),
 
-            handlePollingMessage: function(launchDarklyParamMessage as Dynamic) as Void
+            handlePollingMessage: function(launchDarklyParamCtx as Object, launchDarklyParamMessage as Dynamic) as Void
                 launchDarklyLocalResponseCode = launchDarklyParamMessage.getResponseCode()
 
                 m.config.private.logger.debug("polling response code: " + launchDarklyLocalResponseCode.toStr())
@@ -147,19 +191,21 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
                         m.config.private.logger.debug("updating store")
 
                         m.store.putAll(launchDarklyLocalDecoded)
+
+                        launchDarklyParamCtx.status.private.setStatus(launchDarklyParamCtx.status.map.initialized)
                     end if
                 end if
 
                 if launchDarklyLocalResponseCode = 401 OR launchDarklyLocalResponseCode = 403 then
                     m.config.private.logger.error("polling not authorized")
 
-                    m.unauthorized = true
+                    launchDarklyParamCtx.status.private.setStatus(launchDarklyParamCtx.status.map.unauthorized)
                 else
                     m.resetPollingTransfer()
                 end if
             end function,
 
-            handleEventsMessage: function(launchDarklyParamMessage as Dynamic) as Void
+            handleEventsMessage: function(launchDarklyParamCtx as Object, launchDarklyParamMessage as Dynamic) as Void
                 launchDarklyLocalResponseCode = launchDarklyParamMessage.getResponseCode()
 
                 m.config.private.logger.debug("events response code: " + launchDarklyLocalResponseCode.toStr())
@@ -171,7 +217,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
                 if launchDarklyLocalResponseCode = 401 OR launchDarklyLocalResponseCode = 403 then
                     m.config.private.logger.error("events not authorized")
 
-                    m.unauthorized = true
+                    launchDarklyParamCtx.status.private.setStatus(launchDarklyParamCtx.status.map.unauthorized)
                 else
                     m.resetEventsTransfer()
                 end if
@@ -310,6 +356,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
 
                 m.config.private.logger.debug("polling url: " + launchDarklyLocalUrl)
 
+                m.pollingTransfer = createObject("roUrlTransfer")
                 m.util.prepareNetworkingCommon(m.messagePort, m.config, m.pollingTransfer)
                 m.pollingTransfer.setURL(launchDarklyLocalUrl)
             end function,
@@ -420,7 +467,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
         end function,
 
         handleMessage: function(launchDarklyParamMessage=invalid as Dynamic) as Boolean
-            if m.private.unauthorized = false AND m.private.config.private.offline = false then
+            if m.status.getStatus() <> m.status.map.unauthorized AND m.private.config.private.offline = false then
                 REM start polling if timeout is hit
                 if m.private.config.private.streaming = false AND m.private.pollingActive = false then
                     launchDarklyLocalElapsed = m.private.pollingTimer.totalSeconds()
@@ -453,11 +500,11 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
                 launchDarklyLocalEventsId = m.private.eventsTransfer.getIdentity()
 
                 if launchDarklyLocalEventId = launchDarklyLocalPollingId then
-                    m.private.handlePollingMessage(launchDarklyParamMessage)
+                    m.private.handlePollingMessage(m, launchDarklyParamMessage)
 
                     return true
                 else if launchDarklyLocalEventId = launchDarklyLocalEventsId then
-                    m.private.handleEventsMessage(launchDarklyParamMessage)
+                    m.private.handleEventsMessage(m, launchDarklyParamMessage)
 
                     return true
                 end if
@@ -467,7 +514,9 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
         end function
     }
 
-    launchDarklyLocalThis.append(LaunchDarklyClientSharedFunctions())
+    launchDarklyLocalThis.append(LaunchDarklyClientSharedFunctions(launchDarklyParamConfig.private.sceneGraphNode))
+
+    launchDarklyLocalThis.private.streamClient = LaunchDarklyStreamClient(launchDarklyParamConfig, launchDarklyLocalStore, launchDarklyParamMessagePort, launchDarklyParamUser, launchDarklyLocalThis.status)
 
     launchDarklyLocalThis.private.prepareEventTransfer()
     launchDarklyLocalThis.private.preparePolling()

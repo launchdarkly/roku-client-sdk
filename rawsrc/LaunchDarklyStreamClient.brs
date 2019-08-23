@@ -1,4 +1,4 @@
-function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarklyParamStore as Object, launchDarklyParamMessagePort as Object, launchDarklyParamUser as Object) as Object
+function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarklyParamStore as Object, launchDarklyParamMessagePort as Object, launchDarklyParamUser as Object, launchDarklyParamStatus as Object) as Object
     launchDarklyLocalThis = {
         private: {
             config: launchDarklyParamConfig,
@@ -12,10 +12,11 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                 handshake: 1,
                 sendingRequest: 2,
                 readingHeader: 3,
-                readingBody: 4,
-                unauthorized: 5
+                readingBody: 4
             },
             stage: 0,
+
+            status: launchDarklyParamStatus,
 
             streamCrypto: invalid,
             streamRequestSent: invalid,
@@ -118,7 +119,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                             m.config.private.logger.error("streaming not authorized")
 
                             m.killStream()
-                            m.status = m.stageMap.unauthorized
+                            m.status.private.setStatus(m.status.map.unauthorized)
 
                             return false
                         else if launchDarklyLocalCode < 200 OR launchDarklyLocalCode >= 300 then
@@ -195,6 +196,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
 
                         if launchDarklyLocalEvent.name = "put" then
                             m.store.putAll(launchDarklyLocalBody)
+                            m.status.private.setStatus(m.status.map.initialized)
                         else if launchDarklyLocalEvent.name = "patch" then
                             m.store.upsert(launchDarklyLocalBody)
                         else if launchDarklyLocalEvent.name = "delete" then
@@ -257,7 +259,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                 if launchDarklyLocalResponseCode = 401 OR launchDarklyLocalResponseCode = 403 then
                     m.config.private.logger.error("streaming handshake not authorized")
 
-                    m.status = m.stageMap.unauthorized
+                    m.status.private.setStatus(m.status.map.unauthorized)
 
                     return
                 else if launchDarklyLocalResponseCode = 404 then
@@ -351,7 +353,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
             end if
 
             REM start stream if it is not active
-            if m.private.config.private.streaming AND m.private.stage = m.private.stageMap.notStarted then
+            if m.private.status.getStatus() <> m.private.status.map.unauthorized AND m.private.config.private.streaming AND m.private.stage = m.private.stageMap.notStarted then
                 if m.private.streamBackoff.shouldWait() = false then
                     m.private.config.private.logger.debug("streaming timeout hit")
 
