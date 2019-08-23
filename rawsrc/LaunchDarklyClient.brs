@@ -453,6 +453,8 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
         end function,
 
         identify: function(launchDarklyParamUser as Object) as Void
+            m.status.private.setStatus(m.status.map.uninitialized)
+
             m.private.user = launchDarklyParamUser
             m.private.encodedUser = LaunchDarklyUserEncode(m.private.user, true, m.private.config)
             launchDarklyLocalEvent = m.private.makeBaseEvent("identify")

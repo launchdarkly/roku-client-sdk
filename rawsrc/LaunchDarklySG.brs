@@ -37,6 +37,7 @@ function LaunchDarklySG(launchDarklyParamClientNode as Dynamic) as Object
         end function,
 
         identify: function(launchDarklyParamUser as Object) as Void
+            m.status.private.setStatus(m.status.map.uninitialized)
             m.private.clientNode.user = launchDarklyParamUser
         end function,
 
