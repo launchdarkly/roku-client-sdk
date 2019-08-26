@@ -4,12 +4,20 @@
     <children>
         <LaunchDarklyTask id="launchDarkly"/>
 
-        <Label id="myLabel"
-            text="wait on label"
-          	width="1280"
-          	height="720"
-          	horizAlign="center"
-          	vertAlign="center"
+        <Label id="featureStatus"
+            text="waiting on label"
+            width="1280"
+            height="720"
+            horizAlign="center"
+            vertAlign="center"
+        />
+
+        <Label id="clientStatus"
+            text="waiting on status"
+            width="1280"
+            height="720"
+            horizAlign="right"
+            vertAlign="bottom"
         />
     </children>
 

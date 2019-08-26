@@ -9,6 +9,7 @@
         <!-- boolean but only used for signalling, value is ignored -->
         <field id="flush" type="bool" alwaysNotify="true"/>
         <field id="track" type="assocarray" alwaysNotify="true"/>
+        <field id="status" type="integer" value="0"/>
     </interface>
 
     <!-- you made need to update these paths depending on your project configuration -->

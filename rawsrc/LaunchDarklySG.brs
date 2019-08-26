@@ -1,30 +1,30 @@
-function LaunchDarklySGInit(config as Object, user as Object) as Void
-    node = config.private.sceneGraphNode
-    node.user = user
-    node.config = config
+function LaunchDarklySGInit(launchDarklyParamConfig as Object, launchDarklyParamUser as Object) as Void
+    launchDarklyLocalNode = launchDarklyParamConfig.private.sceneGraphNode
+    launchDarklyLocalNode.user = launchDarklyParamUser
+    launchDarklyLocalNode.config = launchDarklyParamConfig
 end function
 
-function LaunchDarklySG(clientNode as Dynamic) as Object
-    loggerBackend = LaunchDarklyLoggerSG(clientNode.config.private.loggerNode)
-    logger = LaunchDarklyLogger(clientNode.config, loggerBackend)
+function LaunchDarklySG(launchDarklyParamClientNode as Dynamic) as Object
+    launchDarklyLocalLoggerBackend = LaunchDarklyLoggerSG(launchDarklyParamClientNode.config.private.loggerNode)
+    launchDarklyLocalLogger = LaunchDarklyLogger(launchDarklyParamClientNode.config, launchDarklyLocalLoggerBackend)
 
-    this = {
+    launchDarklyLocalThis = {
         private: {
-            clientNode: clientNode,
-            logger: logger,
-            offline: clientNode.config.private.offline,
-            storeNode: clientNode.config.private.storeBackendNode,
+            clientNode: launchDarklyParamClientNode,
+            logger: launchDarklyLocalLogger,
+            offline: launchDarklyParamClientNode.config.private.offline,
+            storeNode: launchDarklyParamClientNode.config.private.storeBackendNode,
 
             isOffline: function() as Boolean
                 return m.offline
             end function,
 
-            handleEventsForEval: function(bundle as Object) as Void
-                m.clientNode.event = bundle
+            handleEventsForEval: function(launchDarklyParamBundle as Object) as Void
+                m.clientNode.event = launchDarklyParamBundle
             end function,
 
-            lookupFlag: function(flagKey as String) as Object
-                return m.storeNode.flags.lookup(flagKey)
+            lookupFlag: function(launchDarklyParamFlagKey as String) as Object
+                return m.storeNode.flags.lookup(launchDarklyParamFlagKey)
             end function,
 
             lookupAll: function() as Object
@@ -36,14 +36,15 @@ function LaunchDarklySG(clientNode as Dynamic) as Object
             m.private.clientNode.flush = true
         end function,
 
-        identify: function(user as Object) as Void
-            m.private.clientNode.user = user
+        identify: function(launchDarklyParamUser as Object) as Void
+            m.status.private.setStatus(m.status.map.uninitialized)
+            m.private.clientNode.user = launchDarklyParamUser
         end function,
 
-        track: function(key as String, data=invalid as Object) as Void
+        track: function(launchDarklyParamKey as String, launchDarklyParamData=invalid as Object) as Void
             m.private.clientNode.track = {
-                key: key,
-                data: data
+                key: launchDarklyParamKey,
+                data: launchDarklyParamData
             }
         end function,
 
@@ -52,7 +53,7 @@ function LaunchDarklySG(clientNode as Dynamic) as Object
         end function
     }
 
-    this.append(LaunchDarklyClientSharedFunctions())
+    launchDarklyLocalThis.append(LaunchDarklyClientSharedFunctions(launchDarklyParamClientNode))
 
-    return this
+    return launchDarklyLocalThis
 end function

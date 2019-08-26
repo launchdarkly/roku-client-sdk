@@ -24,17 +24,17 @@ function TestCase__HTTP_NoBodyNoHeadersFull() as String
         return a
     end if
 
-    a = m.assertEqual(http.responseMajorVersion, 1)
+    a = m.assertEqual(http.majorVersion, 1)
     if a <> "" then
         return a
     end if
 
-    a = m.assertEqual(http.responseMinorVersion, 0)
+    a = m.assertEqual(http.minorVersion, 0)
     if a <> "" then
         return a
     end if
 
-    a = m.assertEqual(http.responseHeaders, {})
+    a = m.assertEqual(http.headers, {})
     if a <> "" then
         return a
     end if
@@ -69,12 +69,12 @@ function TestCase__HTTP_NoBodyWithHeadersFull() as Object
         return a
     end if
 
-    a = m.assertEqual(http.responseMajorVersion, 1)
+    a = m.assertEqual(http.majorVersion, 1)
     if a <> "" then
         return a
     end if
 
-    a = m.assertEqual(http.responseMinorVersion, 1)
+    a = m.assertEqual(http.minorVersion, 1)
     if a <> "" then
         return a
     end if
@@ -82,7 +82,7 @@ function TestCase__HTTP_NoBodyWithHeadersFull() as Object
     responseHeaders = {}
     responseHeaders["connection"] = "Keep-Alive"
 
-    a = m.assertEqual(http.responseHeaders, responseHeaders)
+    a = m.assertEqual(http.headers, responseHeaders)
     if a <> "" then
         return a
     end if
@@ -127,12 +127,12 @@ function TestCase__HTTP_StaticBodyWithHeadersFull() as String
         return a
     end if
 
-    a = m.assertEqual(http.responseMajorVersion, 1)
+    a = m.assertEqual(http.majorVersion, 1)
     if a <> "" then
         return a
     end if
 
-    a = m.assertEqual(http.responseMinorVersion, 1)
+    a = m.assertEqual(http.minorVersion, 1)
     if a <> "" then
         return a
     end if
@@ -141,7 +141,7 @@ function TestCase__HTTP_StaticBodyWithHeadersFull() as String
     responseHeaders["connection"] = "Keep-Alive"
     responseHeaders["content-length"] = body.count().toStr()
 
-    a = m.assertEqual(http.responseHeaders, responseHeaders)
+    a = m.assertEqual(http.headers, responseHeaders)
     if a <> "" then
         return a
     end if
@@ -198,12 +198,12 @@ function TestCase__HTTP_ChunkedBodyWithHeadersFull() as String
         return a
     end if
 
-    a = m.assertEqual(http.responseMajorVersion, 1)
+    a = m.assertEqual(http.majorVersion, 1)
     if a <> "" then
         return a
     end if
 
-    a = m.assertEqual(http.responseMinorVersion, 1)
+    a = m.assertEqual(http.minorVersion, 1)
     if a <> "" then
         return a
     end if
@@ -211,7 +211,7 @@ function TestCase__HTTP_ChunkedBodyWithHeadersFull() as String
     responseHeaders = {}
     responseHeaders["transfer-encoding"] = "chunked"
 
-    a = m.assertEqual(http.responseHeaders, responseHeaders)
+    a = m.assertEqual(http.headers, responseHeaders)
     if a <> "" then
         return a
     end if
@@ -272,12 +272,12 @@ function TestCase__HTTP_NoBodyWithHeadersStreamed() as Object
         return a
     end if
 
-    a = m.assertEqual(http.responseMajorVersion, 1)
+    a = m.assertEqual(http.majorVersion, 1)
     if a <> "" then
         return a
     end if
 
-    a = m.assertEqual(http.responseMinorVersion, 1)
+    a = m.assertEqual(http.minorVersion, 1)
     if a <> "" then
         return a
     end if
@@ -285,7 +285,7 @@ function TestCase__HTTP_NoBodyWithHeadersStreamed() as Object
     responseHeaders = {}
     responseHeaders["connection"] = "Keep-Alive"
 
-    a = m.assertEqual(formatJSON(http.responseHeaders), formatJSON(responseHeaders))
+    a = m.assertEqual(formatJSON(http.headers), formatJSON(responseHeaders))
     if a <> "" then
         return a
     end if
@@ -341,12 +341,12 @@ function TestCase__HTTP_StaticBodyWithHeadersStreamed() as String
         return a
     end if
 
-    a = m.assertEqual(http.responseMajorVersion, 1)
+    a = m.assertEqual(http.majorVersion, 1)
     if a <> "" then
         return a
     end if
 
-    a = m.assertEqual(http.responseMinorVersion, 1)
+    a = m.assertEqual(http.minorVersion, 1)
     if a <> "" then
         return a
     end if
@@ -355,7 +355,7 @@ function TestCase__HTTP_StaticBodyWithHeadersStreamed() as String
     responseHeaders["connection"] = "Keep-Alive"
     responseHeaders["content-length"] = totalBodySize.toStr()
 
-    a = m.assertEqual(formatJSON(http.responseHeaders), formatJSON(responseHeaders))
+    a = m.assertEqual(formatJSON(http.headers), formatJSON(responseHeaders))
     if a <> "" then
         return a
     end if
@@ -425,12 +425,12 @@ function TestCase__HTTP_ChunkedBodyWithHeadersStreamed() as String
         return a
     end if
 
-    a = m.assertEqual(http.responseMajorVersion, 1)
+    a = m.assertEqual(http.majorVersion, 1)
     if a <> "" then
         return a
     end if
 
-    a = m.assertEqual(http.responseMinorVersion, 1)
+    a = m.assertEqual(http.minorVersion, 1)
     if a <> "" then
         return a
     end if
@@ -438,7 +438,7 @@ function TestCase__HTTP_ChunkedBodyWithHeadersStreamed() as String
     responseHeaders = {}
     responseHeaders["transfer-encoding"] = "chunked"
 
-    a = m.assertEqual(http.responseHeaders, responseHeaders)
+    a = m.assertEqual(http.headers, responseHeaders)
     if a <> "" then
         return a
     end if
@@ -613,7 +613,92 @@ function TestCase__HTTP_EmptyHeaderValue() as String
     responseHeaders = {}
     responseHeaders["my-header"] = ""
 
-    return m.assertEqual(http.responseHeaders, responseHeaders)
+    return m.assertEqual(http.headers, responseHeaders)
+end function
+
+function TestCase__HTTP_BasicRequest() as String
+    http = LaunchDarklyHTTPRequest()
+
+    http.addText("GET /index.html HTTP/1.1" + chr(13) + chr(10))
+    http.addText("my-header: hello world" + chr(13) + chr(10))
+    http.addText(chr(13) + chr(10))
+
+    a = m.assertEqual(http.streamHTTP(), invalid)
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertEqual(http.responseStatus, 2)
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertEqual(http.requestVerb, "GET")
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertEqual(http.requestPath, "/index.html")
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertEqual(http.majorVersion, 1)
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertEqual(http.minorVersion, 1)
+    if a <> "" then
+        return a
+    end if
+
+    requestHeaders = {}
+    requestHeaders["my-header"] = "hello world"
+
+    return m.assertEqual(http.headers, requestHeaders)
+end function
+
+function TestCase__HTTP_BasicRequestPost() as String
+    http = LaunchDarklyHTTPRequest()
+
+    body = createObject("roByteArray")
+    body.fromAsciiString("Hello LaunchDarkly!")
+
+    http.addText("POST /upload HTTP/1.1" + chr(13) + chr(10))
+    http.addText("Content-Length: " + body.count().toStr() + chr(13) + chr(10))
+    http.addText(chr(13) + chr(10))
+    http.addBytes(body)
+
+    a = m.assertEqual(http.streamHTTP().toHexString(), body.toHexString())
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertEqual(http.streamHTTP(), invalid)
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertEqual(http.responseStatus, 2)
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertEqual(http.requestVerb, "POST")
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertEqual(http.requestPath, "/upload")
+    if a <> "" then
+        return a
+    end if
+
+    requestHeaders = {}
+    requestHeaders["content-length"] = body.count().toStr()
+
+    return m.assertEqual(http.headers, requestHeaders)
 end function
 
 function TestSuite__HTTP() as Object
@@ -639,6 +724,8 @@ function TestSuite__HTTP() as Object
     this.addTest("TestCase__HTTP_BadMinorVersion", TestCase__HTTP_BadMinorVersion)
     this.addTest("TestCase__HTTP_MalformedStatusLine", TestCase__HTTP_MalformedStatusLine)
     this.addTest("TestCase__HTTP_EmptyHeaderValue", TestCase__HTTP_EmptyHeaderValue)
+    this.addTest("TestCase__HTTP_BasicRequest", TestCase__HTTP_BasicRequest)
+    this.addTest("TestCase__HTTP_BasicRequestPost", TestCase__HTTP_BasicRequestPost)
 
     return this
 end function
