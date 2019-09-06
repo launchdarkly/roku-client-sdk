@@ -190,6 +190,28 @@ function LaunchDarklyUtility() as Object
             return launchDarklyLocalOutput
         end function,
 
+        unsignedIntegerToLittleEndian: function(launchDarklyParamNumber as Integer) as Object
+            launchDarklyLocalBytes = createObject("roByteArray")
+            launchDarklyLocalBytes[3] = 0
+
+            for launchDarklyLocalX = 0 to launchDarklyLocalBytes.count() - 1 step + 1
+                launchDarklyLocalBytes[launchDarklyLocalX] = (launchDarklyParamNumber >> (8 * launchDarklyLocalX)) and 255
+            end for
+
+            return launchDarklyLocalBytes
+        end function,
+
+        randomBytes: function(launchDarklyParamCount as Integer) as Object
+            launchDarklyLocalBytes = createObject("roByteArray")
+            launchDarklyLocalBytes[launchDarklyParamCount - 1] = 0
+
+            for launchDarklyLocalX = 0 to launchDarklyLocalBytes.count() - 1 step + 1
+                launchDarklyLocalBytes[launchDarklyLocalX] = rnd(256)
+            end for
+
+            return launchDarklyLocalBytes
+        end function,
+
         byteArrayEq: function(launchDarklyParamLeft as Object, launchDarklyParamRight as Object) as Boolean
             if launchDarklyParamLeft.count() <> launchDarklyParamRight.count() then
                 return false

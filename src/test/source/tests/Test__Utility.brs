@@ -131,6 +131,30 @@ function TestCase__Utility_StripHTTPProtocol() as String
     return m.assertEqual(u.stripHTTPProtocol("test.com"), "")
 end function
 
+function TestCase__Utility_RandomBytes() as String
+    bytes1 = LaunchDarklyUtility().randomBytes(16)
+
+    a = m.assertEqual(bytes1.count(), 16)
+    if a <> "" then
+        return a
+    end if
+
+    bytes2 = LaunchDarklyUtility().randomBytes(16)
+
+    return m.assertNotEqual(bytes1.toHexString(), bytes2.toHexString())
+end function
+
+function TestCase__Utility_UnsignedIntegerToLittleEndian() as String
+    bytes = LaunchDarklyUtility().unsignedIntegerToLittleEndian(257)
+    a = m.assertEqual(bytes.toHexString(), "01010000")
+    if a <> "" then
+        return a
+    end if
+
+    bytes = LaunchDarklyUtility().unsignedIntegerToLittleEndian(12971)
+    return m.assertEqual(bytes.toHexString(), "AB320000")
+end function
+
 function TestSuite__Utility() as Object
     this = BaseTestSuite()
 
@@ -145,6 +169,8 @@ function TestSuite__Utility() as Object
     this.addTest("TestCase__Utility_GetMilliseconds", TestCase__Utility_GetMilliseconds)
     this.addTest("TestCase__Utility_Backoff", TestCase__Utility_Backoff)
     this.addTest("TestCase__Utility_StripHTTPProtocol", TestCase__Utility_StripHTTPProtocol)
+    this.addTest("TestCase__Utility_RandomBytes", TestCase__Utility_RandomBytes)
+    this.addTest("TestCase__Utility_UnsignedIntegerToLittleEndian", TestCase__Utility_UnsignedIntegerToLittleEndian)
 
     return this
 end function

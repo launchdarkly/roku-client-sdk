@@ -46,6 +46,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
 
                 m.util.prepareNetworkingCommon(m.messagePort, m.config, m.handshakeTransfer)
                 m.handshakeTransfer.addHeader("Content-Type", "application/json")
+                m.handshakeTransfer.addHeader("X-LaunchDarkly-AltStream-Version", "2")
                 m.handshakeTransfer.setURL(launchDarklyLocalUrl)
             end function,
 
@@ -307,6 +308,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                 launchDarklyLocalRequestText += "User-Agent: RokuClient/" + m.config.private.sdkVersion + chr(13) + chr(10)
                 launchDarklyLocalRequestText += "Content-Length: " + launchDarklyLocalBundle.count().toStr() + chr(13) + chr(10)
                 launchDarklyLocalRequestText += "Host: " + launchDarklyLocalHostname + chr(13) + chr(10)
+                launchDarklyLocalRequestText += "X-LaunchDarkly-AltStream-Version: 2" + chr(13) + chr(10)
                 launchDarklyLocalRequestText += "Connection: close" + chr(13) + chr(10)
                 launchDarklyLocalRequestText += chr(13) + chr(10)
 

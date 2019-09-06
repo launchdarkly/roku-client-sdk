@@ -1,26 +1,58 @@
+function TestUtil__Crypto_Encrypt(launchDarklyParamCipherKey as Object, launchDarklyParamAuthKey as Object, launchDarklyParamBody as Object) as Object
+    launchDarklyLocalIv = LaunchDarklyUtility().randomBytes(16)
+
+    launchDarklyLocalCipherContext = createObject("roEVPCipher")
+    a = launchDarklyLocalCipherContext.setup(true, "aes-256-cbc", launchDarklyParamCipherKey.toHexString(), launchDarklyLocalIv.toHexString(), 1)
+    if a <> 0 then
+        print "failed to setup cipher context"
+        STOP
+    end if
+
+    launchDarklyLocalCipherText = launchDarklyLocalCipherContext.process(launchDarklyParamBody)
+
+    launchDarklyLocalSize = launchDarklyUtility().unsignedIntegerToLittleEndian(launchDarklyLocalCipherText.count())
+
+    launchDarklyLocalAuthContext = createObject("roHMAC")
+    a = launchDarklyLocalAuthContext.setup("sha256", launchDarklyParamAuthKey)
+    if a <> 0 then
+        print "failed to setup authentication context"
+        STOP
+    end if
+
+    launchDarklyLocalAuthContext.update(launchDarklyLocalSize)
+    launchDarklyLocalAuthContext.update(launchDarklyLocalIv)
+    launchDarklyLocalAuthContext.update(launchDarklyLocalCipherText)
+
+    launchDarklyLocalAuthCode = launchDarklyLocalAuthContext.final()
+
+    launchDarklyLocalResult = createObject("roByteArray")
+    launchDarklyLocalResult.append(launchDarklyLocalSize)
+    launchDarklyLocalResult.append(launchDarklyLocalIv)
+    launchDarklyLocalResult.append(launchDarklyLocalAuthCode)
+    launchDarklyLocalResult.append(launchDarklyLocalCipherText)
+
+    return launchDarklyLocalResult
+end function
+
 function TestCase__Crypto_Decode_Basic() as String
-    packetText = "IAAAAK7OgoWxB+TsNusZdv88vbFIdErD2wPfCdhj1i11jNvwywoegyXGGVtfqPBqS3jdBaCnhHDo8qQmyqakGzInCLG+DaaSmKX0ZB1DQo7L2c0u"
+    body = createObject("roByteArray")
+    body.fromAsciiString(formatJSON({
+        user: {
+            key: "myKey1"
+        }
+    }))
 
-    authKey = createObject("roByteArray")
-    authKey.fromBase64String("5wXLLS2zV99Uq9TopH1iqFtnrkpJI7VimDSl1lvzmgQ=")
+    authKey = LaunchDarklyUtility().randomBytes(32)
+    cipherKey = LaunchDarklyUtility().randomBytes(32)
 
-    cipherKey = createObject("roByteArray")
-    cipherKey.fromBase64String("WEIeuguICfc3gnlv42JQEw4o8UShna9BjCXOk2vo2fM=")
-
-    packet = createObject("roByteArray")
-    packet.fromBase64String(packetText)
+    packet = TestUtil__Crypto_Encrypt(cipherKey, authKey, body)
 
     decoder = LaunchDarklyCryptoReader(cipherKey, authKey)
-    decoder.addBytes(packet)
     decoder.addBytes(packet)
 
     clearText = decoder.consumeEvent()
 
-    a = m.assertEqual(parseJSON(clearText.toAsciiString()), {
-        user: {
-            key: "myKey"
-        }
-    })
+    a = m.assertEqual(clearText.toAsciiString(), body.toAsciiString())
     if a <> "" then
         return a
     end if
@@ -29,16 +61,19 @@ function TestCase__Crypto_Decode_Basic() as String
 end function
 
 function TestCase__Crypto_Decode_BadBody() as String
-    packetText = "IAAAALGRx5qkoGNT81Q51Py3iImf7LQRe0fRcQxcGWtQ5MLt+3Fie5yRAvvjqrcfTdmHDGiofndY8bGU43gkTzO/J4qeWpnSoRaYbsse58j1WzgV"
+    body = createObject("roByteArray")
+    body.fromAsciiString(formatJSON({
+        user: {
+            key: "myKey2"
+        }
+    }))
 
-    authKey = createObject("roByteArray")
-    authKey.fromBase64String("5wXLLS2zV99Uq9TopH1iqFtnrkpJI7VimDSl1lvzmgQ=")
+    authKey = LaunchDarklyUtility().randomBytes(32)
+    cipherKey = LaunchDarklyUtility().randomBytes(32)
 
-    cipherKey = createObject("roByteArray")
-    cipherKey.fromBase64String("WEIeuguICfc3gnlv42JQEw4o8UShna9BjCXOk2vo2fM=")
+    packet = TestUtil__Crypto_Encrypt(cipherKey, authKey, body)
 
-    packet = createObject("roByteArray")
-    packet.fromBase64String(packetText)
+    packet[32] = 0
 
     decoder = LaunchDarklyCryptoReader(cipherKey, authKey)
     decoder.addBytes(packet)
@@ -52,16 +87,17 @@ function TestCase__Crypto_Decode_BadBody() as String
 end function
 
 function TestCase__Crypto_Decode_Chunked() as String
-    packetText = "IAAAAK7OgoWxB+TsNusZdv88vbFIdErD2wPfCdhj1i11jNvwywoegyXGGVtfqPBqS3jdBaCnhHDo8qQmyqakGzInCLG+DaaSmKX0ZB1DQo7L2c0u"
+    body = createObject("roByteArray")
+    body.fromAsciiString(formatJSON({
+        user: {
+            key: "myKey3"
+        }
+    }))
 
-    authKey = createObject("roByteArray")
-    authKey.fromBase64String("5wXLLS2zV99Uq9TopH1iqFtnrkpJI7VimDSl1lvzmgQ=")
+    authKey = LaunchDarklyUtility().randomBytes(32)
+    cipherKey = LaunchDarklyUtility().randomBytes(32)
 
-    cipherKey = createObject("roByteArray")
-    cipherKey.fromBase64String("WEIeuguICfc3gnlv42JQEw4o8UShna9BjCXOk2vo2fM=")
-
-    packet = createObject("roByteArray")
-    packet.fromBase64String(packetText)
+    packet = TestUtil__Crypto_Encrypt(cipherKey, authKey, body)
 
     decoder = LaunchDarklyCryptoReader(cipherKey, authKey)
 
@@ -74,11 +110,7 @@ function TestCase__Crypto_Decode_Chunked() as String
 
     clearText = decoder.consumeEvent()
 
-    a = m.assertEqual(parseJSON(clearText.toAsciiString()), {
-        user: {
-            key: "myKey"
-        }
-    })
+    a = m.assertEqual(clearText.toAsciiString(), body.toAsciiString())
     if a <> "" then
         return a
     end if
