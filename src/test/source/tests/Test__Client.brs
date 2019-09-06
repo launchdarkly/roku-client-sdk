@@ -319,8 +319,12 @@ function TestCase__Client_Variation_String() as String
     return testVariation(m, "stringVariation", "abc", "def", "abc")
 end function
 
-function TestCase__Client_Variation_AA() as String
-    return testVariation(m, "aaVariation", { b: 6 }, { a: 4 }, { b: 6 })
+function TestCase__Client_Variation_JSONVariationObjectFlag() as String
+    return testVariation(m, "jsonVariation", { b: 6 }, { a: 4 }, { b: 6 })
+end function
+
+function TestCase__Client_Variation_JSONVariationArrayFlag() as String
+    return testVariation(m, "jsonVariation", [1, 2, 3], [4, 5, 6], [1, 2, 3])
 end function
 
 function TestCase__Client_Variation_Double() as String
@@ -372,7 +376,8 @@ function TestSuite__Client() as Object
     this.addTest("TestCase__Client_Variation_Int", TestCase__Client_Variation_Int)
     this.addTest("TestCase__Client_Variation_Bool", TestCase__Client_Variation_Bool)
     this.addTest("TestCase__Client_Variation_String", TestCase__Client_Variation_String)
-    this.addTest("TestCase__Client_Variation_AA", TestCase__Client_Variation_AA)
+    this.addTest("TestCase__Client_Variation_JSONVariationObjectFlag", TestCase__Client_Variation_JSONVariationObjectFlag)
+    this.addTest("TestCase__Client_Variation_JSONVariationArrayFlag", TestCase__Client_Variation_JSONVariationArrayFlag)
     this.addTest("TestCase__Client_Variation_Double", TestCase__Client_Variation_Double)
     this.addTest("TestCase__Client_Variation_IntVariationDoubleFlag", TestCase__Client_Variation_IntVariationDoubleFlag)
     this.addTest("TestCase__Client_Variation_DoubleVariationIntFlag", TestCase__Client_Variation_DoubleVariationIntFlag)

@@ -68,9 +68,15 @@ function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Ob
             end function)
         end function,
 
-        aaVariation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Object) as Object
+        jsonVariation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Object) as Object
             return m.variation(launchDarklyParamFlagKey, launchDarklyParamFallback, function(launchDarklyParamValue as Dynamic) as Boolean
-                return getInterface(launchDarklyParamValue, "ifAssociativeArray") <> invalid
+                if getInterface(launchDarklyParamValue, "ifAssociativeArray") <> invalid then
+                    return true
+                else if getInterface(launchDarklyParamValue, "ifArray") <> invalid then
+                    return true
+                else
+                    return false
+                end if
             end function)
         end function,
 
