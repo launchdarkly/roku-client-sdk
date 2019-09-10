@@ -303,6 +303,12 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
                 return launchDarklyLocalEvent
             end function,
 
+            makeIdentifyEvent: function(launchDarklyParamUser as Object) as Object
+                launchDarklyLocalEvent = m.makeBaseEvent("identify")
+                launchDarklyLocalEvent.key = launchDarklyParamUser.private.key
+                return launchDarklyLocalEvent
+            end function,
+
             summarizeEval: function(launchDarklyParamValue as Dynamic, launchDarklyParamFlagKey as String, launchDarklyParamFlag as Object, launchDarklyParamFallback as Dynamic, launchDarklyParamTypeMatch as Boolean) as Void
                 launchDarklyLocalSummary = m.eventsSummary.lookup(launchDarklyParamFlagKey)
 
@@ -426,7 +432,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
                        m.enqueueEvent(launchDarklyLocalEvent)
                     end if
                 end if
-            end function,
+            end function
         },
 
         track: function(launchDarklyParamKey as String, launchDarklyParamData=invalid as Object) as Void
@@ -463,9 +469,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
 
             m.private.user = launchDarklyParamUser
             m.private.encodedUser = LaunchDarklyUserEncode(m.private.user, true, m.private.config)
-            launchDarklyLocalEvent = m.private.makeBaseEvent("identify")
-            launchDarklyLocalEvent.key = launchDarklyParamUser.private.key
-            m.private.enqueueEvent(launchDarklyLocalEvent)
+            m.private.enqueueEvent(m.private.makeIdentifyEvent(launchDarklyParamUser))
 
             m.private.streamClient.changeUser(launchDarklyParamUser)
             m.handleMessage(invalid)
@@ -528,6 +532,8 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
 
     launchDarklyLocalThis.private.prepareEventTransfer()
     launchDarklyLocalThis.private.preparePolling()
+
+    launchDarklyLocalThis.private.enqueueEvent(launchDarklyLocalThis.private.makeIdentifyEvent(launchDarklyParamUser))
 
     launchDarklyLocalThis.handleMessage(invalid)
 

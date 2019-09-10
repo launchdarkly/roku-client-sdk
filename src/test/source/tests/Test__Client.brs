@@ -40,7 +40,7 @@ function TestCase__Client_Eval_NotTracked() as String
 
     eventQueue = client.private.events
 
-    return m.assertEqual(eventQueue.count(), 0)
+    return m.assertEqual(eventQueue.count(), 1)
 end function
 
 function TestCase__Client_Eval_Tracked() as String
@@ -68,12 +68,12 @@ function TestCase__Client_Eval_Tracked() as String
 
     eventQueue = client.private.events
 
-    a = m.assertEqual(eventQueue.count(), 1)
+    a = m.assertEqual(eventQueue.count(), 2)
     if a <> "" then
         return a
     end if
 
-    event = eventQueue.getEntry(0)
+    event = eventQueue.getEntry(1)
 
     a = m.assertTrue(event.creationDate > 0)
     if a <> "" then
@@ -229,12 +229,12 @@ function TestCase__Client_Track() as String
 
     eventQueue = client.private.events
 
-    a = m.assertEqual(eventQueue.count(), 1)
+    a = m.assertEqual(eventQueue.count(), 2)
     if a <> "" then
         return a
     end if
 
-    event = eventQueue.getEntry(0)
+    event = eventQueue.getEntry(1)
 
     a = m.assertTrue(event.creationDate > 0)
     if a <> "" then
@@ -267,12 +267,12 @@ function TestCase__Client_Identify() as String
 
     eventQueue = client.private.events
 
-    a = m.assertEqual(eventQueue.count(), 1)
+    a = m.assertEqual(eventQueue.count(), 2)
     if a <> "" then
         return a
     end if
 
-    event = eventQueue.getEntry(0)
+    event = eventQueue.getEntry(1)
 
     a = m.assertTrue(event.creationDate > 0)
     if a <> "" then
