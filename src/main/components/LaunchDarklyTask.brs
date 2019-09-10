@@ -47,7 +47,11 @@ function mainThread() as Void
             else if field = "flush" then
                 client.flush()
             else if field = "user" then
-                client.identify(msg.getData())
+                user = msg.getData()
+                REM don't call identify for first user
+                if user.private.initial <> true then
+                    client.identify(user)
+                end if
             else if field = "track" then
                 value = msg.getData()
                 client.track(value.key, value.data)
