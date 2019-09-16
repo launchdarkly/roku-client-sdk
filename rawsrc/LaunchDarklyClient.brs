@@ -472,10 +472,12 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
             m.private.enqueueEvent(m.private.makeIdentifyEvent(launchDarklyParamUser))
 
             m.private.streamClient.changeUser(launchDarklyParamUser)
-            m.handleMessage(invalid)
 
             m.private.resetPollingTransfer()
             m.private.preparePolling()
+            m.private.pollingInitial = true
+
+            m.handleMessage(invalid)
         end function,
 
         handleMessage: function(launchDarklyParamMessage=invalid as Dynamic) as Boolean
