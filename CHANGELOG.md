@@ -2,6 +2,15 @@
 
 All notable changes to the LaunchDarkly Roku SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.0.0-rc.1] - 2019-09-17
+### Changed
+- Renamed `aaVariation` to `jsonVariation`. Now supports arrays.
+### Fixed
+- Identify event not generated on initialization in core client
+- Scenegraph API generates extra identify event on initialization
+- Polling not starting instantly when identify is called
+- Increased streaming HMAC coverage increasing security
+
 ## [1.0.0-beta.2] - 2019-08-26
 ### Added
 - Client status API
