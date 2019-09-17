@@ -1,0 +1,30 @@
+version: 2
+jobs:
+  check-and-package:
+    docker:
+      - image: circleci/node
+    steps:
+      - checkout
+      - run: echo "Node version:" `node --version`
+      - run:
+          name: Install dev tools
+          command: sudo npm install -g @willowtreeapps/ukor @willowtreeapps/wist
+      - run:
+          name: Lint
+          command: make lint
+      - run:
+          name: Package
+          command: make package
+      - run:
+          name: Copy artifacts
+          command: |
+              mkdir -p /tmp/artifacts
+              cp package.zip /tmp/artifacts/
+      - store_artifacts:
+          path: /tmp/artifacts
+
+workflows:
+  version: 2
+  check-and-package:
+    jobs:
+      - check-and-package

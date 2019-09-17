@@ -20,3 +20,6 @@ test: build
 
 console:
 	ukor console roku
+
+lint:
+	ukor lint main
