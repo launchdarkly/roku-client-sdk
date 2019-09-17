@@ -6,6 +6,7 @@ function LaunchDarklyCryptoReader(launchDarklyParamCipherKey as Object, launchDa
 
             REM cached read of the size of the current packet
             bodySize: invalid,
+            bodySizeRaw: invalid,
             REM defaults to zero, see getErrorString for details
             errorCode: 0,
 
@@ -25,7 +26,8 @@ function LaunchDarklyCryptoReader(launchDarklyParamCipherKey as Object, launchDa
                         return invalid
                     end if
 
-                    m.bodySize = m.util.littleEndianUnsignedToInteger(m.stream.takeCount(4))
+                    m.bodySizeRaw = m.stream.takeCount(4)
+                    m.bodySize = m.util.littleEndianUnsignedToInteger(m.bodySizeRaw)
                 end if
 
                 REM wait until full packet is available
@@ -34,7 +36,7 @@ function LaunchDarklyCryptoReader(launchDarklyParamCipherKey as Object, launchDa
                 end if
 
                 REM split up packet
-                launchDarklyLocalIv = m.stream.takeCount(m.initVectorSize).toHexString()
+                launchDarklyLocalIv = m.stream.takeCount(m.initVectorSize)
                 launchDarklyLocalAuthCode = m.stream.takeCount(m.authCodeSize)
                 launchDarklyLocalCipherText = m.stream.takeCount(m.bodySize)
                 m.bodySize = invalid
@@ -49,6 +51,8 @@ function LaunchDarklyCryptoReader(launchDarklyParamCipherKey as Object, launchDa
                 if m.lastMAC <> invalid then
                     launchDarklyLocalAuthContext.update(m.lastMAC)
                 end if
+                launchDarklyLocalAuthContext.update(m.bodySizeRaw)
+                launchDarklyLocalAuthContext.update(launchDarklyLocalIv)
                 launchDarklyLocalAuthContext.update(launchDarklyLocalCipherText)
 
                 REM generate mac from cipher text and maybe last mac
@@ -62,7 +66,7 @@ function LaunchDarklyCryptoReader(launchDarklyParamCipherKey as Object, launchDa
 
                 REM prepare decryption
                 launchDarklyLocalCipherContext = createObject("roEVPCipher")
-                if launchDarklyLocalCipherContext.setup(false, "aes-256-cbc", m.cipherKey, launchDarklyLocalIv, 1) <> 0 then
+                if launchDarklyLocalCipherContext.setup(false, "aes-256-cbc", m.cipherKey, launchDarklyLocalIv.toHexString(), 1) <> 0 then
                     m.errorCode = 3
                     return invalid
                 end if

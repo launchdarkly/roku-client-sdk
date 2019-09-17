@@ -1,4 +1,6 @@
 function LaunchDarklySGInit(launchDarklyParamConfig as Object, launchDarklyParamUser as Object) as Void
+    REM ensure we don't call identify for this user
+    launchDarklyParamUser.private.initial = true
     launchDarklyLocalNode = launchDarklyParamConfig.private.sceneGraphNode
     launchDarklyLocalNode.user = launchDarklyParamUser
     launchDarklyLocalNode.config = launchDarklyParamConfig
