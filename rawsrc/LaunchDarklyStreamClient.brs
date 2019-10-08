@@ -199,7 +199,11 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                             m.store.putAll(launchDarklyLocalBody)
                             m.status.private.setStatus(m.status.map.initialized)
                         else if launchDarklyLocalEvent.name = "patch" then
-                            m.store.upsert(launchDarklyLocalBody)
+                            if getInterface(launchDarklyLocalBody.key, "ifString") = invalid then
+                                m.config.private.logger.error("SSE stream patch body invalid key")
+                            else
+                                m.store.upsert(launchDarklyLocalBody)
+                            end if
                         else if launchDarklyLocalEvent.name = "delete" then
                             m.store.delete(launchDarklyLocalBody["key"], launchDarklyLocalBody["version"])
                         end if

@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly Roku SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.0.0-rc.2] - 2019-10-08
+### Fixed
+- Schema validation bug in streaming
+
 ## [1.0.0-rc.1] - 2019-09-17
 ### Changed
 - Renamed `aaVariation` to `jsonVariation`. Now supports arrays.
