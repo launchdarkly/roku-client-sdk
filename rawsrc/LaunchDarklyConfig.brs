@@ -16,7 +16,7 @@ function LaunchDarklyConfig(launchDarklyParamMobileKey as String, launchDarklyPa
             storeBackend: invalid,
             storeBackendNode: launchDarklyParamSceneGraphNode,
             streaming: true,
-            sdkVersion: "1.0.0-rc.1",
+            sdkVersion: "1.0.0-rc.2",
             logLevel: LaunchDarklyLogLevels().warn,
             sceneGraphNode: launchDarklyParamSceneGraphNode,
 
