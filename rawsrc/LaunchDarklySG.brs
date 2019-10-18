@@ -43,10 +43,11 @@ function LaunchDarklySG(launchDarklyParamClientNode as Dynamic) as Object
             m.private.clientNode.user = launchDarklyParamUser
         end function,
 
-        track: function(launchDarklyParamKey as String, launchDarklyParamData=invalid as Object) as Void
+        track: function(launchDarklyParamKey as String, launchDarklyParamData=invalid as Object, launchDarklyParamMetric=invalid as Dynamic) as Void
             m.private.clientNode.track = {
                 key: launchDarklyParamKey,
-                data: launchDarklyParamData
+                data: launchDarklyParamData,
+                metric: launchDarklyParamMetric
             }
         end function,
 

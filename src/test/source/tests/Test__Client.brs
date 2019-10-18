@@ -228,7 +228,7 @@ function TestCase__Client_Track() as String
         b: 3
     }
 
-    client.track(eventName, eventData)
+    client.track(eventName, eventData, 52)
 
     eventQueue = client.private.events
 
@@ -245,14 +245,17 @@ function TestCase__Client_Track() as String
     end if
     event.delete("creationDate")
 
-    return m.assertEqual(FormatJSON(event), FormatJSON({
+    expected = {
         kind: "custom",
         user: {
             key: "user-key"
         },
         key: eventName,
         data: eventData
-    }))
+    }
+    expected["metricValue"] = 52
+
+    return m.assertEqual(FormatJSON(event), FormatJSON(expected))
 end function
 
 function TestCase__Client_Identify() as String

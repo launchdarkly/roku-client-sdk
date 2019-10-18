@@ -54,7 +54,7 @@ function mainThread() as Void
                 end if
             else if field = "track" then
                 value = msg.getData()
-                client.track(value.key, value.data)
+                client.track(value.key, value.data, value.metric)
             end if
         end if
     end while

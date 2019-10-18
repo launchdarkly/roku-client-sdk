@@ -76,7 +76,7 @@ function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Ob
                         typeMatch: launchDarklyLocalTypeMatch
                     }
 
-                    if launchDarklyParamEmbedReason = true then
+                    if launchDarklyParamEmbedReason = true OR launchDarklyLocalFlag.trackReason = true then
                         launchDarklyLocalState.reason = LaunchDarklyUtility().deepCopy(launchDarklyLocalReason)
                     end if
 
@@ -509,12 +509,16 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
             end function
         },
 
-        track: function(launchDarklyParamKey as String, launchDarklyParamData=invalid as Object) as Void
+        track: function(launchDarklyParamKey as String, launchDarklyParamData=invalid as Object, launchDarklyParamMetric=invalid as Dynamic) as Void
             launchDarklyLocalEvent = m.private.makeBaseEvent("custom")
             launchDarklyLocalEvent.key = launchDarklyParamKey
 
             if launchDarklyParamData <> invalid then
                 launchDarklyLocalEvent.data = launchDarklyParamData
+            end if
+
+            if launchDarklyParamMetric <> invalid then
+                launchDarklyLocalEvent["metricValue"] = launchDarklyParamMetric
             end if
 
             m.private.enqueueEvent(launchDarklyLocalEvent)
