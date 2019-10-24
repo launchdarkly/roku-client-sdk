@@ -2,7 +2,7 @@
 
 All notable changes to the LaunchDarkly Roku SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [1.0.0-rc.3] - 2019-10-23
+## [1.0.0-rc.3] - 2019-10-24
 ### Added
 - Added support for the new LaunchDarkly experimentation functionality. An optional numeric metric parameter has been added the `track` method.
 - The new family of `*VariationDetail` methods allows you to evaluate a feature flag (using the same parameters as you would for `*Variation`) and receive more information about how the value was calculated. This information is returned in an object that contains both the result value and a "reason" object which will tell you, for instance, if the user was individually targeted for the flag or was matched by one of the flag's rules, or if the flag returned the default value due to an error.
