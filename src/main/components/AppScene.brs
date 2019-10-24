@@ -41,5 +41,4 @@ function init() as Void
 
     launchDarklyNode.observeField("flags", "onFeatureChange")
     launchDarklyNode.observeField("status", "onStatusChange")
-
 end function

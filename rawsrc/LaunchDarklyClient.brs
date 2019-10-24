@@ -1,13 +1,25 @@
 function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Object) as Object
     return {
-        variation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Dynamic, launchDarklyParamStrong=invalid as Dynamic) as Dynamic
-            if m.private.isOffline() then
-                return launchDarklyParamFallback
+        variationDetail: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Dynamic, launchDarklyParamEmbedReason=true as Boolean, launchDarklyParamStrong=invalid as Dynamic) as Object
+            if m.status.getStatus() <> m.status.map.initialized then
+                launchDarklyLocalReason = {}
+                launchDarklyLocalReason["kind"] = "ERROR"
+                launchDarklyLocalReason["errorKind"] = "CLIENT_NOT_READY"
+
+                launchDarklyLocalDetails = {}
+                launchDarklyLocalDetails["result"] = launchDarklyParamFallback
+                launchDarklyLocalDetails["reason"] = launchDarklyLocalReason
+
+                return launchDarklyLocalDetails
             else
                 launchDarklyLocalFlag = m.private.lookupFlag(launchDarklyParamFlagKey)
 
                 if launchDarklyLocalFlag = invalid then
                     m.private.logger.error("missing flag")
+
+                    launchDarklyLocalReason = {}
+                    launchDarklyLocalReason["kind"] = "ERROR"
+                    launchDarklyLocalReason["errorKind"] = "FLAG_NOT_FOUND"
 
                     launchDarklyLocalState = {
                         value: launchDarklyParamFallback,
@@ -17,24 +29,43 @@ function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Ob
                         typeMatch: true
                     }
 
+                    if launchDarklyParamEmbedReason = true then
+                        launchDarklyLocalState.reason = LaunchDarklyUtility().deepCopy(launchDarklyLocalReason)
+                    end if
+
                     m.private.handleEventsForEval(launchDarklyLocalState)
 
-                    return launchDarklyParamFallback
+                    launchDarklyLocalDetails = {}
+                    launchDarklyLocalDetails["result"] = launchDarklyParamFallback
+                    launchDarklyLocalDetails["reason"] = launchDarklyLocalReason
+
+                    return launchDarklyLocalDetails
                 else
+                    launchDarklyLocalReason = {}
                     launchDarklyLocalTypeMatch = true
+                    launchDarklyLocalValue = invalid
+
                     if launchDarklyParamStrong <> invalid then
-                        if not launchDarklyParamStrong(launchDarklyLocalFlag.value) then
+                        if launchDarklyParamStrong(launchDarklyLocalFlag.value) = true then
+                            launchDarklyLocalValue = launchDarklyLocalFlag.value
+                        else
                             m.private.logger.error("eval type mismatch")
+
+                            launchDarklyLocalValue = launchDarklyParamFallback
 
                             launchDarklyLocalTypeMatch = false
                         end if
+                    else
+                        launchDarklyLocalValue = launchDarklyLocalFlag.value
                     end if
 
-                    launchDarklyLocalValue = invalid
-                    if launchDarklyLocalTypeMatch = true then
-                        launchDarklyLocalValue = launchDarklyLocalFlag.value
+                    if launchDarklyLocalTypeMatch OR launchDarklyLocalFlag.value = invalid then
+                        if launchDarklyLocalFlag.reason <> invalid then
+                            launchDarklyLocalReason = LaunchDarklyUtility().deepCopy(launchDarklyLocalFlag.reason)
+                        end if
                     else
-                        launchDarklyLocalValue = launchDarklyParamFallback
+                        launchDarklyLocalReason["kind"] = "ERROR"
+                        launchDarklyLocalReason["errorKind"] = "WRONG_TYPE"
                     end if
 
                     launchDarklyLocalState = {
@@ -45,31 +76,42 @@ function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Ob
                         typeMatch: launchDarklyLocalTypeMatch
                     }
 
+                    if launchDarklyParamEmbedReason = true OR launchDarklyLocalFlag.trackReason = true then
+                        launchDarklyLocalState.reason = LaunchDarklyUtility().deepCopy(launchDarklyLocalReason)
+                    end if
+
                     m.private.handleEventsForEval(launchDarklyLocalState)
 
-                    return launchDarklyLocalValue
+                    launchDarklyLocalDetails = {}
+                    launchDarklyLocalDetails["result"] = launchDarklyLocalValue
+                    launchDarklyLocalDetails["reason"] = launchDarklyLocalReason
+                    launchDarklyLocalDetails["variationIndex"] = launchDarklyLocalFlag.variation
+
+                    return launchDarklyLocalDetails
                 end if
             end if
         end function,
 
-        intVariation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Integer) as Integer
-            return int(m.doubleVariation(launchDarklyParamFlagKey, launchDarklyParamFallback))
+        intVariationDetail: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Integer, launchDarklyParamEmbedReason=true as Dynamic) as Object
+            launchDarklyLocalValue = m.doubleVariationDetail(launchDarklyParamFlagKey, launchDarklyParamFallback, launchDarklyParamEmbedReason)
+            launchDarklyLocalValue.result = int(launchDarklyLocalValue.result)
+            return launchDarklyLocalValue
         end function,
 
-        boolVariation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Boolean) as Boolean
-            return m.variation(launchDarklyParamFlagKey, launchDarklyParamFallback, function(launchDarklyParamValue as Dynamic) as Boolean
+        boolVariationDetail: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Boolean, launchDarklyParamEmbedReason=true as Dynamic) as Object
+            return m.variationDetail(launchDarklyParamFlagKey, launchDarklyParamFallback, launchDarklyParamEmbedReason, function(launchDarklyParamValue as Dynamic) as Boolean
                 return getInterface(launchDarklyParamValue, "ifBoolean") <> invalid
             end function)
         end function,
 
-        stringVariation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as String) as String
-            return m.variation(launchDarklyParamFlagKey, launchDarklyParamFallback, function(launchDarklyParamValue as Dynamic) as Boolean
+        stringVariationDetail: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as String, launchDarklyParamEmbedReason=true as Dynamic) as Object
+            return m.variationDetail(launchDarklyParamFlagKey, launchDarklyParamFallback, launchDarklyParamEmbedReason, function(launchDarklyParamValue as Dynamic) as Boolean
                 return getInterface(launchDarklyParamValue, "ifString") <> invalid
             end function)
         end function,
 
-        jsonVariation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Object) as Object
-            return m.variation(launchDarklyParamFlagKey, launchDarklyParamFallback, function(launchDarklyParamValue as Dynamic) as Boolean
+        jsonVariationDetail: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Object, launchDarklyParamEmbedReason=true as Dynamic) as Object
+            return m.variationDetail(launchDarklyParamFlagKey, launchDarklyParamFallback, launchDarklyParamEmbedReason, function(launchDarklyParamValue as Dynamic) as Boolean
                 if getInterface(launchDarklyParamValue, "ifAssociativeArray") <> invalid then
                     return true
                 else if getInterface(launchDarklyParamValue, "ifArray") <> invalid then
@@ -80,8 +122,8 @@ function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Ob
             end function)
         end function,
 
-        doubleVariation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Double) as Double
-            return m.variation(launchDarklyParamFlagKey, launchDarklyParamFallback, function(launchDarklyParamValue as Dynamic) as Boolean
+        doubleVariationDetail: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Double, launchDarklyParamEmbedReason=true as Dynamic) as Object
+            return m.variationDetail(launchDarklyParamFlagKey, launchDarklyParamFallback, launchDarklyParamEmbedReason, function(launchDarklyParamValue as Dynamic) as Boolean
                 if getInterface(launchDarklyParamValue, "ifFloat") <> invalid then
                     return true
                 else if getInterface(launchDarklyParamValue, "ifDouble") <> invalid then
@@ -92,6 +134,30 @@ function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Ob
                     return false
                 end if
             end function)
+        end function,
+
+        variation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Dynamic, launchDarklyParamStrong=invalid as Dynamic) as Dynamic
+            return m.variationDetail(launchDarklyParamFlagKey, launchDarklyParamFallback, false, launchDarklyParamStrong).result
+        end function,
+
+        intVariation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Integer) as Integer
+            return m.intVariationDetail(launchDarklyParamFlagKey, launchDarklyParamFallback, false).result
+        end function,
+
+        boolVariation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Boolean) as Boolean
+            return m.boolVariationDetail(launchDarklyParamFlagKey, launchDarklyParamFallback, false).result
+        end function,
+
+        stringVariation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as String) as String
+            return m.stringVariationDetail(launchDarklyParamFlagKey, launchDarklyParamFallback, false).result
+        end function,
+
+        jsonVariation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Object) as Object
+            return m.jsonVariationDetail(launchDarklyParamFlagKey, launchDarklyParamFallback, false).result
+        end function,
+
+        doubleVariation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Double) as Double
+            return m.doubleVariationDetail(launchDarklyParamFlagKey, launchDarklyParamFallback, false).result
         end function,
 
         allFlags: function() as Object
@@ -257,6 +323,10 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
                 launchDarklyLocalEvent.value = launchDarklyParamBundle.value
                 launchDarklyLocalEvent.default = launchDarklyParamBundle.fallback
 
+                if launchDarklyParamBundle.reason <> invalid then
+                    launchDarklyLocalEvent.reason = launchDarklyParamBundle.reason
+                end if
+
                 return launchDarklyLocalEvent
             end function,
 
@@ -366,6 +436,10 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
                 launchDarklyLocalUserBase64JSON = launchDarklyLocalBuffer.toBase64String()
                 launchDarklyLocalUrl = m.config.private.appURI + "/msdk/evalx/users/" + launchDarklyLocalUserBase64JSON
 
+                if m.config.private.useReasons then
+                    launchDarklyLocalUrl += "?withReasons=true"
+                end if
+
                 m.config.private.logger.debug("polling url: " + launchDarklyLocalUrl)
 
                 m.pollingTransfer = createObject("roUrlTransfer")
@@ -435,12 +509,16 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
             end function
         },
 
-        track: function(launchDarklyParamKey as String, launchDarklyParamData=invalid as Object) as Void
+        track: function(launchDarklyParamKey as String, launchDarklyParamData=invalid as Object, launchDarklyParamMetric=invalid as Dynamic) as Void
             launchDarklyLocalEvent = m.private.makeBaseEvent("custom")
             launchDarklyLocalEvent.key = launchDarklyParamKey
 
             if launchDarklyParamData <> invalid then
                 launchDarklyLocalEvent.data = launchDarklyParamData
+            end if
+
+            if launchDarklyParamMetric <> invalid then
+                launchDarklyLocalEvent["metricValue"] = launchDarklyParamMetric
             end if
 
             m.private.enqueueEvent(launchDarklyLocalEvent)

@@ -256,6 +256,10 @@ function LaunchDarklyUtility() as Object
                 REM impossible in usage
                 return ""
             end if
+        end function,
+
+        deepCopy: function(launchDarklyParamValue as Dynamic) as Dynamic
+            return parseJSON(formatJSON(launchDarklyParamValue))
         end function
     }
 end function

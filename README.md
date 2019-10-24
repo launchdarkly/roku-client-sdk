@@ -1,6 +1,8 @@
 LaunchDarkly SDK for Roku
 ===========================
 
+[![CircleCI](https://circleci.com/gh/launchdarkly/roku-client-sdk.svg?style=svg)](https://circleci.com/gh/launchdarkly/roku-client-sdk)
+
 *This version of the SDK is a **beta** version and should not be considered ready for production use while this message is visible.*
 
 LaunchDarkly overview

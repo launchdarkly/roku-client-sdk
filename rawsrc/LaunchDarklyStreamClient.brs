@@ -42,6 +42,10 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
             prepareHandshakeTransfer: function() as Void
                 launchDarklyLocalUrl = m.config.private.streamURI + "/handshake"
 
+                if m.config.private.useReasons then
+                    launchDarklyLocalUrl += "?withReasons=true"
+                end if
+
                 m.config.private.logger.debug("handshake url: " + launchDarklyLocalUrl)
 
                 m.util.prepareNetworkingCommon(m.messagePort, m.config, m.handshakeTransfer)

@@ -16,9 +16,10 @@ function LaunchDarklyConfig(launchDarklyParamMobileKey as String, launchDarklyPa
             storeBackend: invalid,
             storeBackendNode: launchDarklyParamSceneGraphNode,
             streaming: true,
-            sdkVersion: "1.0.0-rc.2",
+            sdkVersion: "1.0.0-rc.3",
             logLevel: LaunchDarklyLogLevels().warn,
             sceneGraphNode: launchDarklyParamSceneGraphNode,
+            useReasons: false,
 
             validateURI: function(launchDarklyParamRawURI as String) as Boolean
                 launchDarklyLocalHTTPS = "https://"
@@ -104,6 +105,10 @@ function LaunchDarklyConfig(launchDarklyParamMobileKey as String, launchDarklyPa
 
         setLogLevel: function(launchDarklyParamLogLevel as Integer) as Void
             m.private.logLevel = launchDarklyParamLogLevel
+        end function,
+
+        setUseEvaluationReasons: function(launchDarklyParamUseReasons as Boolean) as Void
+            m.private.useReasons = launchDarklyParamUseReasons
         end function
     }
 

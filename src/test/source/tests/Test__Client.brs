@@ -1,4 +1,4 @@
-function makeTestClient() as Object
+function makeTestClientUninitialized() as Object
     messagePort = CreateObject("roMessagePort")
     config = LaunchDarklyConfig("mob-abc123")
     config.setOffline(true)
@@ -6,21 +6,24 @@ function makeTestClient() as Object
     return LaunchDarklyClient(config, user, messagePort)
 end function
 
-function makeTestClientOnline() as Object
+function makeTestClientInitialized() as Object
     messagePort = CreateObject("roMessagePort")
     config = LaunchDarklyConfig("mob-abc123")
     user = LaunchDarklyUser("user-key")
-    return LaunchDarklyClient(config, user, messagePort)
+    config.setOffline(true)
+    client = LaunchDarklyClient(config, user, messagePort)
+    client.status.private.setStatus(client.status.map.initialized)
+    return client
 end function
 
 function TestCase__Client_Eval_Offline() as String
-    client = makeTestClient()
+    client = makeTestClientUninitialized()
     fallback = "fallback"
     return m.assertEqual(client.variation("flag", fallback), fallback)
 end function
 
 function TestCase__Client_Eval_NotTracked() as String
-    client = makeTestClientOnline()
+    client = makeTestClientInitialized()
 
     expectedValue = "def"
     client.private.store.putAll({
@@ -44,7 +47,7 @@ function TestCase__Client_Eval_NotTracked() as String
 end function
 
 function TestCase__Client_Eval_Tracked() as String
-    client = makeTestClientOnline()
+    client = makeTestClientInitialized()
 
     expectedValue = "def"
     expectedVariation = 3
@@ -96,7 +99,7 @@ function TestCase__Client_Eval_Tracked() as String
 end function
 
 function TestCase__Client_Summary_Known() as String
-    client = makeTestClientOnline()
+    client = makeTestClientInitialized()
 
     flagKey = "flag1"
     fallback = "myFallback"
@@ -161,7 +164,7 @@ function TestCase__Client_Summary_Known() as String
 end function
 
 function TestCase__Client_Summary_Unknown() as String
-    client = makeTestClientOnline()
+    client = makeTestClientInitialized()
 
     flagKey = "flag1"
     expectedFallback = "myFallback"
@@ -216,7 +219,7 @@ function TestCase__Client_Summary_Unknown() as String
 end function
 
 function TestCase__Client_Track() as String
-    client = makeTestClient()
+    client = makeTestClientUninitialized()
     fallback = "fallback"
 
     eventName = "my-event"
@@ -225,7 +228,7 @@ function TestCase__Client_Track() as String
         b: 3
     }
 
-    client.track(eventName, eventData)
+    client.track(eventName, eventData, 52)
 
     eventQueue = client.private.events
 
@@ -242,18 +245,21 @@ function TestCase__Client_Track() as String
     end if
     event.delete("creationDate")
 
-    return m.assertEqual(FormatJSON(event), FormatJSON({
+    expected = {
         kind: "custom",
         user: {
             key: "user-key"
         },
         key: eventName,
         data: eventData
-    }))
+    }
+    expected["metricValue"] = 52
+
+    return m.assertEqual(FormatJSON(event), FormatJSON(expected))
 end function
 
 function TestCase__Client_Identify() as String
-    client = makeTestClient()
+    client = makeTestClientUninitialized()
 
     newUserKey = "user-key2"
     newUser = LaunchDarklyUser(newUserKey)
@@ -290,7 +296,7 @@ function TestCase__Client_Identify() as String
 end function
 
 function testVariation(ctx as Object, functionName as String, flagValue as Dynamic, fallback as Dynamic, expectedValue as Dynamic) as String
-    client = makeTestClientOnline()
+    client = makeTestClientInitialized()
 
     flagKey = "flag1"
 
@@ -298,13 +304,27 @@ function testVariation(ctx as Object, functionName as String, flagValue as Dynam
         flag1: {
             value: flagValue,
             variation: 3,
-            version: 4
+            version: 4,
+            reason: {
+                kind: "FALLTHROUGH"
+            }
         }
     })
 
     actualValue = client[functionName](flagKey, fallback)
+    a = ctx.assertEqual(actualValue, expectedValue)
+    if a <> "" then
+        return a
+    end if
 
-    return ctx.assertEqual(actualValue, expectedValue)
+    actualValue = client[functionName + "Detail"](flagKey, fallback)
+    return ctx.assertEqual(actualValue, {
+        result: expectedValue,
+        reason: {
+            kind: "FALLTHROUGH"
+        },
+        variationIndex: 3
+    })
 end function
 
 function TestCase__Client_Variation_Int() as String
@@ -339,8 +359,57 @@ function TestCase__Client_Variation_DoubleVariationIntFlag() as String
     return testVariation(m, "doubleVariation", 6, 3.5, 6.0)
 end function
 
+function TestCase__Client_VariationDetail_FlagNotFound() as String
+    client = makeTestClientInitialized()
+    client.private.store.putAll({})
+
+    return m.assertEqual(client.variationDetail("abc", 50), {
+        result: 50,
+        reason: {
+            kind: "ERROR",
+            errorKind: "FLAG_NOT_FOUND"
+        }
+    })
+end function
+
+function TestCase__Client_VariationDetail_WrongType() as String
+    client = makeTestClientInitialized()
+
+    client.private.store.putAll({
+        flag1: {
+            value: "hello world!",
+            variation: 3,
+            version: 4,
+            reason: {
+                kind: "FALLTHROUGH"
+            }
+        }
+    })
+
+    return m.assertEqual(client.intVariationDetail("flag1", 50), {
+        result: 50,
+        variationIndex: 3,
+        reason: {
+            kind: "ERROR",
+            errorKind: "WRONG_TYPE"
+        }
+    })
+end function
+
+function TestCase__Client_VariationDetail_ClientNotReady() as String
+    client = makeTestClientUninitialized()
+
+    return m.assertEqual(client.variationDetail("abc", 50), {
+        result: 50,
+        reason: {
+            kind: "ERROR",
+            errorKind: "CLIENT_NOT_READY"
+        }
+    })
+end function
+
 function TestCase__Client_AllFlags() as String
-    client = makeTestClient()
+    client = makeTestClientUninitialized()
 
     flags = {
         flag1: {
@@ -381,6 +450,9 @@ function TestSuite__Client() as Object
     this.addTest("TestCase__Client_Variation_Double", TestCase__Client_Variation_Double)
     this.addTest("TestCase__Client_Variation_IntVariationDoubleFlag", TestCase__Client_Variation_IntVariationDoubleFlag)
     this.addTest("TestCase__Client_Variation_DoubleVariationIntFlag", TestCase__Client_Variation_DoubleVariationIntFlag)
+    this.addTest("TestCase__Client_VariationDetail_FlagNotFound", TestCase__Client_VariationDetail_FlagNotFound)
+    this.addTest("TestCase__Client_VariationDetail_WrongType", TestCase__Client_VariationDetail_WrongType)
+    this.addTest("TestCase__Client_VariationDetail_ClientNotReady", TestCase__Client_VariationDetail_ClientNotReady)
     this.addTest("TestCase__Client_AllFlags", TestCase__Client_AllFlags)
 
     return this
