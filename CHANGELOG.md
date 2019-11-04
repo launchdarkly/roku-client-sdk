@@ -2,6 +2,9 @@
 
 All notable changes to the LaunchDarkly Roku SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.0.0] - 2019-11-04
+First GA release. No associated changes.
+
 ## [1.0.0-rc.3] - 2019-10-24
 ### Added
 - Added support for the new LaunchDarkly experimentation functionality. An optional numeric metric parameter has been added the `track` method.
