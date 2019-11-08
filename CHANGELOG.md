@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly Roku SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.0.1] - 2019-11-08
+### Fixed
+- Dereference of an `invalid` value in streaming mode
+
 ## [1.0.0] - 2019-11-04
 First GA release. No associated changes.
 
