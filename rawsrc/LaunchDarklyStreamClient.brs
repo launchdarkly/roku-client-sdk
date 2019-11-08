@@ -383,7 +383,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                     return true
                 end if
             else if type(launchDarklyParamMessage) = "roSocketEvent" then
-                if launchDarklyParamMessage.getSocketID() = m.private.streamSocket.getID() then
+                if m.private.streamSocket <> invalid AND launchDarklyParamMessage.getSocketID() = m.private.streamSocket.getID() then
                     m.private.handleStreamMessage(launchDarklyParamMessage)
 
                     return true
