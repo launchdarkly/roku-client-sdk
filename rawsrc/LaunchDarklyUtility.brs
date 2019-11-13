@@ -1,3 +1,7 @@
+function LaunchDarklySDKVersion() as String
+    return "1.1.0"
+end function
+
 function LaunchDarklyBackoff() as Object
     return {
         private: {
@@ -238,7 +242,7 @@ function LaunchDarklyUtility() as Object
 
         prepareNetworkingCommon: function(launchDarklyParamMessagePort as Object, launchDarklyParamConfig as Object, launchDarklyParamTransfer as Object) as Void
             launchDarklyParamTransfer.setPort(launchDarklyParamMessagePort)
-            launchDarklyParamTransfer.addHeader("User-Agent", "RokuClient/" + launchDarklyParamConfig.private.sdkVersion)
+            launchDarklyParamTransfer.addHeader("User-Agent", "RokuClient/" + LaunchDarklySDKVersion())
             launchDarklyParamTransfer.addHeader("Authorization", launchDarklyParamConfig.private.mobileKey)
             launchDarklyParamTransfer.setCertificatesFile("common:/certs/ca-bundle.crt")
             launchDarklyParamTransfer.initClientCertificates()

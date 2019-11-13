@@ -313,7 +313,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
 
                 launchDarklyLocalRequestText = ""
                 launchDarklyLocalRequestText += "POST /mevalalternate HTTP/1.1" + chr(13) + chr(10)
-                launchDarklyLocalRequestText += "User-Agent: RokuClient/" + m.config.private.sdkVersion + chr(13) + chr(10)
+                launchDarklyLocalRequestText += "User-Agent: RokuClient/" + LaunchDarklySDKVersion() + chr(13) + chr(10)
                 launchDarklyLocalRequestText += "Content-Length: " + launchDarklyLocalBundle.count().toStr() + chr(13) + chr(10)
                 launchDarklyLocalRequestText += "Host: " + launchDarklyLocalHostname + chr(13) + chr(10)
                 launchDarklyLocalRequestText += "X-LaunchDarkly-AltStream-Version: 2" + chr(13) + chr(10)
