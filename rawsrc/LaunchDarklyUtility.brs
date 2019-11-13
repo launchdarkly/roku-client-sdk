@@ -1,5 +1,5 @@
 function LaunchDarklySDKVersion() as String
-    return "1.0.1"
+    return "1.1.0"
 end function
 
 function LaunchDarklyBackoff() as Object
