@@ -244,6 +244,9 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
             eventsFlushActive: false,
             eventsSummary: {},
             eventsSummaryStart: 0,
+            eventsFailureRetrying: false,
+            eventsPayloadId: invalid,
+            eventsPayload: invalid,
 
             streamClient: invalid,
 
@@ -282,17 +285,25 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
 
                 m.config.private.logger.debug("events response code: " + launchDarklyLocalResponseCode.toStr())
 
+                launchDarklyLocalRetryable = false
+
                 if launchDarklyLocalResponseCode >= 200 AND launchDarklyLocalResponseCode < 300 then
                     m.config.private.logger.debug("events sent")
-                end if
-
-                if launchDarklyLocalResponseCode = 401 OR launchDarklyLocalResponseCode = 403 then
+                else if launchDarklyLocalResponseCode = 401 OR launchDarklyLocalResponseCode = 403 then
                     m.config.private.logger.error("events not authorized")
 
                     launchDarklyParamCtx.status.private.setStatus(launchDarklyParamCtx.status.map.unauthorized)
                 else
-                    m.resetEventsTransfer()
+                    launchDarklyLocalRetryable = true
                 end if
+
+                if launchDarklyLocalRetryable = true AND m.eventsFailureRetrying = false then
+                    m.eventsFailureRetrying = true
+                else
+                    m.eventsFailureRetrying = false
+                end if
+
+                m.resetEventsTransfer()
             end function,
 
             getFlagVersion: function(launchDarklyParamFlag as Object) as Integer
@@ -527,17 +538,26 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
         flush: function() as Void
             if m.private.config.private.offline = false then
                 if m.private.eventsFlushActive = false then
-                    if m.private.eventsSummaryStart <> 0 then
-                        launchDarklyLocalSummary = m.private.makeSummaryEvent()
-                        m.private.events.push(launchDarklyLocalSummary)
-                        m.private.eventsSummary = {}
-                        m.private.eventsSummaryStart = 0
+                    if m.private.eventsFailureRetrying = false then
+                        if m.private.eventsSummaryStart <> 0 then
+                            launchDarklyLocalSummary = m.private.makeSummaryEvent()
+                            m.private.events.push(launchDarklyLocalSummary)
+                            m.private.eventsSummary = {}
+                            m.private.eventsSummaryStart = 0
+                        end if
+
+                        m.private.eventsPayload = formatJSON(m.private.events)
+
+                        m.private.eventsPayloadId = createObject("roDeviceInfo").getRandomUUID()
+
+                        m.private.events.clear()
                     end if
 
                     m.private.eventsFlushActive = true
-                    launchDarklyLocalSerialized = formatJSON(m.private.events)
-                    m.private.events.clear()
-                    m.private.eventsTransfer.asyncPostFromString(launchDarklyLocalSerialized)
+
+                    m.private.eventsTransfer.addHeader("X-LaunchDarkly-Payload-ID", m.private.eventsPayloadId)
+
+                    m.private.eventsTransfer.asyncPostFromString(m.private.eventsPayload)
                 end if
             end if
         end function,
@@ -575,7 +595,11 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
                 if m.private.eventsFlushActive = false then
                     launchDarklyLocalElapsed = m.private.eventsFlushTimer.totalSeconds()
 
-                    if launchDarklyLocalElapsed >= m.private.config.private.eventsFlushIntervalSeconds then
+                    if m.private.eventsFailureRetrying = true AND launchDarklyLocalElapsed >= 1 then
+                        m.private.config.private.logger.debug("flush retry timeout hit")
+
+                        m.flush()
+                    else if launchDarklyLocalElapsed >= m.private.config.private.eventsFlushIntervalSeconds then
                         m.private.config.private.logger.debug("flush timeout hit")
 
                         m.flush()
