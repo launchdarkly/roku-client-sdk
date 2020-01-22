@@ -1,0 +1,14 @@
+repo:
+  public: roku-client-sdk
+  private: roku-client-sdk-private
+
+circleci:
+  linux:
+    image: circleci/node
+
+documentation:
+  title: LaunchDarkly Client-Side SDK for Roku
+  githubPages: true
+
+sdk:
+  displayName: "Roku (client-side)"
