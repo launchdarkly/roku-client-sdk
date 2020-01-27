@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly Roku SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.1.2] - 2020-01-27
+### Fixed:
+- The SDK will no longer send empty event payloads to LaunchDarkly.
+
 ## [1.1.1] - 2020-01-17
 ### Fixed
 - The SDK now specifies a uniquely identifiable request header when sending events to LaunchDarkly to ensure that events are only processed once, even if the SDK sends them two times due to a failed initial attempt.
