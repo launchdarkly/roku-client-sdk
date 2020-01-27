@@ -546,6 +546,14 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
                             m.private.eventsSummaryStart = 0
                         end if
 
+                        if m.private.events.count() = 0 then
+                            m.private.resetEventsTransfer()
+
+                            m.private.config.private.logger.debug("event payload empty skipping post")
+
+                            return
+                        end if
+
                         m.private.eventsPayload = formatJSON(m.private.events)
 
                         m.private.eventsPayloadId = createObject("roDeviceInfo").getRandomUUID()
