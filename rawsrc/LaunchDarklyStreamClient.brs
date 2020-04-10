@@ -36,6 +36,8 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                     launchDarklyLocalUser = FormatJSON(LaunchDarklyUserEncode(m.user, false))
                     m.handshakeTransfer.asyncPostFromString(launchDarklyLocalUser)
                     m.stage = m.stageMap.handshake
+
+                    m.streamBackoff.started()
                 end if
             end function,
 
@@ -58,11 +60,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                 m.stage = m.stageMap.notStarted
                 m.streamSocket = invalid
                 m.handshakeTransfer.asyncCancel()
-            end function,
-
-            killFailedStream: function() as Void
-                m.killStream()
-                m.streamBackoff.fail()
+                m.streamBackoff.finished()
             end function,
 
             runTCPStep: function() as Void
@@ -80,7 +78,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
 
                             exit while
                         else if launchDarklyLocalStatus = 0 then
-                            m.killFailedStream()
+                            m.killStream()
 
                             m.config.private.logger.debug("socket closed")
 
@@ -112,7 +110,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                     if m.streamHTTP.responseStatus < 0 then
                         launchDarklyLocalErrorText = m.streamCrypto.responseStatusText()
                         m.config.private.logger.error("http stream: " + launchDarklyLocalErrorText)
-                        m.killFailedStream()
+                        m.killStream()
 
                         return false
                     else if m.streamHTTP.responseStatus >= 1 AND m.stage = m.stageMap.readingHeader then
@@ -130,11 +128,9 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                         else if launchDarklyLocalCode < 200 OR launchDarklyLocalCode >= 300 then
                             m.config.private.logger.warn("stream http request fail")
 
-                            m.killFailedStream()
+                            m.killStream()
 
                             return false
-                        else
-                            m.streamBackoff.success()
                         end if
 
                         m.stage = m.stageMap.readingBody
@@ -161,7 +157,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                     if m.streamCrypto.getErrorCode() <> 0 then
                         launchDarklyLocalErrorText = m.streamCrypto.getErrorString()
                         m.config.private.logger.error("crypto stream error: " + launchDarklyLocalErrorText)
-                        m.killFailedStream()
+                        m.killStream()
 
                         return false
                     end if
@@ -195,9 +191,11 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
 
                         if launchDarklyLocalBody = invalid then
                             m.config.private.logger.error("SSE stream failed to parse JSON")
-                            m.killFailedStream()
+                            m.killStream()
                             return false
                         end if
+
+                        m.streamBackoff.gotStreamData()
 
                         if launchDarklyLocalEvent.name = "put" then
                             m.store.putAll(launchDarklyLocalBody)
@@ -242,7 +240,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                                 exit while
                             else if launchDarklyLocalStatus = 0 then
                                 m.config.private.logger.debug("socket closed")
-                                m.killFailedStream()
+                                m.killStream()
                                 return
                             else if launchDarklyLocalStatus > 0 then
                                 m.config.private.logger.debug("socket sent bytes " + launchDarklyLocalStatus.toStr())
@@ -280,7 +278,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                 else if launchDarklyLocalResponseCode < 200 OR launchDarklyLocalResponseCode >= 300 then
                     m.config.private.logger.error("streaming handshake not successful")
 
-                    m.killFailedStream()
+                    m.killStream()
 
                     return
                 end if
@@ -290,7 +288,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                 if launchDarklyLocalDecoded = invalid then
                     m.config.private.logger.error("failed json decoding")
 
-                    m.killFailedStream()
+                    m.killStream()
 
                     return
                 end if
@@ -348,7 +346,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                     m.stage = m.stageMap.sendingRequest
                 else
                     m.config.private.logger.error("streaming socket connection failure")
-                    m.killFailedStream()
+                    m.killStream()
                 end if
             end function,
         },
@@ -398,6 +396,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
 
             m.private.user = launchDarklyParamUser
             m.private.killStream()
+            m.private.streamBackoff.reset()
             m.handleMessage(invalid)
         end function
     }

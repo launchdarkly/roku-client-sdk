@@ -98,19 +98,21 @@ end function
 function TestCase__Utility_Backoff() as String
     backoff = LaunchDarklyBackoff()
 
+    backoff.started()
+
     a = m.assertFalse(backoff.shouldWait())
     if a <> "" then
         return a
     end if
 
-    backoff.fail()
+    backoff.finished()
 
     a = m.assertTrue(backoff.shouldWait())
     if a <> "" then
         return a
     end if
 
-    backoff.success()
+    backoff.reset()
 
     return m.assertFalse(backoff.shouldWait())
 end function
