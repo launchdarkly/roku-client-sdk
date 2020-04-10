@@ -3,29 +3,49 @@ function LaunchDarklyBackoff() as Object
         private: {
             u: LaunchDarklyUtility(),
             attempts: 0,
-            waitUntil: 0
+            waitUntil: 0,
+            streamStarted: createObject("roTimeSpan"),
+            gotStreamData: false
         },
-        fail: function() as Void
+
+        started: function() as Void
+            m.private.streamStarted.mark()
+            m.private.gotStreamData = false
+        end function,
+
+        gotStreamData: function() as Void
+            m.private.gotStreamData = true
+        end function,
+
+        reset: function() as Void
+            m.private.attempts = 0
+            m.private.waitUntil = 0
+        end function,
+
+        finished: function() as Void
+            if m.private.gotStreamData AND m.private.streamStarted.totalSeconds() > 60 then
+                m.reset()
+                return
+            end if
+
             m.private.attempts++
 
-            launchDarklyLocalBackoff = 1000 * (2 ^ m.private.attempts) / 2
-            launchDarklyLocalBackoffLimit = 3600 * 1000
+            if m.private.attempts = 1 then
+                m.private.waitUntil = 1000 + m.private.u.getMilliseconds()
+                return
+            end if
 
+            launchDarklyLocalBackoff = 1000 * (2 ^ m.private.attempts) / 2
+            launchDarklyLocalBackoff /= 2
+            REM jitter random value between 0 and backoff
+            launchDarklyLocalBackoff += rnd(launchDarklyLocalBackoff)
+
+            launchDarklyLocalBackoffLimit = 30 * 1000
             if launchDarklyLocalBackoff > launchDarklyLocalBackoffLimit then
                 launchDarklyLocalBackoff = launchdarklyLocalBackoffLimit
             end if
 
-            launchDarklyLocalBackoff /= 2
-
-            REM jitter random value between 0 and backoff
-            launchDarklyLocalBackoff += rnd(launchDarklyLocalBackoff)
-
             m.private.waitUntil = launchDarklyLocalBackoff + m.private.u.getMilliseconds()
-        end function,
-
-        success: function() as Void
-            m.private.attempts = 0
-            m.private.waitUntil = 0
         end function,
 
         shouldWait: function() as Boolean
