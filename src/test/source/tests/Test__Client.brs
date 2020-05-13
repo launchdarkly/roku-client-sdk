@@ -156,9 +156,6 @@ function TestCase__Client_Summary_Known() as String
                 default: fallback,
                 counters: counters
             }
-        },
-        user: {
-            key: "user-key"
         }
     }))
 end function
@@ -211,9 +208,6 @@ function TestCase__Client_Summary_Unknown() as String
                 default: expectedFallback,
                 counters: counters
             }
-        },
-        user: {
-            key: "user-key"
         }
     }))
 end function

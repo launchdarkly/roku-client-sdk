@@ -342,7 +342,8 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
             end function,
 
             makeSummaryEvent: function() as Object
-                launchDarklyLocalEvent = m.makeBaseEvent("summary")
+                launchDarklyLocalEvent = {}
+                launchDarklyLocalEvent["kind"] = "summary"
                 launchDarklyLocalEvent["startDate"] = m.eventsSummaryStart
                 launchDarklyLocalEvent["endDate"] = m.util.getMilliseconds()
                 launchDarklyLocalEvent.features = {}
