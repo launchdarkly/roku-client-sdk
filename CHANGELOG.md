@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly Roku SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.1.4] - 2020-05-13
+### Fixed:
+- Corrected summary event schema to no longer include user info
+
 ## [1.1.3] - 2020-04-10
 ### Fixed:
 - Standardized streaming retry behavior. First delay is always 1 second, delay is capped at 30 seconds, and if the stream is productive for 60 seconds reset back-off.
