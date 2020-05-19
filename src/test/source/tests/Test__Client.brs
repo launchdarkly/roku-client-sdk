@@ -41,9 +41,9 @@ function TestCase__Client_Eval_NotTracked() as String
         return a
     end if
 
-    eventQueue = client.private.events
+    eventQueue = client.private.eventProcessor.flush()
 
-    return m.assertEqual(eventQueue.count(), 1)
+    return m.assertEqual(eventQueue.count(), 2)
 end function
 
 function TestCase__Client_Eval_Tracked() as String
@@ -69,9 +69,9 @@ function TestCase__Client_Eval_Tracked() as String
         return a
     end if
 
-    eventQueue = client.private.events
+    eventQueue = client.private.eventProcessor.flush()
 
-    a = m.assertEqual(eventQueue.count(), 2)
+    a = m.assertEqual(eventQueue.count(), 3)
     if a <> "" then
         return a
     end if
@@ -121,13 +121,14 @@ function TestCase__Client_Summary_Known() as String
         return a
     end if
 
-    event = client.private.makeSummaryEvent()
+    events = client.private.eventProcessor.flush()
 
-    a = m.assertTrue(event.creationDate > 0)
+    a = m.assertEqual(events.count(), 2)
     if a <> "" then
         return a
     end if
-    event.delete("creationDate")
+
+    event = events[1]
 
     a = m.assertTrue(event.endDate > 0)
     if a <> "" then
@@ -174,13 +175,19 @@ function TestCase__Client_Summary_Unknown() as String
         return a
     end if
 
-    event = client.private.makeSummaryEvent()
+    events = client.private.eventProcessor.flush()
 
-    a = m.assertTrue(event.creationDate > 0)
+    a = m.assertEqual(events.count(), 2)
     if a <> "" then
         return a
     end if
-    event.delete("creationDate")
+
+    event = events[1]
+
+    a = m.assertNotInvalid(event)
+    if a <> "" then
+        return a
+    end if
 
     a = m.assertTrue(event.endDate > 0)
     if a <> "" then
@@ -212,6 +219,68 @@ function TestCase__Client_Summary_Unknown() as String
     }))
 end function
 
+function TestCase__Client_Summary_MultipleFlush() as String
+    client = makeTestClientInitialized()
+
+    flagKey = "flag1"
+    fallback = "myFallback"
+    expectedValue = "expected"
+
+    client.private.store.putAll({
+        flag1: {
+            value: expectedValue,
+            variation: 3,
+            version: 4
+        }
+    })
+
+    client.variation(flagKey, fallback)
+
+    events = client.private.eventProcessor.flush()
+
+    a = m.assertEqual(events.count(), 2)
+    if a <> "" then
+        return a
+    end if
+
+    firstSummary = events[1]
+
+    a = m.assertTrue(firstSummary.endDate >= firstSummary.startDate)
+    if a <> "" then
+        return a
+    end if
+
+    a = m.assertTrue(firstSummary.startDate > 0)
+    if a <> "" then
+        return a
+    end if
+
+    events = client.private.eventProcessor.flush()
+
+    a = m.assertInvalid(events)
+    if a <> "" then
+        return a
+    end if
+
+    client.variation(flagKey, fallback)
+
+    events = client.private.eventProcessor.flush()
+
+    a = m.assertEqual(events.count(), 1)
+    if a <> "" then
+        return a
+    end if
+
+    secondSummary = events[0]
+
+    a = m.assertTrue(secondSummary.startDate >= firstSummary.endDate)
+    if a <> "" then
+        return a
+    end if
+
+    return ""
+end function
+
 function TestCase__Client_Track() as String
     client = makeTestClientUninitialized()
     fallback = "fallback"
@@ -224,7 +293,7 @@ function TestCase__Client_Track() as String
 
     client.track(eventName, eventData, 52)
 
-    eventQueue = client.private.events
+    eventQueue = client.private.eventProcessor.flush()
 
     a = m.assertEqual(eventQueue.count(), 2)
     if a <> "" then
@@ -265,7 +334,7 @@ function TestCase__Client_Identify() as String
         return a
     end if
 
-    eventQueue = client.private.events
+    eventQueue = client.private.eventProcessor.flush()
 
     a = m.assertEqual(eventQueue.count(), 2)
     if a <> "" then
@@ -436,6 +505,7 @@ function TestSuite__Client() as Object
     this.addTest("TestCase__Client_Identify", TestCase__Client_Identify)
     this.addTest("TestCase__Client_Summary_Unknown", TestCase__Client_Summary_Unknown)
     this.addTest("TestCase__Client_Summary_Known", TestCase__Client_Summary_Known)
+    this.addTest("TestCase__Client_Summary_MultipleFlush", TestCase__Client_Summary_MultipleFlush)
     this.addTest("TestCase__Client_Variation_Int", TestCase__Client_Variation_Int)
     this.addTest("TestCase__Client_Variation_Bool", TestCase__Client_Variation_Bool)
     this.addTest("TestCase__Client_Variation_String", TestCase__Client_Variation_String)
