@@ -238,12 +238,10 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
             pollingTimer: createObject("roTimeSpan"),
             pollingActive: false,
 
+            eventProcessor: LaunchDarklyEventProcessor(launchDarklyParamConfig, launchDarklyParamUser),
             eventsTransfer: createObject("roUrlTransfer"),
-            events: createObject("roArray", 0, true),
             eventsFlushTimer: createObject("roTimeSpan"),
             eventsFlushActive: false,
-            eventsSummary: {},
-            eventsSummaryStart: 0,
             eventsFailureRetrying: false,
             eventsPayloadId: invalid,
             eventsPayload: invalid,
@@ -304,142 +302,6 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
                 end if
 
                 m.resetEventsTransfer()
-            end function,
-
-            getFlagVersion: function(launchDarklyParamFlag as Object) as Integer
-                if launchDarklyParamFlag.flagVersion <> invalid then
-                    return launchDarklyParamFlag.flagVersion
-                else
-                    return launchDarklyParamFlag.version
-                end if
-            end function,
-
-            makeBaseEvent: function(launchDarklyParamKind as String) as Object
-                launchDarklyLocalBaseEvent = {
-                    kind: launchDarklyParamKind,
-                    user: m.encodedUser
-                }
-
-                launchDarklyLocalBaseEvent["creationDate"] = m.util.getMilliseconds()
-
-                return launchDarklyLocalBaseEvent
-            end function,
-
-            makeFeatureEvent: function(launchDarklyParamBundle as Object) as Object
-                launchDarklyLocalEvent = m.makeBaseEvent("feature")
-
-                launchDarklyLocalEvent.key = launchDarklyParamBundle.flagKey
-                launchDarklyLocalEvent.version = m.getFlagVersion(launchDarklyParamBundle.flag)
-                launchDarklyLocalEvent.variation = launchDarklyParamBundle.flag.variation
-                launchDarklyLocalEvent.value = launchDarklyParamBundle.value
-                launchDarklyLocalEvent.default = launchDarklyParamBundle.fallback
-
-                if launchDarklyParamBundle.reason <> invalid then
-                    launchDarklyLocalEvent.reason = launchDarklyParamBundle.reason
-                end if
-
-                return launchDarklyLocalEvent
-            end function,
-
-            makeSummaryEvent: function() as Object
-                launchDarklyLocalEvent = {}
-                launchDarklyLocalEvent["kind"] = "summary"
-                launchDarklyLocalEvent["startDate"] = m.eventsSummaryStart
-                launchDarklyLocalEvent["endDate"] = m.util.getMilliseconds()
-                launchDarklyLocalEvent.features = {}
-
-                for each launchDarklyLocalFeatureKey in m.eventsSummary
-                    launchdarklyLocalFeature = m.eventsSummary.lookup(launchDarklyLocalFeatureKey)
-
-                    launchDarklyLocalFeatureNode = {
-                        default: launchDarklyLocalFeature.default,
-                        counters: createObject("roArray", 0, true)
-                    }
-
-                    for each launchDarklyLocalCounterKey in launchDarklyLocalFeature.counters
-                        launchDarklyLocalCounter = launchDarklyLocalFeature.counters.lookup(launchDarklyLocalCounterKey)
-
-                        launchDarklyLocalCounterNode = {
-                            count: launchDarklyLocalCounter.count,
-                            value: launchdarklyLocalCounter.value
-                        }
-
-                        if launchDarklyLocalCounter.version <> invalid then
-                            launchDarklyLocalCounterNode.version = launchDarklyLocalCounter.version
-                        end if
-
-                        if launchDarklyLocalCounter.variation <> invalid then
-                            launchDarklyLocalCounterNode.variation = launchDarklyLocalCounter.variation
-                        end if
-
-                        if launchDarklyLocalCounterKey = "unknown" then
-                            launchDarklyLocalCounterNode.unknown = true
-                        end if
-
-                        launchDarklyLocalFeatureNode.counters.push(launchDarklyLocalCounterNode)
-                    end for
-
-                    launchDarklyLocalEvent.features.addReplace(launchDarklyLocalFeatureKey, launchDarklyLocalFeatureNode)
-                end for
-
-                return launchDarklyLocalEvent
-            end function,
-
-            makeIdentifyEvent: function(launchDarklyParamUser as Object) as Object
-                launchDarklyLocalEvent = m.makeBaseEvent("identify")
-                launchDarklyLocalEvent.key = launchDarklyParamUser.private.key
-                return launchDarklyLocalEvent
-            end function,
-
-            summarizeEval: function(launchDarklyParamValue as Dynamic, launchDarklyParamFlagKey as String, launchDarklyParamFlag as Object, launchDarklyParamFallback as Dynamic, launchDarklyParamTypeMatch as Boolean) as Void
-                launchDarklyLocalSummary = m.eventsSummary.lookup(launchDarklyParamFlagKey)
-
-                if launchDarklyLocalSummary = invalid then
-                    launchDarklyLocalSummary = {}
-                    m.eventsSummary.addReplace(launchDarklyParamFlagKey, launchDarklyLocalSummary)
-                    launchDarklyLocalSummary.default = launchDarklyParamFallback
-                    launchDarklyLocalSummary.counters = {}
-                end if
-
-                if m.eventsSummaryStart = 0 then
-                    m.eventsSummaryStart = m.util.getMilliseconds()
-                end if
-
-                launchDarklyLocalCounterKey = invalid
-
-                if launchDarklyParamFlag = invalid then
-                    launchDarklyLocalCounterKey = "unknown"
-                else if launchDarklyParamTypeMatch = false then
-                    launchDarklyLocalCounterKey = "default"
-                else
-                    launchDarklyLocalCounterKey = m.getFlagVersion(launchDarklyParamFlag).toStr() + " " + launchDarklyParamFlag.variation.toStr()
-                end if
-
-                launchDarklyLocalCounter = launchDarklyLocalSummary.counters.lookup(launchDarklyLocalCounterKey)
-
-                if launchDarklyLocalCounter = invalid then
-                    launchDarklyLocalCounter = {
-                        value: launchDarklyParamValue,
-                        count: 0
-                    }
-
-                    launchDarklyLocalSummary.counters.addReplace(launchDarklyLocalCounterKey, launchDarklyLocalCounter)
-                end if
-
-                if launchDarklyParamFlag <> invalid AND launchDarklyLocalCounter.count = 0 then
-                    launchDarklyLocalCounter.version = m.getFlagVersion(launchDarklyParamFlag)
-                    launchDarklyLocalCounter.variation = launchDarklyParamFlag.variation
-                end if
-
-                launchDarklyLocalCounter.count += 1
-            end function,
-
-            enqueueEvent: function(launchDarklyParamEvent as Object) as Void
-                if m.events.count() < m.config.private.eventsCapacity then
-                    m.events.push(launchDarklyParamEvent)
-                else
-                    m.config.private.logger.warn("eventsCapacity exceeded dropping event")
-                end if
             end function,
 
             preparePolling: function() as Void
@@ -504,50 +366,21 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
             end function,
 
             handleEventsForEval: function(launchDarklyParamBundle as Object) as Void
-                m.summarizeEval(launchDarklyParamBundle.value, launchDarklyParamBundle.flagKey, launchDarklyParamBundle.flag, launchDarklyParamBundle.fallback, launchDarklyParamBundle.typeMatch)
-
-                if launchDarklyParamBundle.flag <> invalid then
-                    launchDarklyLocalNow = m.util.getMilliseconds()
-
-                    launchDarklyLocalShouldTrack = launchDarklyParamBundle.flag.trackEvents <> invalid AND launchDarklyParamBundle.flag.trackEvents = true
-                    launchDarklyLocalShouldDebug = launchDarklyParamBundle.flag.debugEventsUntilDate <> invalid AND launchDarklyParamBundle.flag.debugEventsUntilDate > launchDarklyLocalNow
-
-                    if launchDarklyLocalShouldTrack OR launchDarklyLocalShouldDebug then
-                       launchDarklyLocalEvent = m.makeFeatureEvent(launchDarklyParamBundle)
-
-                       m.enqueueEvent(launchDarklyLocalEvent)
-                    end if
-                end if
+                m.eventProcessor.handleEventsForEval(launchDarklyParamBundle)
             end function
         },
 
         track: function(launchDarklyParamKey as String, launchDarklyParamData=invalid as Object, launchDarklyParamMetric=invalid as Dynamic) as Void
-            launchDarklyLocalEvent = m.private.makeBaseEvent("custom")
-            launchDarklyLocalEvent.key = launchDarklyParamKey
-
-            if launchDarklyParamData <> invalid then
-                launchDarklyLocalEvent.data = launchDarklyParamData
-            end if
-
-            if launchDarklyParamMetric <> invalid then
-                launchDarklyLocalEvent["metricValue"] = launchDarklyParamMetric
-            end if
-
-            m.private.enqueueEvent(launchDarklyLocalEvent)
+            m.private.eventProcessor.track(launchDarklyParamKey, launchDarklyParamData, launchDarklyParamMetric)
         end function,
 
         flush: function() as Void
             if m.private.config.private.offline = false then
                 if m.private.eventsFlushActive = false then
                     if m.private.eventsFailureRetrying = false then
-                        if m.private.eventsSummaryStart <> 0 then
-                            launchDarklyLocalSummary = m.private.makeSummaryEvent()
-                            m.private.events.push(launchDarklyLocalSummary)
-                            m.private.eventsSummary = {}
-                            m.private.eventsSummaryStart = 0
-                        end if
+                        launchDarklyLocalEvents = m.private.eventProcessor.flush()
 
-                        if m.private.events.count() = 0 then
+                        if launchDarklyLocalEvents = invalid then
                             m.private.resetEventsTransfer()
 
                             m.private.config.private.logger.debug("event payload empty skipping post")
@@ -555,11 +388,9 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
                             return
                         end if
 
-                        m.private.eventsPayload = formatJSON(m.private.events)
+                        m.private.eventsPayload = formatJSON(launchDarklyLocalEvents)
 
                         m.private.eventsPayloadId = createObject("roDeviceInfo").getRandomUUID()
-
-                        m.private.events.clear()
                     end if
 
                     m.private.eventsFlushActive = true
@@ -575,9 +406,8 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
             m.status.private.setStatus(m.status.map.uninitialized)
 
             m.private.user = launchDarklyParamUser
-            m.private.encodedUser = LaunchDarklyUserEncode(m.private.user, true, m.private.config)
-            m.private.enqueueEvent(m.private.makeIdentifyEvent(launchDarklyParamUser))
 
+            m.private.eventProcessor.identify(launchDarklyParamUser)
             m.private.streamClient.changeUser(launchDarklyParamUser)
 
             m.private.resetPollingTransfer()
@@ -646,7 +476,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
     launchDarklyLocalThis.private.prepareEventTransfer()
     launchDarklyLocalThis.private.preparePolling()
 
-    launchDarklyLocalThis.private.enqueueEvent(launchDarklyLocalThis.private.makeIdentifyEvent(launchDarklyParamUser))
+    launchDarklyLocalThis.private.eventProcessor.identify(launchDarklyParamUser)
 
     launchDarklyLocalThis.handleMessage(invalid)
 
