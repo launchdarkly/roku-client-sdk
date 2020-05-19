@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly Roku SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.1.5] - 2020-05-19
+### Changed:
+- Refactored internal event processing logic
+
 ## [1.1.4] - 2020-05-13
 ### Fixed:
 - Corrected summary event schema to no longer include user info
