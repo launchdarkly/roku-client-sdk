@@ -374,6 +374,10 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
             m.private.eventProcessor.track(launchDarklyParamKey, launchDarklyParamData, launchDarklyParamMetric)
         end function,
 
+        alias: function(launchDarklyParamUser as Object, launchDarklyParamPreviousUser as Object) as Void
+            m.private.eventProcessor.alias(launchDarklyParamUser, launchDarklyParamPreviousUser)
+        end function,
+
         flush: function() as Void
             if m.private.config.private.offline = false then
                 if m.private.eventsFlushActive = false then

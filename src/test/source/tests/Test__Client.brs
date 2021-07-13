@@ -283,7 +283,6 @@ end function
 
 function TestCase__Client_Track() as String
     client = makeTestClientUninitialized()
-    fallback = "fallback"
 
     eventName = "my-event"
     eventData = {
@@ -356,6 +355,69 @@ function TestCase__Client_Identify() as String
             key: "user-key2"
         }
     }))
+end function
+
+function testAlias(ctx as Object, user1 as object, user2 as object, kind1 as String, kind2 as String) as String
+    client = makeTestClientUninitialized()
+
+    client.alias(user1, user2)
+
+    eventQueue = client.private.eventProcessor.flush()
+
+    a = ctx.assertEqual(eventQueue.count(), 2)
+    if a <> "" then
+        return a
+    end if
+
+    event = eventQueue.getEntry(1)
+
+    a = ctx.assertTrue(event.creationDate > 0)
+    if a <> "" then
+        return a
+    end if
+    event.delete("creationDate")
+
+    expected = {
+        kind: "alias",
+        key: user1.private.key,
+        contextKind: kind1,
+        previousKey: user2.private.key,
+        previousContextKind: kind2
+    }
+
+    return ctx.assertEqual(FormatJSON(event), FormatJSON(expected))
+end function
+
+function TestCase__Client_AliasTwoNonAnonUsers() as String
+    user1 = LaunchDarklyUser("user1")
+    user2 = LaunchDarklyUser("user2")
+
+    return testAlias(m, user1, user2, "user", "user")
+end function
+
+function TestCase__Client_AliasAnonUserToNonAnonUser() as String
+    user1 = LaunchDarklyUser("user1")
+    user1.setAnonymous(true)
+    user2 = LaunchDarklyUser("user2")
+
+    return testAlias(m, user1, user2, "anonymousUser", "user")
+end function
+
+function TestCase__Client_AliasNonAnonUserToAnonUser() as String
+    user1 = LaunchDarklyUser("user1")
+    user2 = LaunchDarklyUser("user2")
+    user2.setAnonymous(true)
+
+    return testAlias(m, user1, user2, "user", "anonymousUser")
+end function
+
+function TestCase__Client_AliasTwoAnonUsers() as String
+    user1 = LaunchDarklyUser("user1")
+    user1.setAnonymous(true)
+    user2 = LaunchDarklyUser("user2")
+    user2.setAnonymous(true)
+
+    return testAlias(m, user1, user2, "anonymousUser", "anonymousUser")
 end function
 
 function testVariation(ctx as Object, functionName as String, flagValue as Dynamic, fallback as Dynamic, expectedValue as Dynamic) as String
@@ -503,6 +565,10 @@ function TestSuite__Client() as Object
     this.addTest("TestCase__Client_Eval_Tracked", TestCase__Client_Eval_Tracked)
     this.addTest("TestCase__Client_Track", TestCase__Client_Track)
     this.addTest("TestCase__Client_Identify", TestCase__Client_Identify)
+    this.addTest("TestCase__Client_AliasTwoNonAnonUsers", TestCase__Client_AliasTwoNonAnonUsers)
+    this.addTest("TestCase__Client_AliasAnonUserToNonAnonUser", TestCase__Client_AliasAnonUserToNonAnonUser)
+    this.addTest("TestCase__Client_AliasNonAnonUserToAnonUser", TestCase__Client_AliasNonAnonUserToAnonUser)
+    this.addTest("TestCase__Client_AliasTwoAnonUsers", TestCase__Client_AliasTwoAnonUsers)
     this.addTest("TestCase__Client_Summary_Unknown", TestCase__Client_Summary_Unknown)
     this.addTest("TestCase__Client_Summary_Known", TestCase__Client_Summary_Known)
     this.addTest("TestCase__Client_Summary_MultipleFlush", TestCase__Client_Summary_MultipleFlush)
