@@ -1,3 +1,3 @@
 function LaunchDarklySDKVersion() as String
-    return "1.1.5"
+    return "1.2.0"
 end function

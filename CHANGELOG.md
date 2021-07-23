@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly Roku SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.2.0] - 2021-07-23
+### Added:
+- Added the `Alias` method. This can be used to associate two user objects for analytics purposes with an alias event.
+
+### Fixed:
+- `DoubleVariation` is now guaranteed to return a `Double` value rather than an integer or `Float` type, regardless of whether the value could be represented as an integer.
+
 ## [1.1.5] - 2020-05-19
 ### Changed:
 - Refactored internal event processing logic
