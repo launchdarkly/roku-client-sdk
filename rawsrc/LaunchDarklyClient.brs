@@ -93,9 +93,9 @@ function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Ob
         end function,
 
         intVariationDetail: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Integer, launchDarklyParamEmbedReason=true as Dynamic) as Object
-            launchDarklyLocalValue = m.doubleVariationDetail(launchDarklyParamFlagKey, launchDarklyParamFallback, launchDarklyParamEmbedReason)
-            launchDarklyLocalValue.result = int(launchDarklyLocalValue.result)
-            return launchDarklyLocalValue
+            launchDarklyLocalResult = m.doubleVariationDetail(launchDarklyParamFlagKey, launchDarklyParamFallback, launchDarklyParamEmbedReason)
+            launchDarklyLocalResult.result = int(launchDarklyLocalResult.result)
+            return launchDarklyLocalResult
         end function,
 
         boolVariationDetail: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Boolean, launchDarklyParamEmbedReason=true as Dynamic) as Object
@@ -123,7 +123,7 @@ function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Ob
         end function,
 
         doubleVariationDetail: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Double, launchDarklyParamEmbedReason=true as Dynamic) as Object
-            return m.variationDetail(launchDarklyParamFlagKey, launchDarklyParamFallback, launchDarklyParamEmbedReason, function(launchDarklyParamValue as Dynamic) as Boolean
+            launchDarklyLocalResult = m.variationDetail(launchDarklyParamFlagKey, launchDarklyParamFallback, launchDarklyParamEmbedReason, function(launchDarklyParamValue as Dynamic) as Boolean
                 if getInterface(launchDarklyParamValue, "ifFloat") <> invalid then
                     return true
                 else if getInterface(launchDarklyParamValue, "ifDouble") <> invalid then
@@ -134,6 +134,9 @@ function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Ob
                     return false
                 end if
             end function)
+            launchDarklyLocalValue# = launchDarklyLocalResult.result
+            launchDarklyLocalResult.result = launchDarklyLocalValue#
+            return launchDarklyLocalResult
         end function,
 
         variation: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Dynamic, launchDarklyParamStrong=invalid as Dynamic) as Dynamic
@@ -374,6 +377,10 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
             m.private.eventProcessor.track(launchDarklyParamKey, launchDarklyParamData, launchDarklyParamMetric)
         end function,
 
+        alias: function(launchDarklyParamUser as Object, launchDarklyParamPreviousUser as Object) as Void
+            m.private.eventProcessor.alias(launchDarklyParamUser, launchDarklyParamPreviousUser)
+        end function,
+
         flush: function() as Void
             if m.private.config.private.offline = false then
                 if m.private.eventsFlushActive = false then
@@ -405,6 +412,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
         identify: function(launchDarklyParamUser as Object) as Void
             m.status.private.setStatus(m.status.map.uninitialized)
 
+            launchDarklyLocalPreviousUser = m.private.user
             m.private.user = launchDarklyParamUser
 
             m.private.eventProcessor.identify(launchDarklyParamUser)
@@ -413,6 +421,14 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
             m.private.resetPollingTransfer()
             m.private.preparePolling()
             m.private.pollingInitial = true
+
+            if launchDarklyLocalPreviousUser <> invalid then
+                if m.private.config.private.autoAliasingOptOut = false then
+                    if launchDarklyLocalPreviousUser.private.anonymous = true and launchDarklyParamUser.private.anonymous = false then
+                        m.alias(launchDarklyParamUser, launchDarklyLocalPreviousUser)
+                    end if
+                end if
+            end if
 
             m.handleMessage(invalid)
         end function,

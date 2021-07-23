@@ -19,6 +19,7 @@ function LaunchDarklyConfig(launchDarklyParamMobileKey as String, launchDarklyPa
             logLevel: LaunchDarklyLogLevels().warn,
             sceneGraphNode: launchDarklyParamSceneGraphNode,
             useReasons: false,
+            autoAliasingOptOut: false,
 
             validateURI: function(launchDarklyParamRawURI as String) as Boolean
                 launchDarklyLocalHTTPS = "https://"
@@ -108,6 +109,10 @@ function LaunchDarklyConfig(launchDarklyParamMobileKey as String, launchDarklyPa
 
         setUseEvaluationReasons: function(launchDarklyParamUseReasons as Boolean) as Void
             m.private.useReasons = launchDarklyParamUseReasons
+        end function,
+
+        setAutoAliasingOptOut: function(launchDarklyParamAutoAliasingOptOut as Boolean) as Void
+            m.private.autoAliasingOptOut = launchDarklyParamAutoAliasingOptOut
         end function
     }
 

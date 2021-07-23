@@ -1,5 +1,11 @@
-src/main/source/LaunchDarkly.brs
 ukor.local
 package
 package.zip
 build
+.ukor
+
+# LaunchDarkly.brs is generated in the build as a concatenation of other files
+src/main/source/LaunchDarkly.brs
+
+# src/tests contains generated test output files; test source code is in src/test
+src/tests
