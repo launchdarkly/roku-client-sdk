@@ -389,13 +389,12 @@ function testAlias(ctx as Object, user1 as object, user2 as object, kind1 as Str
     end if
     event.delete("creationDate")
 
-    expected = {
-        kind: "alias",
-        key: user1.private.key,
-        contextKind: kind1,
-        previousKey: user2.private.key,
-        previousContextKind: kind2
-    }
+    expected = {}
+    expected["kind"] = "alias"
+    expected["key"] = user1.private.key
+    expected["contextKind"] = kind1
+    expected["previousKey"] = user2.private.key
+    expected["previousContextKind"] = kind2
 
     return ctx.assertEqual(FormatJSON(event), FormatJSON(expected))
 end function
@@ -470,13 +469,13 @@ function TestCase__Client_AutoAliasOnIdentifyFromAnonUserToNonAnonUser() as Stri
         return a
     end if
     event3.delete("creationDate")
-    a = m.assertEqual(FormatJSON(event3), FormatJSON({
-        kind: "alias",
-        key: "user2",
-        previousKey: "user1",
-        contextKind: "user",
-        previousContextKind: "anonymousUser"
-    }))
+    expected = {}
+    expected["kind"] = "alias"
+    expected["key"] = "user2"
+    expected["previousKey"] = "user1"
+    expected["contextKind"] = "user"
+    expected["previousContextKind"] = "anonymousUser"
+    a = m.assertEqual(FormatJSON(event3), FormatJSON(expected))
     return a
 end function
 

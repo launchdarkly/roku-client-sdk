@@ -185,10 +185,10 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, launchDar
         alias: function(launchDarklyParamUser as Object, launchDarklyParamPreviousUser as Object) as Void
             launchDarklyLocalEvent = m.private.makeBaseEvent("alias")
             launchDarklyLocalEvent.delete("user")
-            launchDarklyLocalEvent.key = launchDarklyParamUser.private.key
-            launchDarklyLocalEvent.contextKind = m.private.util.contextKindForUser(launchDarklyParamUser)
-            launchDarklyLocalEvent.previousKey = launchDarklyParamPreviousUser.private.key
-            launchDarklyLocalEvent.previousContextKind = m.private.util.contextKindForUser(launchDarklyParamPreviousUser)
+            launchDarklyLocalEvent["key"] = launchDarklyParamUser.private.key
+            launchDarklyLocalEvent["contextKind"] = m.private.util.contextKindForUser(launchDarklyParamUser)
+            launchDarklyLocalEvent["previousKey"] = launchDarklyParamPreviousUser.private.key
+            launchDarklyLocalEvent["previousContextKind"] = m.private.util.contextKindForUser(launchDarklyParamPreviousUser)
 
             m.private.enqueueEvent(launchDarklyLocalEvent)
         end function,
