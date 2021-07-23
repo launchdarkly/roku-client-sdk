@@ -377,6 +377,10 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
             m.private.eventProcessor.track(launchDarklyParamKey, launchDarklyParamData, launchDarklyParamMetric)
         end function,
 
+        alias: function(launchDarklyParamUser as Object, launchDarklyParamPreviousUser as Object) as Void
+            m.private.eventProcessor.alias(launchDarklyParamUser, launchDarklyParamPreviousUser)
+        end function,
+
         flush: function() as Void
             if m.private.config.private.offline = false then
                 if m.private.eventsFlushActive = false then
@@ -408,6 +412,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
         identify: function(launchDarklyParamUser as Object) as Void
             m.status.private.setStatus(m.status.map.uninitialized)
 
+            launchDarklyLocalPreviousUser = m.private.user
             m.private.user = launchDarklyParamUser
 
             m.private.eventProcessor.identify(launchDarklyParamUser)
@@ -416,6 +421,14 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
             m.private.resetPollingTransfer()
             m.private.preparePolling()
             m.private.pollingInitial = true
+
+            if launchDarklyLocalPreviousUser <> invalid then
+                if m.private.config.private.autoAliasingOptOut = false then
+                    if launchDarklyLocalPreviousUser.private.anonymous = true and launchDarklyParamUser.private.anonymous = false then
+                        m.alias(launchDarklyParamUser, launchDarklyLocalPreviousUser)
+                    end if
+                end if
+            end if
 
             m.handleMessage(invalid)
         end function,

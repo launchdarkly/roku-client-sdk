@@ -7,6 +7,7 @@ function init()
     m.top.observeField("flush", m.messagePort)
     m.top.observeField("user", m.messagePort)
     m.top.observeField("track", m.messagePort)
+    m.top.observeField("alias", m.messagePort)
     m.top.observeField("config", "startThread")
 end function
 
@@ -55,6 +56,9 @@ function mainThread() as Void
             else if field = "track" then
                 value = msg.getData()
                 client.track(value.key, value.data, value.metric)
+            else if field = "alias" then
+                value = msg.getData()
+                client.alias(value.user, value.previousUser)            
             end if
         end if
     end while

@@ -51,6 +51,13 @@ function LaunchDarklySG(launchDarklyParamClientNode as Dynamic) as Object
             }
         end function,
 
+        alias: function(launchDarklyParamUser as Object, launchDarklyParamPreviousUser as Object) as Void
+            m.private.clientNode.alias = {
+                user: launchDarklyParamUser,
+                previousUser: launchDarklyParamPreviousUser
+            }
+        end function,
+
         allFlags: function() as Object
             return m.private.storeNode.flags
         end function

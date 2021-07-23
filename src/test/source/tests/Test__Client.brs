@@ -7,13 +7,39 @@ function makeTestClientUninitialized() as Object
 end function
 
 function makeTestClientInitialized() as Object
-    messagePort = CreateObject("roMessagePort")
+    return makeTestClientInitializedWithUser(LaunchDarklyUser("user-key"))
+end function
+
+function makeTestClientInitializedWithUser(user as Object) as Object
     config = LaunchDarklyConfig("mob-abc123")
-    user = LaunchDarklyUser("user-key")
     config.setOffline(true)
+    return makeTestClientInitializedWithUserAndConfig(user, config)
+end function
+
+function makeTestClientInitializedWithUserAndConfig(user as Object, config as Object) as Object
+    messagePort = CreateObject("roMessagePort")
     client = LaunchDarklyClient(config, user, messagePort)
     client.status.private.setStatus(client.status.map.initialized)
     return client
+end function
+
+function assertIdentifyEvent(ctx as Object, event as Object, user as Object) as String
+    a = ctx.assertTrue(event.creationDate > 0)
+    if a <> "" then
+        return a
+    end if
+    event.delete("creationDate")
+    expected = {
+        kind: "identify",
+        key: user.private.key,
+        user: {
+            key: user.private.key
+        }
+    }
+    if user.private.anonymous then
+        expected.user.anonymous = true
+    end if
+    return ctx.assertEqual(FormatJSON(event), FormatJSON(expected))
 end function
 
 function TestCase__Client_Eval_Offline() as String
@@ -283,7 +309,6 @@ end function
 
 function TestCase__Client_Track() as String
     client = makeTestClientUninitialized()
-    fallback = "fallback"
 
     eventName = "my-event"
     eventData = {
@@ -341,21 +366,213 @@ function TestCase__Client_Identify() as String
         return a
     end if
 
+    return assertIdentifyEvent(m, eventQueue.getEntry(1), newUser)
+end function
+
+function testAlias(ctx as Object, user1 as object, user2 as object, kind1 as String, kind2 as String) as String
+    client = makeTestClientUninitialized()
+
+    client.alias(user1, user2)
+
+    eventQueue = client.private.eventProcessor.flush()
+
+    a = ctx.assertEqual(eventQueue.count(), 2)
+    if a <> "" then
+        return a
+    end if
+
     event = eventQueue.getEntry(1)
 
-    a = m.assertTrue(event.creationDate > 0)
+    a = ctx.assertTrue(event.creationDate > 0)
     if a <> "" then
         return a
     end if
     event.delete("creationDate")
 
-    return m.assertEqual(FormatJSON(event), FormatJSON({
-        kind: "identify",
-        key: "user-key2",
-        user: {
-            key: "user-key2"
-        }
+    expected = {
+        kind: "alias",
+        key: user1.private.key,
+        contextKind: kind1,
+        previousKey: user2.private.key,
+        previousContextKind: kind2
+    }
+
+    return ctx.assertEqual(FormatJSON(event), FormatJSON(expected))
+end function
+
+function TestCase__Client_AliasTwoNonAnonUsers() as String
+    user1 = LaunchDarklyUser("user1")
+    user2 = LaunchDarklyUser("user2")
+
+    return testAlias(m, user1, user2, "user", "user")
+end function
+
+function TestCase__Client_AliasAnonUserToNonAnonUser() as String
+    user1 = LaunchDarklyUser("user1")
+    user1.setAnonymous(true)
+    user2 = LaunchDarklyUser("user2")
+
+    return testAlias(m, user1, user2, "anonymousUser", "user")
+end function
+
+function TestCase__Client_AliasNonAnonUserToAnonUser() as String
+    user1 = LaunchDarklyUser("user1")
+    user2 = LaunchDarklyUser("user2")
+    user2.setAnonymous(true)
+
+    return testAlias(m, user1, user2, "user", "anonymousUser")
+end function
+
+function TestCase__Client_AliasTwoAnonUsers() as String
+    user1 = LaunchDarklyUser("user1")
+    user1.setAnonymous(true)
+    user2 = LaunchDarklyUser("user2")
+    user2.setAnonymous(true)
+
+    return testAlias(m, user1, user2, "anonymousUser", "anonymousUser")
+end function
+
+function TestCase__Client_AutoAliasOnIdentifyFromAnonUserToNonAnonUser() as String
+    oldUser = LaunchDarklyUser("user1")
+    oldUser.setAnonymous(true)
+
+    newUser = LaunchDarklyUser("user2")
+
+    client = makeTestClientInitializedWithUser(oldUser)
+
+    a = m.assertEqual(client.private.user.private.key, oldUser.private.key)
+    if a <> "" then
+        return a
+    end if
+
+    client.identify(newUser)
+
+    eventQueue = client.private.eventProcessor.flush()
+
+    a = m.assertEqual(eventQueue.count(), 3)
+    if a <> "" then
+        return a
+    end if
+
+    a = assertIdentifyEvent(m, eventQueue.getEntry(0), oldUser)
+    if a <> "" then
+        return a
+    end if
+
+    a = assertIdentifyEvent(m, eventQueue.getEntry(1), newUser)
+    if a <> "" then
+        return a
+    end if
+
+    event3 = eventQueue.getEntry(2)
+    a = m.assertTrue(event3.creationDate > 0)
+    if a <> "" then
+        return a
+    end if
+    event3.delete("creationDate")
+    a = m.assertEqual(FormatJSON(event3), FormatJSON({
+        kind: "alias",
+        key: "user2",
+        previousKey: "user1",
+        contextKind: "user",
+        previousContextKind: "anonymousUser"
     }))
+    return a
+end function
+
+function TestCase__Client_NoAutoAliasOnIdentifyFromAnonUserToAnonUser() as String
+    oldUser = LaunchDarklyUser("user1")
+    oldUser.setAnonymous(true)
+
+    newUser = LaunchDarklyUser("user2")
+    newUser.setAnonymous(true)
+
+    client = makeTestClientInitializedWithUser(oldUser)
+
+    a = m.assertEqual(client.private.user.private.key, oldUser.private.key)
+    if a <> "" then
+        return a
+    end if
+
+    client.identify(newUser)
+
+    eventQueue = client.private.eventProcessor.flush()
+
+    a = m.assertEqual(eventQueue.count(), 2)
+    if a <> "" then
+        return a
+    end if
+
+    a = assertIdentifyEvent(m, eventQueue.getEntry(0), oldUser)
+    if a <> "" then
+        return a
+    end if
+
+    a = assertIdentifyEvent(m, eventQueue.getEntry(1), newUser)
+    return a
+end function
+
+function TestCase__Client_NoAutoAliasOnIdentifyFromNonAnonUserToNonAnonUser() as String
+    oldUser = LaunchDarklyUser("user1")
+    newUser = LaunchDarklyUser("user2")
+
+    client = makeTestClientInitializedWithUser(oldUser)
+
+    a = m.assertEqual(client.private.user.private.key, oldUser.private.key)
+    if a <> "" then
+        return a
+    end if
+
+    client.identify(newUser)
+
+    eventQueue = client.private.eventProcessor.flush()
+
+    a = m.assertEqual(eventQueue.count(), 2)
+    if a <> "" then
+        return a
+    end if
+
+    a = assertIdentifyEvent(m, eventQueue.getEntry(0), oldUser)
+    if a <> "" then
+        return a
+    end if
+
+    a = assertIdentifyEvent(m, eventQueue.getEntry(1), newUser)
+    return a
+end function
+
+function TestCase__Client_NoAutoAliasOnIdentifyIfOptedOut() as String
+    oldUser = LaunchDarklyUser("user1")
+    oldUser.setAnonymous(true)
+
+    newUser = LaunchDarklyUser("user2")
+
+    config = LaunchDarklyConfig("mob-abc123")
+    config.setOffline(true)
+    config.setAutoAliasingOptOut(true)
+    client = makeTestClientInitializedWithUserAndConfig(oldUser, config)
+
+    a = m.assertEqual(client.private.user.private.key, oldUser.private.key)
+    if a <> "" then
+        return a
+    end if
+
+    client.identify(newUser)
+
+    eventQueue = client.private.eventProcessor.flush()
+
+    a = m.assertEqual(eventQueue.count(), 2)
+    if a <> "" then
+        return a
+    end if
+
+    a = assertIdentifyEvent(m, eventQueue.getEntry(0), oldUser)
+    if a <> "" then
+        return a
+    end if
+
+    a = assertIdentifyEvent(m, eventQueue.getEntry(1), newUser)
+    return a
 end function
 
 function testVariation(ctx as Object, functionName as String, flagValue as Dynamic, fallback as Dynamic, expectedValue as Dynamic) as String
@@ -507,6 +724,14 @@ function TestSuite__Client() as Object
     this.addTest("TestCase__Client_Eval_Tracked", TestCase__Client_Eval_Tracked)
     this.addTest("TestCase__Client_Track", TestCase__Client_Track)
     this.addTest("TestCase__Client_Identify", TestCase__Client_Identify)
+    this.addTest("TestCase__Client_AliasTwoNonAnonUsers", TestCase__Client_AliasTwoNonAnonUsers)
+    this.addTest("TestCase__Client_AliasAnonUserToNonAnonUser", TestCase__Client_AliasAnonUserToNonAnonUser)
+    this.addTest("TestCase__Client_AliasNonAnonUserToAnonUser", TestCase__Client_AliasNonAnonUserToAnonUser)
+    this.addTest("TestCase__Client_AutoAliasOnIdentifyFromAnonUserToNonAnonUser", TestCase__Client_AutoAliasOnIdentifyFromAnonUserToNonAnonUser)
+    this.addTest("TestCase__Client_NoAutoAliasOnIdentifyFromAnonUserToAnonUser", TestCase__Client_NoAutoAliasOnIdentifyFromAnonUserToAnonUser)
+    this.addTest("TestCase__Client_NoAutoAliasOnIdentifyFromNonAnonUserToNonAnonUser", TestCase__Client_NoAutoAliasOnIdentifyFromNonAnonUserToNonAnonUser)
+    this.addTest("TestCase__Client_NoAutoAliasOnIdentifyIfOptedOut", TestCase__Client_NoAutoAliasOnIdentifyIfOptedOut)
+    this.addTest("TestCase__Client_AliasTwoAnonUsers", TestCase__Client_AliasTwoAnonUsers)
     this.addTest("TestCase__Client_Summary_Unknown", TestCase__Client_Summary_Unknown)
     this.addTest("TestCase__Client_Summary_Known", TestCase__Client_Summary_Known)
     this.addTest("TestCase__Client_Summary_MultipleFlush", TestCase__Client_Summary_MultipleFlush)
