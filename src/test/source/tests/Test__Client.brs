@@ -411,7 +411,11 @@ function TestCase__Client_Variation_JSONVariationArrayFlag() as String
 end function
 
 function TestCase__Client_Variation_Double() as String
-    return testVariation(m, "doubleVariation", 12.5, 6.2, 12.5)
+    return testVariation(m, "doubleVariation", 12.5, 6.2, 12.5#)
+end function
+
+function TestCase__Client_Variation_DoubleVariationFloatFlag() as String
+    return testVariation(m, "doubleVariation", 6.5!, 3, 6.5#)
 end function
 
 function TestCase__Client_Variation_IntVariationDoubleFlag() as String
@@ -419,7 +423,7 @@ function TestCase__Client_Variation_IntVariationDoubleFlag() as String
 end function
 
 function TestCase__Client_Variation_DoubleVariationIntFlag() as String
-    return testVariation(m, "doubleVariation", 6, 3.5, 6.0)
+    return testVariation(m, "doubleVariation", 6, 3, 6.0#)
 end function
 
 function TestCase__Client_VariationDetail_FlagNotFound() as String
@@ -512,6 +516,7 @@ function TestSuite__Client() as Object
     this.addTest("TestCase__Client_Variation_JSONVariationObjectFlag", TestCase__Client_Variation_JSONVariationObjectFlag)
     this.addTest("TestCase__Client_Variation_JSONVariationArrayFlag", TestCase__Client_Variation_JSONVariationArrayFlag)
     this.addTest("TestCase__Client_Variation_Double", TestCase__Client_Variation_Double)
+    this.addTest("TestCase__Client_Variation_DoubleVariationFloatFlag", TestCase__Client_Variation_DoubleVariationFloatFlag)
     this.addTest("TestCase__Client_Variation_IntVariationDoubleFlag", TestCase__Client_Variation_IntVariationDoubleFlag)
     this.addTest("TestCase__Client_Variation_DoubleVariationIntFlag", TestCase__Client_Variation_DoubleVariationIntFlag)
     this.addTest("TestCase__Client_VariationDetail_FlagNotFound", TestCase__Client_VariationDetail_FlagNotFound)
