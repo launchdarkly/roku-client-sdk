@@ -314,6 +314,12 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                 launchDarklyLocalRequestText += "User-Agent: RokuClient/" + LaunchDarklySDKVersion() + chr(13) + chr(10)
                 launchDarklyLocalRequestText += "Content-Length: " + launchDarklyLocalBundle.count().toStr() + chr(13) + chr(10)
                 launchDarklyLocalRequestText += "Host: " + launchDarklyLocalHostname + chr(13) + chr(10)
+
+                appInfoHeader = m.util.createApplicationInfoHeader(m.config)
+                if appInfoHeader <> "" then
+                  launchDarklyLocalRequestText += "X-LaunchDarkly-Tags: " + appInfoHeader + chr(13) + chr(10)
+                end if
+
                 launchDarklyLocalRequestText += "X-LaunchDarkly-AltStream-Version: 2" + chr(13) + chr(10)
                 launchDarklyLocalRequestText += "Connection: close" + chr(13) + chr(10)
                 launchDarklyLocalRequestText += chr(13) + chr(10)

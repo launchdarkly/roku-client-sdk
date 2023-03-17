@@ -125,6 +125,44 @@ function TestCase__Config_URI_Validation() as String
     return m.assertFalse(config.setAppURI("test.com"))
 end function
 
+function TestCase__Config_AppInfo_CanSetValidValues() as String
+    config = LaunchDarklyConfig("mob")
+
+    a = m.assertEqual(config.private.applicationInfo, invalid)
+    if a <> "" then
+        return a
+    end if
+
+    config.setApplicationInfoValue("id", "example-id")
+    config.setApplicationInfoValue("version", "example-version")
+
+    a = m.assertEqual(config.private.applicationInfo, {"id": "example-id", "version": "example-version"})
+    if a <> "" then
+      return a
+    end if
+
+    return m.assertEqual(config.private.createApplicationInfoHeader(), "application-id/example-id application-version/example-version")
+end function
+
+function TestCase__Config_AppInfo_WillIgnoreInvalidValues() as String
+    config = LaunchDarklyConfig("mob")
+
+    a = m.assertEqual(config.private.applicationInfo, invalid)
+    if a <> "" then
+        return a
+    end if
+
+    config.setApplicationInfoValue("id", "this is contains invalid characters")
+    config.setApplicationInfoValue("version", "this-is-an-obnoxiously-long-value-which-also-happens-to-be-invalid")
+    config.setApplicationInfoValue("unknown-tag", "with-valid-value")
+
+    a =  m.assertEqual(config.private.applicationInfo, invalid)
+    if a <> "" then
+      return a
+    end if
+
+    return m.assertEqual(config.private.createApplicationInfoHeader(), "")
+end function
 
 function TestSuite__Config() as Object
     this = BaseTestSuite()
@@ -141,6 +179,9 @@ function TestSuite__Config() as Object
     this.addTest("TestCase__Config_FlushIntervalSeconds", TestCase__Config_EventsFlushIntervalSeconds)
     this.addTest("TestCase__Config_Streaming", TestCase__Config_Streaming)
     this.addTest("TestCase__Config_URI_Validation", TestCase__Config_URI_Validation)
+
+    this.addTest("TestCase__Config_AppInfo_CanSetValidValues", TestCase__Config_AppInfo_CanSetValidValues)
+    this.addTest("TestCase__Config_AppInfo_WillIgnoreInvalidValues", TestCase__Config_AppInfo_WillIgnoreInvalidValues)
 
     return this
 end function

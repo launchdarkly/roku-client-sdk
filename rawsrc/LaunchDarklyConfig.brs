@@ -20,13 +20,16 @@ function LaunchDarklyConfig(launchDarklyParamMobileKey as String, launchDarklyPa
             sceneGraphNode: launchDarklyParamSceneGraphNode,
             useReasons: false,
             autoAliasingOptOut: false,
+            applicationInfo: invalid,
 
             validateURI: function(launchDarklyParamRawURI as String) as Boolean
                 launchDarklyLocalHTTPS = "https://"
                 launchDarklyLocalHTTP = "http://"
 
                 return left(launchDarklyParamRawURI, len(launchDarklyLocalHTTPS)) = launchDarklyLocalHTTPS OR left(launchDarklyParamRawURI, len(launchDarklyLocalHTTP)) = launchDarklyLocalHTTP
-            end function
+            end function,
+
+            appInfoRegex: CreateObject("roRegex", "[^a-zA-Z0-9._-]", ""),
         },
 
         setAppURI: function(launchDarklyParamAppURI as String) as Boolean
@@ -113,6 +116,30 @@ function LaunchDarklyConfig(launchDarklyParamMobileKey as String, launchDarklyPa
 
         setAutoAliasingOptOut: function(launchDarklyParamAutoAliasingOptOut as Boolean) as Void
             m.private.autoAliasingOptOut = launchDarklyParamAutoAliasingOptOut
+        end function,
+
+        ' Application metadata may be used in LaunchDarkly analytics or other
+        ' product features, but does not affect feature flag evaluations.
+        setApplicationInfoValue: function(name as String, value as String) as Void
+          if name <> "id" and name <> "version" then
+            m.private.logger.warn("application info values can only be set for id and version at this time")
+            return
+          end if
+
+          if Len(value) > 64 then
+            m.private.logger.warn("application value " + value + " was longer than 64 characters and was discard")
+            return
+          end if
+
+          if m.private.appInfoRegex.isMatch(value) then
+            m.private.logger.warn("application value " + value + " contained invalid characters and was discarded")
+            return
+          end if
+
+          if m.private.applicationInfo = invalid then
+            m.private.applicationInfo = {}
+          end if
+          m.private.applicationInfo[name] = value
         end function
     }
 

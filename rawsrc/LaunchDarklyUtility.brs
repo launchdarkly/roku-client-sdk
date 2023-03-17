@@ -260,8 +260,37 @@ function LaunchDarklyUtility() as Object
             launchDarklyParamTransfer.setPort(launchDarklyParamMessagePort)
             launchDarklyParamTransfer.addHeader("User-Agent", "RokuClient/" + LaunchDarklySDKVersion())
             launchDarklyParamTransfer.addHeader("Authorization", launchDarklyParamConfig.private.mobileKey)
+
+            appInfoHeader = m.createApplicationInfoHeader(launchDarklyParamConfig)
+            if appInfoHeader <> "" then
+              launchDarklyParamTransfer.addHeader("X-LaunchDarkly-Tags", appInfoHeader)
+            end if
+
             launchDarklyParamTransfer.setCertificatesFile("common:/certs/ca-bundle.crt")
             launchDarklyParamTransfer.initClientCertificates()
+        end function,
+
+        ' When given the LaunchDarkly configuration object, generate the appropriate X-LaunchDarkly-Tags header value.
+        '
+        ' This method will return an empty string if no valid application info values have been set on the config;
+        ' otherwise, it will return the formatted header value.
+        createApplicationInfoHeader: function(config as Object) as String
+          if config.private.applicationInfo = invalid then
+            return ""
+          end if
+
+          ' NOTE: The spec calls for tags to be in sorted order by tag name.
+          ' Additional tags added should maintain this ordering.
+          values = CreateObject("roArray", 2, false)
+          if config.private.applicationInfo["id"] <> invalid then
+            values.push("application-id/" + config.private.applicationInfo["id"])
+          end if
+
+          if config.private.applicationInfo["version"] <> invalid then
+            values.push("application-version/" + config.private.applicationInfo["version"])
+          end if
+
+          return values.Join(" ")
         end function,
 
         stripHTTPProtocol: function(launchDarklyParamRawURI as String) as String
