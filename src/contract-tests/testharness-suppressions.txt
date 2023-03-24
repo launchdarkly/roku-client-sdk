@@ -21,3 +21,6 @@ events/debug events/should not see debug event/debugEventsUntilDate is after SDK
 
 # Disabled while we move to v2
 events/alias events
+events/custom events/basic properties/inline user/anonymous user
+events/custom events/basic properties/inline user/non-anonymous user
+events/user properties/inlineUsers=true

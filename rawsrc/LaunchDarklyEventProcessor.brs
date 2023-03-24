@@ -5,7 +5,6 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, launchDar
             util: LaunchDarklyUtility(),
 
             user: launchDarklyParamUser,
-            inlineUsers: launchDarklyParamConfig.private.inlineUsers,
             encodedUser: LaunchDarklyUserEncode(launchDarklyParamUser, true, launchDarklyParamConfig),
 
             events: createObject("roArray", 0, true),
@@ -44,9 +43,7 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, launchDar
 
                 if isDebugEvent then
                   launchDarklyLocalEvent.kind = "debug"
-                end if
-
-                if isDebugEvent = false and m.inlineUsers = false then
+                else
                   launchDarklyLocalEvent.delete("user")
                   launchDarklyLocalEvent["userKey"] = m.user.private.key
                 end if
@@ -186,10 +183,8 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, launchDar
               launchDarklyLocalEvent["contextKind"] = "anonymousUser"
             end if
 
-            if m.private.inlineUsers = false then
-              launchDarklyLocalEvent.delete("user")
-              launchDarklyLocalEvent["userKey"] = m.private.user.private.key
-            end if
+            launchDarklyLocalEvent.delete("user")
+            launchDarklyLocalEvent["userKey"] = m.private.user.private.key
 
             if launchDarklyParamData <> invalid then
                 launchDarklyLocalEvent.data = launchDarklyParamData

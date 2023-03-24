@@ -8,7 +8,6 @@ function LaunchDarklyConfig(launchDarklyParamMobileKey as String, launchDarklyPa
             pollingIntervalSeconds: 15,
             mobileKey: launchDarklyParamMobileKey,
             offline: false,
-            inlineUsers: false,
             privateAttributeNames: {},
             allAttributesPrivate: false,
             eventsCapacity: 100,
@@ -69,10 +68,6 @@ function LaunchDarklyConfig(launchDarklyParamMobileKey as String, launchDarklyPa
 
         setOffline: function(launchDarklyParamOffline as Boolean) as Void
             m.private.offline = launchDarklyParamOffline
-        end function,
-
-        setInlineUsers: function(launchDarklyParamInline as Boolean) as Void
-            m.private.inlineUsers = launchDarklyParamInline
         end function,
 
         addPrivateAttribute: function(launchDarklyParamPrivateAttribute as String) as Void

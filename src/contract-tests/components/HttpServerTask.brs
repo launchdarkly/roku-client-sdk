@@ -409,10 +409,6 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
 
           events = configuration["events"]
           if events <> invalid then
-            if events["inlineUsers"] <> invalid then
-              config.setInlineUsers(events["inlineUsers"])
-            end if
-
             if events["baseUri"] <> invalid then
               config.setEventsURI(events["baseUri"])
             end if
