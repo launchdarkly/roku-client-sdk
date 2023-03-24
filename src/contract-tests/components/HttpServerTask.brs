@@ -595,7 +595,13 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
             end if
 
             if request.requestVerb = "DELETE"
-              m.private.clients.delete(match[1])
+              client = m.private.clients[match[1]]
+              if client <> invalid then
+                client.private.clientNode.control = "STOP"
+                m.private.clients.delete(match[1])
+                client = invalid
+              end if
+
               return m.makeResponse(200, "OK", "deleted")
             end if
 
