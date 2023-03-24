@@ -1,12 +1,14 @@
 function LaunchDarklyConfig(launchDarklyParamMobileKey as String, launchDarklyParamSceneGraphNode=invalid as Dynamic) as Object
     launchDarklyLocalThis = {
         private: {
+            util: launchDarklyUtility(),
             appURI: "https://app.launchdarkly.com",
             eventsURI: "https://mobile.launchdarkly.com",
             streamURI: "https://clientstream.launchdarkly.com",
             pollingIntervalSeconds: 15,
             mobileKey: launchDarklyParamMobileKey,
             offline: false,
+            inlineUsers: false,
             privateAttributeNames: {},
             allAttributesPrivate: false,
             eventsCapacity: 100,
@@ -34,7 +36,7 @@ function LaunchDarklyConfig(launchDarklyParamMobileKey as String, launchDarklyPa
 
         setAppURI: function(launchDarklyParamAppURI as String) as Boolean
             if m.private.validateURI(launchDarklyParamAppURI) then
-                m.private.appURI = launchDarklyParamAppURI
+                m.private.appURI = m.private.util.trimTrailingSlash(launchDarklyParamAppURI)
 
                 return true
             else
@@ -44,7 +46,7 @@ function LaunchDarklyConfig(launchDarklyParamMobileKey as String, launchDarklyPa
 
         setEventsURI: function(launchDarklyParamEventsURI as String) as Boolean
             if m.private.validateURI(launchDarklyParamEventsURI) then
-                m.private.eventsURI = launchDarklyParamEventsURI
+                m.private.eventsURI = m.private.util.trimTrailingSlash(launchDarklyParamEventsURI)
 
                 return true
             else
@@ -54,7 +56,7 @@ function LaunchDarklyConfig(launchDarklyParamMobileKey as String, launchDarklyPa
 
         setStreamURI: function(launchDarklyParamStreamURI as String) as Boolean
             if m.private.validateURI(launchDarklyParamStreamURI) then
-                m.private.streamURI = launchDarklyParamStreamURI
+                m.private.streamURI = m.private.util.trimTrailingSlash(launchDarklyParamStreamURI)
 
                 return true
             else
@@ -68,6 +70,10 @@ function LaunchDarklyConfig(launchDarklyParamMobileKey as String, launchDarklyPa
 
         setOffline: function(launchDarklyParamOffline as Boolean) as Void
             m.private.offline = launchDarklyParamOffline
+        end function,
+
+        setInlineUsers: function(launchDarklyParamInline as Boolean) as Void
+            m.private.inlineUsers = launchDarklyParamInline
         end function,
 
         addPrivateAttribute: function(launchDarklyParamPrivateAttribute as String) as Void

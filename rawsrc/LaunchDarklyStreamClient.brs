@@ -50,9 +50,11 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
 
                 m.config.private.logger.debug("handshake url: " + launchDarklyLocalUrl)
 
-                m.util.prepareNetworkingCommon(m.messagePort, m.config, m.handshakeTransfer)
-                m.handshakeTransfer.addHeader("Content-Type", "application/json")
-                m.handshakeTransfer.addHeader("X-LaunchDarkly-AltStream-Version", "2")
+                defaultStreamHeaders = {
+                  "Content-Type": "application/json",
+                  "X-LaunchDarkly-AltStream-Version": "2"
+                }
+                m.util.prepareNetworkingCommon(m.messagePort, m.config, m.handshakeTransfer, defaultStreamHeaders)
                 m.handshakeTransfer.setURL(launchDarklyLocalUrl)
             end function,
 
@@ -307,13 +309,15 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                 launchDarklyLocalBundle = createObject("roByteArray")
                 launchdarklyLocalBundle.fromBase64String(launchDarklyLocalDecoded.serverBundle)
 
+                uriParts = m.util.extractUriParts(m.config.private.streamURI)
+                path = uriParts["path"] + "/mevalalternate"
                 launchDarklyLocalHostname = m.util.stripHTTPProtocol(m.config.private.streamURI)
 
                 launchDarklyLocalRequestText = ""
-                launchDarklyLocalRequestText += "POST /mevalalternate HTTP/1.1" + chr(13) + chr(10)
+                launchDarklyLocalRequestText += "POST " + path + " HTTP/1.1" + chr(13) + chr(10)
                 launchDarklyLocalRequestText += "User-Agent: RokuClient/" + LaunchDarklySDKVersion() + chr(13) + chr(10)
                 launchDarklyLocalRequestText += "Content-Length: " + launchDarklyLocalBundle.count().toStr() + chr(13) + chr(10)
-                launchDarklyLocalRequestText += "Host: " + launchDarklyLocalHostname + chr(13) + chr(10)
+                launchDarklyLocalRequestText += "Host: " + uriParts["host"] + chr(13) + chr(10)
 
                 appInfoHeader = m.util.createApplicationInfoHeader(m.config)
                 if appInfoHeader <> "" then
@@ -331,8 +335,8 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                 m.streamRequestContent.append(launchDarklyLocalBundle)
 
                 launchDarklyLocalSendAddress = createObject("roSocketAddress")
-                launchDarklyLocalSendAddress.setHostname(launchDarklyLocalHostname)
-                launchDarklyLocalSendAddress.setPort(80)
+                launchDarklyLocalSendAddress.setHostname(uriParts["host"])
+                launchDarklyLocalSendAddress.setPort(uriParts["port"])
 
                 launchDarklyLocalSocket = createObject("roStreamSocket")
                 launchDarklyLocalSocket.setSendToAddress(launchDarklyLocalSendAddress)

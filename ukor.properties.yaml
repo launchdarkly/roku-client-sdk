@@ -3,8 +3,11 @@ version: 0.0.1
 buildDir: build
 sourceDir: src
 defaults:
-  falvor: main
+  flavor: main
 flavors:
   main:
     src:
       - main
+  contract-tests:
+    src:
+      - contract-tests

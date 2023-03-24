@@ -113,9 +113,7 @@ function TestCase__Client_Eval_Tracked() as String
 
     return m.assertEqual(event, {
         kind: "feature",
-        user: {
-            key: "user-key"
-        },
+        userKey: "user-key",
         key: "flag1",
         value: expectedValue,
         variation: expectedVariation,
@@ -335,12 +333,11 @@ function TestCase__Client_Track() as String
 
     expected = {
         kind: "custom",
-        user: {
-            key: "user-key"
-        },
         key: eventName,
         data: eventData
     }
+
+    expected["userKey"] = "user-key"
     expected["metricValue"] = 52
 
     return m.assertEqual(FormatJSON(event), FormatJSON(expected))
@@ -671,7 +668,6 @@ function TestCase__Client_VariationDetail_WrongType() as String
 
     return m.assertEqual(client.intVariationDetail("flag1", 50), {
         result: 50,
-        variationIndex: 3,
         reason: {
             kind: "ERROR",
             errorKind: "WRONG_TYPE"

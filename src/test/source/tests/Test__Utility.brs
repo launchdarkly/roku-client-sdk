@@ -133,6 +133,34 @@ function TestCase__Utility_StripHTTPProtocol() as String
     return m.assertEqual(u.stripHTTPProtocol("test.com"), "")
 end function
 
+function TestCase__Utility_ExtractUriParts() as String
+    u = LaunchDarklyUtility()
+
+    testCases = {
+      "example.com": { "scheme": "http", "host": "example.com", "port": 80, "path": "" },
+      "http://example.com": { "scheme": "http", "host": "example.com", "port": 80, "path": "" },
+      "https://example.com": { "scheme": "https", "host": "example.com", "port": 443, "path": "" },
+      "https://example.com:8000": { "scheme": "https", "host": "example.com", "port": 8000, "path": "" },
+      "https://example.com/": { "scheme": "https", "host": "example.com", "port": 443, "path": "" },
+      "https://example.com//": { "scheme": "https", "host": "example.com", "port": 443, "path": "" },
+      "https://example.com/multi/part/path/": { "scheme": "https", "host": "example.com", "port": 443, "path": "/multi/part/path" },
+      "https://example.com?query=parameter": { "scheme": "https", "host": "example.com", "port": 443, "path": "" },
+      "https://example.com/path/with?query=parameter": { "scheme": "https", "host": "example.com", "port": 443, "path": "/path/with" },
+      "https://example.com/path/with/trailing/slash/?query=parameter": { "scheme": "https", "host": "example.com", "port": 443, "path": "/path/with/trailing/slash" },
+      "https://example.com?/invalid-setup": invalid,
+    }
+
+    for each uri in testCases
+      parts = u.extractUriParts(uri)
+      result = m.assertEqual(parts, testCases[uri])
+      if result <> "" then
+        return result
+      end if
+    end for
+
+    return ""
+end function
+
 function TestCase__Utility_RandomBytes() as String
     bytes1 = LaunchDarklyUtility().randomBytes(16)
 
@@ -171,6 +199,7 @@ function TestSuite__Utility() as Object
     this.addTest("TestCase__Utility_GetMilliseconds", TestCase__Utility_GetMilliseconds)
     this.addTest("TestCase__Utility_Backoff", TestCase__Utility_Backoff)
     this.addTest("TestCase__Utility_StripHTTPProtocol", TestCase__Utility_StripHTTPProtocol)
+    this.addTest("TestCase__Utility_ExtractUriParts", TestCase__Utility_ExtractUriParts)
     this.addTest("TestCase__Utility_RandomBytes", TestCase__Utility_RandomBytes)
     this.addTest("TestCase__Utility_UnsignedIntegerToLittleEndian", TestCase__Utility_UnsignedIntegerToLittleEndian)
 

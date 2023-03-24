@@ -256,19 +256,24 @@ function LaunchDarklyUtility() as Object
             return launchDarklyLocalCreationDate#
         end function,
 
-        prepareNetworkingCommon: function(launchDarklyParamMessagePort as Object, launchDarklyParamConfig as Object, launchDarklyParamTransfer as Object) as Void
+        prepareNetworkingCommon: function(launchDarklyParamMessagePort as Object, launchDarklyParamConfig as Object, launchDarklyParamTransfer as Object, headers as Object) as Void
             launchDarklyParamTransfer.setPort(launchDarklyParamMessagePort)
-            launchDarklyParamTransfer.addHeader("User-Agent", "RokuClient/" + LaunchDarklySDKVersion())
-            launchDarklyParamTransfer.addHeader("Authorization", launchDarklyParamConfig.private.mobileKey)
-
-            appInfoHeader = m.createApplicationInfoHeader(launchDarklyParamConfig)
-            if appInfoHeader <> "" then
-              launchDarklyParamTransfer.addHeader("X-LaunchDarkly-Tags", appInfoHeader)
-            end if
-
+            launchDarklyParamTransfer.setHeaders(m.addDefaultHeaders(headers, launchDarklyParamConfig))
             launchDarklyParamTransfer.setCertificatesFile("common:/certs/ca-bundle.crt")
             launchDarklyParamTransfer.initClientCertificates()
         end function,
+
+        addDefaultHeaders: function(headers as Object, launchDarklyParamConfig as Object) as Object
+            headers["User-Agent"] = "RokuClient/" + LaunchDarklySDKVersion()
+            headers["Authorization"] = launchDarklyParamConfig.private.mobileKey
+
+            appInfoHeader = m.createApplicationInfoHeader(launchDarklyParamConfig)
+            if appInfoHeader <> "" then
+              headers["X-LaunchDarkly-Tags"] = appInfoHeader
+            end if
+
+            return headers
+        end function
 
         ' When given the LaunchDarkly configuration object, generate the appropriate X-LaunchDarkly-Tags header value.
         '
@@ -305,6 +310,73 @@ function LaunchDarklyUtility() as Object
                 REM impossible in usage
                 return ""
             end if
+        end function,
+
+        ' Provides a simplistic approach at parsing out the bits of a URI.
+        '
+        ' WARNING: This does not support IPv6.
+        '
+        ' This function assumes the provided URI is well-formed. It will return
+        ' an object containing:
+        '
+        ' - host
+        ' - port :: If not provided, defaults to 80 for http and 443 for https
+        ' - path :: URL path without a trailing slash. A path of "/" is returned as ""
+        ' - scheme :: e.g. http or https. Defaults to http
+        extractUriParts: function(uri as String) as Object
+            parts = { scheme: "http", port: 80, path: "" }
+
+            launchDarklyLocalHTTPS = "https://"
+            launchDarklyLocalHTTP = "http://"
+
+            withoutScheme = uri
+            if left(uri, len(launchDarklyLocalHTTPS)) = launchdarklyLocalHTTPS then
+                parts["scheme"] = "https"
+                parts["port"] = 443
+                withoutScheme = mid(uri, len(launchDarklyLocalHTTPS) + 1)
+            else if left(uri, len(launchDarklyLocalHTTP)) = launchDarklyLocalHTTP then
+                parts["scheme"] = "http"
+                parts["port"] = 80
+                withoutScheme = mid(uri, len(launchDarklyLocalHTTP) + 1)
+            end if
+
+            slashIndex = withoutScheme.Instr("/")
+            questionIndex = withoutScheme.Instr("?")
+
+            if questionIndex < slashIndex and questionIndex <> -1 then
+              return invalid
+            end if
+
+            if slashIndex = -1 and questionIndex = -1 then
+              parts["host"] = withoutScheme
+            else if slashIndex <> -1 and questionIndex = -1 then
+              parts["host"] = withoutScheme.Left(slashIndex)
+              parts["path"] = withoutScheme.Mid(slashIndex)
+            else if slashIndex <> -1 and questionIndex <> -1 then
+              parts["host"] = withoutScheme.Left(slashIndex)
+              parts["path"] = withoutScheme.Mid(slashIndex, questionIndex - slashIndex)
+            else if slashIndex = -1 then
+              parts["host"] = withoutScheme.Left(questionIndex)
+            end if
+            parts["path"] = m.trimTrailingSlash(parts["path"])
+
+            hostParts = parts["host"].Split(":")
+            if hostParts.Count() = 2 then
+              parts["host"] = hostParts[0]
+              parts["port"] = hostParts[1].ToInt()
+            else if hostParts.Count() > 2 then
+              return invalid
+            end if
+
+            return parts
+        end function,
+
+        trimTrailingSlash: function(input as String) as String
+          while input.EndsWith("/")
+            input = input.Left(input.Len() - 1)
+          end while
+
+          return input
         end function,
 
         deepCopy: function(launchDarklyParamValue as Dynamic) as Dynamic

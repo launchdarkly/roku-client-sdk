@@ -141,7 +141,7 @@ function TestCase__Config_AppInfo_CanSetValidValues() as String
       return a
     end if
 
-    return m.assertEqual(config.private.createApplicationInfoHeader(), "application-id/example-id application-version/example-version")
+    return m.assertEqual(LaunchDarklyUtility().createApplicationInfoHeader(config), "application-id/example-id application-version/example-version")
 end function
 
 function TestCase__Config_AppInfo_WillIgnoreInvalidValues() as String
@@ -161,7 +161,7 @@ function TestCase__Config_AppInfo_WillIgnoreInvalidValues() as String
       return a
     end if
 
-    return m.assertEqual(config.private.createApplicationInfoHeader(), "")
+    return m.assertEqual(LaunchDarklyUtility().createApplicationInfoHeader(config), "")
 end function
 
 function TestSuite__Config() as Object

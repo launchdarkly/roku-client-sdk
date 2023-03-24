@@ -6,6 +6,12 @@ build
 
 # LaunchDarkly.brs is generated in the build as a concatenation of other files
 src/main/source/LaunchDarkly.brs
+src/contract-tests/source/LaunchDarkly.brs
+
+# LaunchDarklyTask.* is copied from the tracked file in main. We don't want to
+# maintain two copies.
+src/contract-tests/components/LaunchDarklyTask.brs
+src/contract-tests/components/LaunchDarklyTask.xml
 
 # src/tests contains generated test output files; test source code is in src/test
 src/tests

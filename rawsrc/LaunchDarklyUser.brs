@@ -5,6 +5,7 @@ function LaunchDarklyUser(launchDarklyParamUserKey as String) as Object
             anonymous: false,
             firstName: invalid,
             lastName: invalid,
+            country: invalid,
             email: invalid,
             name: invalid,
             avatar: invalid,
@@ -23,6 +24,10 @@ function LaunchDarklyUser(launchDarklyParamUserKey as String) as Object
 
         setLastName: function(launchDarklyParamLastName as String) as Void
             m.private.lastName = launchDarklyParamLastName
+        end function,
+
+        setCountry: function(launchDarklyParamCountry as String) as Void
+            m.private.country = launchDarklyParamCountry
         end function,
 
         setEmail: function(launchDarklyParamEmail as String) as Void
@@ -102,10 +107,19 @@ function LaunchDarklyUserEncode(launchDarklyParamUser as Object, launchDarklyPar
 
     launchDarklyLocalAddField(launchDarklyParamUser.private, launchDarklyLocalEncoded, launchDarklyParamUser.private, "firstName", launchDarklyParamConfig, launchDarklyLocalPrivateAttrs)
     launchDarklyLocalAddField(launchDarklyParamUser.private, launchDarklyLocalEncoded, launchDarklyParamUser.private, "lastName", launchDarklyParamConfig, launchDarklyLocalPrivateAttrs)
+    launchDarklyLocalAddField(launchDarklyParamUser.private, launchDarklyLocalEncoded, launchDarklyParamUser.private, "country", launchDarklyParamConfig, launchDarklyLocalPrivateAttrs)
     launchDarklyLocalAddField(launchDarklyParamUser.private, launchDarklyLocalEncoded, launchDarklyParamUser.private, "email", launchDarklyParamConfig, launchDarklyLocalPrivateAttrs)
     launchDarklyLocalAddField(launchDarklyParamUser.private, launchDarklyLocalEncoded, launchDarklyParamUser.private, "name", launchDarklyParamConfig, launchDarklyLocalPrivateAttrs)
     launchDarklyLocalAddField(launchDarklyParamUser.private, launchDarklyLocalEncoded, launchDarklyParamUser.private, "avatar", launchDarklyParamConfig, launchDarklyLocalPrivateAttrs)
     launchDarklyLocalAddField(launchDarklyParamUser.private, launchDarklyLocalEncoded, launchDarklyParamUser.private, "ip", launchDarklyParamConfig, launchDarklyLocalPrivateAttrs)
+
+    if launchDarklyParamRedact = false then
+      keys = launchDarklyParamUser.private.privateAttributeNames.Keys()
+
+      if keys.Count() > 0 then
+        launchDarklyLocalEncoded["privateAttributeNames"] = keys
+      end if
+    end if
 
     if launchDarklyParamUser.private.custom <> invalid then
         launchDarklyLocalCustom = {}
