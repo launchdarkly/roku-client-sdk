@@ -21,7 +21,6 @@ function LaunchDarklyConfig(launchDarklyParamMobileKey as String, launchDarklyPa
             logLevel: LaunchDarklyLogLevels().warn,
             sceneGraphNode: launchDarklyParamSceneGraphNode,
             useReasons: false,
-            autoAliasingOptOut: false,
             applicationInfo: invalid,
 
             validateURI: function(launchDarklyParamRawURI as String) as Boolean
@@ -118,10 +117,6 @@ function LaunchDarklyConfig(launchDarklyParamMobileKey as String, launchDarklyPa
 
         setUseEvaluationReasons: function(launchDarklyParamUseReasons as Boolean) as Void
             m.private.useReasons = launchDarklyParamUseReasons
-        end function,
-
-        setAutoAliasingOptOut: function(launchDarklyParamAutoAliasingOptOut as Boolean) as Void
-            m.private.autoAliasingOptOut = launchDarklyParamAutoAliasingOptOut
         end function,
 
         ' Application metadata may be used in LaunchDarkly analytics or other

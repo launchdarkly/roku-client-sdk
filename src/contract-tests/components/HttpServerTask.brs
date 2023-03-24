@@ -384,10 +384,6 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
             return m.makeResponse(400, "Bad Request", "invalid user")
           end if
 
-          if clientSide["autoAliasingOptOut"] <> invalid then
-            config.setAutoAliasingOptOut(clientSide["autoAliasingOptOut"])
-          endif
-
           if clientSide["evaluationReasons"] <> invalid then
             config.setUseEvaluationReasons(clientSide["evaluationReasons"])
           endif
@@ -480,8 +476,6 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
             return m.makeResponse(200, "OK", "")
           else if command = "customEvent" then
             return m.customEvent(client, jsonBody["customEvent"])
-          else if command = "aliasEvent" then
-            return m.alias(client, jsonBody["aliasEvent"])
           else if command = "flushEvents" then
             client.flush()
             return m.makeResponse(200, "OK", "")
@@ -546,21 +540,6 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
 
         customEvent: function(client as Object, params as Object) as Object
           client.track(params["eventKey"], params["data"], params["metricValue"])
-          return m.makeResponse(200, "OK", "")
-        end function,
-
-        alias: function(client as Object, params as Object) as Object
-          user = m.makeUser(params["user"])
-          if user = invalid then
-              return m.makeResponse(400, "Bad Request", "invalid user")
-          end if
-
-          previousUser = m.makeUser(params["previousUser"])
-          if previousUser = invalid then
-              return m.makeResponse(400, "Bad Request", "invalid previousUser")
-          end if
-
-          client.alias(user, previousUser)
           return m.makeResponse(200, "OK", "")
         end function,
 

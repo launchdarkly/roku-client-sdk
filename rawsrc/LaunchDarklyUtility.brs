@@ -381,13 +381,6 @@ function LaunchDarklyUtility() as Object
 
         deepCopy: function(launchDarklyParamValue as Dynamic) as Dynamic
             return parseJSON(formatJSON(launchDarklyParamValue))
-        end function,
-
-        contextKindForUser: function(launchDarklyParamUser as Object) as String
-            if launchDarklyParamUser.private.anonymous = true then
-                return "anonymousUser"
-            end if
-            return "user"
         end function
     }
 end function

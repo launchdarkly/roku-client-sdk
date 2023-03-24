@@ -182,9 +182,8 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, launchDar
         track: function(launchDarklyParamKey as String, launchDarklyParamData=invalid as Object, launchDarklyParamMetric=invalid as Dynamic) as Void
             launchDarklyLocalEvent = m.private.makeBaseEvent("custom")
             launchDarklyLocalEvent.key = launchDarklyParamKey
-            contextKind = m.private.util.contextKindForUser(m.private.user)
-            if contextKind <> "user" then
-              launchDarklyLocalEvent["contextKind"] = contextKind
+            if m.private.user.private.anonymous = true then
+              launchDarklyLocalEvent["contextKind"] = "anonymousUser"
             end if
 
             if m.private.inlineUsers = false then
@@ -199,17 +198,6 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, launchDar
             if launchDarklyParamMetric <> invalid then
                 launchDarklyLocalEvent["metricValue"] = launchDarklyParamMetric
             end if
-
-            m.private.enqueueEvent(launchDarklyLocalEvent)
-        end function,
-
-        alias: function(launchDarklyParamUser as Object, launchDarklyParamPreviousUser as Object) as Void
-            launchDarklyLocalEvent = m.private.makeBaseEvent("alias")
-            launchDarklyLocalEvent.delete("user")
-            launchDarklyLocalEvent["key"] = launchDarklyParamUser.private.key
-            launchDarklyLocalEvent["contextKind"] = m.private.util.contextKindForUser(launchDarklyParamUser)
-            launchDarklyLocalEvent["previousKey"] = launchDarklyParamPreviousUser.private.key
-            launchDarklyLocalEvent["previousContextKind"] = m.private.util.contextKindForUser(launchDarklyParamPreviousUser)
 
             m.private.enqueueEvent(launchDarklyLocalEvent)
         end function,
