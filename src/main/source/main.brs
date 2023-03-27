@@ -7,6 +7,7 @@ sub main(params as object)
         runner.SetFunctions([
             TestSuite__Client
             TestSuite__Config
+            TestSuite__Context
             TestSuite__Crypto
             TestSuite__HTTP
             TestSuite__SSE
