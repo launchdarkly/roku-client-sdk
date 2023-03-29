@@ -175,11 +175,11 @@ function LaunchDarklyCreateContext(data as Object) as Object
     return util.createInvalidContext("context data is not an roAssociativeArray")
   end if
 
-  kind = data["kind"]
-  if kind = invalid then
+  if data.DoesExist("kind") = false then
     return util.createLegacyContext(data)
   end if
 
+  kind = data["kind"]
   if type(kind) <> "String" and type(kind) <> "roString" then
     return util.createInvalidContext("context kind must be a string")
   end if
@@ -208,7 +208,7 @@ function LaunchDarklyContextUtilities(createContext as Function) as Object
   return {
     private: {
       createContext: createContext
-      kindRegex: CreateObject("roRegex", "^[a-zA-Z0-9._-]+$", ""),
+      kindRegex: CreateObject("roRegex", "[^a-zA-Z0-9._-]", ""),
     },
 
     ' Convenience method for constructing invalid contexts with the provided
@@ -234,6 +234,10 @@ function LaunchDarklyContextUtilities(createContext as Function) as Object
         return m.createInvalidContext("context key must not be null or empty")
       end if
 
+      if type(key) <> "String" and type(key) <> "roString" then
+        return m.createInvalidContext("context key must be a string")
+      end if
+
       name = data["name"]
       nameError = m.validateName(name)
       if nameError <> invalid then
@@ -254,11 +258,20 @@ function LaunchDarklyContextUtilities(createContext as Function) as Object
       attributes = custom
       for each k in data
         if k = "ip" or k = "email" or k = "avatar" or k = "firstName" or k = "lastName" or k = "country" then
+          value = data[k]
+          if value = invalid then
+            continue for
+          end if
+
+          if type(value) <> "String" and type(value) <> "roString" then
+            return m.createInvalidContext("context " + k + " must be a string")
+          end if
+
           if attributes = invalid then
             attributes = {}
           end if
 
-          attributes[k] = data[k]
+          attributes[k] = value
         end if
       end for
 
@@ -323,7 +336,7 @@ function LaunchDarklyContextUtilities(createContext as Function) as Object
       ' of the ones we store in dedicated instance variables.
       attributes = invalid
       for each k in data
-        if k <> "kind" and k <> "k" and k <> "name" and k <> "anonymous" and k <> "_meta" then
+        if k <> "kind" and k <> "key" and k <> "name" and k <> "anonymous" and k <> "_meta" then
           if attributes = invalid then
             attributes = {}
           end if
@@ -397,9 +410,11 @@ function LaunchDarklyContextUtilities(createContext as Function) as Object
         return "'kind' is not a valid context kind"
       else if kind = "multi" then
         return "'multi' is not a valid context kind"
+      else if kind = "" then
+        return "context kind must not be empty"
       end if
 
-      if m.private.kindRegex.isMatch(kind) then
+      if m.private.kindRegex.isMatch(kind) = false then
         return invalid
       end if
 
@@ -457,7 +472,12 @@ function LaunchDarklyContextEncode(context as Object) as Object
   end if
 
   if context.private.attributes <> invalid then
-    attributes = context.private.attributes
+    for each key in context.private.attributes
+      value = context.private.attributes[key]
+      if value <> invalid then
+        attributes[key] = value
+      end if
+    end for
   end if
 
   attributes["key"] = context.key()
