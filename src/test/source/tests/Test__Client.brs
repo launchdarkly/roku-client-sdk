@@ -171,7 +171,8 @@ function TestCase__Client_Summary_Known() as String
         features: {
             flag1: {
                 default: fallback,
-                counters: counters
+                counters: counters,
+                "contextKinds": ["user"]
             }
         }
     }))
@@ -230,6 +231,7 @@ function TestCase__Client_Summary_Unknown() as String
             flag1: {
                 default: expectedFallback,
                 counters: counters
+                "contextKinds": ["user"]
             }
         }
     }))

@@ -22,7 +22,6 @@ events/debug events/should not see debug event/debugEventsUntilDate is after SDK
 events/debug events/should not see debug event/debugEventsUntilDate is after SDK time/SDK knows LD time is after debugEventsUntilDate/with reasons/type: string
 
 # To be addressed throughout U2C work
-events/summary events
 events/identify events/basic properties/multi-kind
 events/context properties/multi-kind minimal
 
@@ -31,9 +30,6 @@ events/context properties/single-kind, allAttributesPrivate initial identify eve
 events/context properties/single-kind, specific private attributes
 events/context properties/single-kind, specific private attributes initial identify event with old user
 events/context properties/single-kind, private attribute nested property
-events/event capacity/capacity is enforced
-events/event capacity/buffer is reset after flush
-events/event capacity/summary event is still included even if buffer was full
 
 polling/requests/context properties/multi-kind/GET
 polling/requests/context properties/single kind with all attributes/GET

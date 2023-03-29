@@ -73,6 +73,7 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, context a
 
                     launchDarklyLocalFeatureNode = {
                         default: launchDarklyLocalFeature.default,
+                        "contextKinds": launchdarklyLocalFeature["contextKinds"].Keys(),
                         counters: createObject("roArray", 0, true)
                     }
 
@@ -119,6 +120,7 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, context a
                     m.summary.addReplace(launchDarklyParamFlagKey, launchDarklyLocalSummary)
                     launchDarklyLocalSummary.default = launchDarklyParamFallback
                     launchDarklyLocalSummary.counters = {}
+                    launchDarklyLocalSummary["contextKinds"] = {}
                 end if
 
                 if m.summaryStart = 0 then
@@ -138,6 +140,7 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, context a
                 end if
 
                 launchDarklyLocalCounter = launchDarklyLocalSummary.counters.lookup(launchDarklyLocalCounterKey)
+                launchDarklyLocalSummary["contextKinds"].Append(m.context.keys())
 
                 if launchDarklyLocalCounter = invalid then
                     launchDarklyLocalCounter = {
