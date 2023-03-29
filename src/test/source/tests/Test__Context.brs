@@ -54,6 +54,59 @@ function TestCase__Context_LegacyFormat_CanCreate() as String
   context = LaunchDarklyCreateContext({"key": "my-key", "name": "Sandy", "custom": {"address": "123 Easy St."}})
   return m.assertTrue(context.isValid())
 end function
+
+function TestCase__Context_LegacyFormat_CanRetrieveBasicAttributes() as String
+  context = LaunchDarklyCreateContext({"key": "my-key", "name": "Sandy", "anonymous": true})
+
+  testCases = [
+    {reference: "kind", expected: "user"},
+    {reference: "key", expected: "my-key"},
+    {reference: "name", expected: "Sandy"},
+    {reference: "anonymous", expected: true},
+    {reference: "privateAttributeNames", expected: invalid},
+    {reference: "privateAttributes", expected: invalid}
+  ]
+
+  for each testCase in testCases
+    reference = LaunchDarklyCreateReference(testCase["reference"])
+    r = m.assertEqual(testCase["expected"], context.getValueForReference(reference))
+    if r <> "" then
+      return r
+    end if
+  end for
+
+  return ""
+end function
+
+function TestCase__Context_LegacyFormat_CanRetrieveComplexAttributes() as String
+  address = { city: "Oakland", state: "CA", zip: 94612 }
+  tags = ["LaunchDarkly", "Feature Flags"]
+  nested = { upper: { middle: { name: "Middle Level", inner: { levels: [0, 1, 2] } }, name: "Upper Level" } }
+
+  context = LaunchDarklyCreateContext({ key: "user", name: "Ruby", custom: { address: address, tags: tags, nested: nested }})
+
+  testCases = [
+    ' Simple top level attributes are accessible
+    {reference: "/address", expected: address},
+    {reference: "/address/city", expected: "Oakland"},
+
+    {reference: "/tags", expected: tags},
+
+    {reference: "/nested/upper/name", expected: "Upper Level"},
+    {reference: "/nested/upper/middle/name", expected: "Middle Level"},
+    {reference: "/nested/upper/middle/inner/levels", expected: [0, 1, 2]},
+  ]
+
+  for each testCase in testCases
+    reference = LaunchDarklyCreateReference(testCase["reference"])
+    r = m.assertEqual(testCase["expected"], context.getValueForReference(reference))
+    if r <> "" then
+      return r
+    end if
+  end for
+
+  return ""
+end function
 ' }}}
 
 ' {{{ Single-kind context tests
@@ -110,6 +163,59 @@ end function
 function TestCase__Context_SingleKind_CanCreate() as String
   context = LaunchDarklyCreateContext({"key": "my-key", "kind": "user", "name": "Sandy", "address": "123 Easy St."})
   return m.assertTrue(context.isValid())
+end function
+
+function TestCase__Context_SingleKind_CanRetrieveBasicAttributes() as String
+  context = LaunchDarklyCreateContext({"key": "my-key", "kind": "org", "name": "LaunchDarkly", "anonymous": false})
+
+  testCases = [
+    {reference: "kind", expected: "org"},
+    {reference: "key", expected: "my-key"},
+    {reference: "name", expected: "LaunchDarkly"},
+    {reference: "anonymous", expected: false},
+    {reference: "privateAttributeNames", expected: invalid},
+    {reference: "privateAttributes", expected: invalid}
+  ]
+
+  for each testCase in testCases
+    reference = LaunchDarklyCreateReference(testCase["reference"])
+    r = m.assertEqual(testCase["expected"], context.getValueForReference(reference))
+    if r <> "" then
+      return r
+    end if
+  end for
+
+  return ""
+end function
+
+function TestCase__Context_SingleKind_CanRetrieveComplexAttributes() as String
+  address = { city: "Oakland", state: "CA", zip: 94612 }
+  tags = ["LaunchDarkly", "Feature Flags"]
+  nested = { upper: { middle: { name: "Middle Level", inner: { levels: [0, 1, 2] } }, name: "Upper Level" } }
+
+  context = LaunchDarklyCreateContext({ key: "ld", kind: "org", name: "LaunchDarkly", anonymous: true, address: address, tags: tags, nested: nested })
+
+  testCases = [
+    ' Simple top level attributes are accessible
+    {reference: "/address", expected: address},
+    {reference: "/address/city", expected: "Oakland"},
+
+    {reference: "/tags", expected: tags},
+
+    {reference: "/nested/upper/name", expected: "Upper Level"},
+    {reference: "/nested/upper/middle/name", expected: "Middle Level"},
+    {reference: "/nested/upper/middle/inner/levels", expected: [0, 1, 2]},
+  ]
+
+  for each testCase in testCases
+    reference = LaunchDarklyCreateReference(testCase["reference"])
+    r = m.assertEqual(testCase["expected"], context.getValueForReference(reference))
+    if r <> "" then
+      return r
+    end if
+  end for
+
+  return ""
 end function
 ' }}}
 
@@ -169,6 +275,34 @@ function TestCase__Context_MultiKind_WithOneCreatesSingleKind() as String
 
   return m.assertFalse(context.isMulti())
 end function
+
+function TestCase__Context_MultiKind_CanOnlyRetrieveKindValue() as String
+  data = {
+    "kind": "multi",
+    "user": {"key": "user-key"},
+    "org": {"key": "org-key"},
+  }
+  context = LaunchDarklyCreateContext(data)
+
+  testCases = [
+    {reference: "kind", result: "multi"},
+    {reference: "key", result: invalid},
+    {reference: "name", result: invalid},
+    {reference: "anonymous", result: invalid},
+  ]
+
+  for each testCase in testCases
+    reference = LaunchDarklyCreateReference(testCase["reference"])
+    result = context.getValueForReference(reference)
+
+    r = m.assertEqual(testCase["result"], result)
+    if r <> "" then
+      return r
+    end if
+  end for
+
+  return ""
+end function
 ' }}}
 
 function TestSuite__Context() as Object
@@ -180,13 +314,18 @@ function TestSuite__Context() as Object
 
     this.addTest("TestCase__Context_LegacyFormat_ValidatesTypes", TestCase__Context_LegacyFormat_ValidatesTypes)
     this.addTest("TestCase__Context_LegacyFormat_CanCreate", TestCase__Context_LegacyFormat_CanCreate)
+    this.addTest("TestCase__Context_LegacyFormat_CanRetrieveBasicAttributes", TestCase__Context_LegacyFormat_CanRetrieveBasicAttributes)
+    this.addTest("TestCase__Context_LegacyFormat_CanRetrieveComplexAttributes", TestCase__Context_LegacyFormat_CanRetrieveComplexAttributes)
 
     this.addTest("TestCase__Context_SingleKind_ValidatesTypes", TestCase__Context_SingleKind_ValidatesTypes)
     this.addTest("TestCase__Context_SingleKind_CanCreate", TestCase__Context_SingleKind_CanCreate)
+    this.addTest("TestCase__Context_SingleKind_CanRetrieveBasicAttributes", TestCase__Context_SingleKind_CanRetrieveBasicAttributes)
+    this.addTest("TestCase__Context_SingleKind_CanRetrieveComplexAttributes", TestCase__Context_SingleKind_CanRetrieveComplexAttributes)
 
     this.addTest("TestCase__Context_MultiKind_ValidatesTypes", TestCase__Context_MultiKind_ValidatesTypes)
     this.addTest("TestCase__Context_MultiKind_CanCreate", TestCase__Context_MultiKind_CanCreate)
     this.addTest("TestCase__Context_MultiKind_WithOneCreatesSingleKind", TestCase__Context_MultiKind_WithOneCreatesSingleKind)
+    this.addTest("TestCase__Context_MultiKind_CanOnlyRetrieveKindValue", TestCase__Context_MultiKind_CanOnlyRetrieveKindValue)
 
     return this
 end function

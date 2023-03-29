@@ -27,7 +27,21 @@ function LaunchDarklyCreateContext(data as Object) as Object
         privateAttributes: privateAttributes,
         error: error,
         contexts: contexts,
-        isMulti: contexts <> invalid
+        isMulti: contexts <> invalid,
+
+        getTopLevelAddressableAttributeSingleKind: function(attributeName) as Object
+          if attributeName = "kind" then
+            return m.kind
+          else if attributeName = "key"
+            return m.key
+          else if attributeName = "name"
+            return m.name
+          else if attributeName = "anonymous"
+            return m.anonymous
+          else
+            return m.attributes?.lookup?(attributeName)
+          end if
+        end function
       },
 
       ' @return A string if an error exists; invalid otherwise.
@@ -61,6 +75,64 @@ function LaunchDarklyCreateContext(data as Object) as Object
       ' @return Boolean determining whether or not the context is a multi-kind context
       isMulti: function() as Boolean
         return m.private.isMulti
+      end function,
+
+      ' getValueForReference looks up the value of any attribute of the
+      ' context, or a value contained within an attribute, based on a reference
+      ' instance. This includes only attributes that are addressable in
+      ' evaluations-- not metadata such as private attributes.
+      '
+      ' This implements the same behavior that the SDK uses to resolve attribute
+      ' references during a flag evaluation. In a single-kind context, the
+      ' reference can represent a simple attribute name-- either a built-in one
+      ' like "name" or "key", or a custom attribute -- or, it can be a
+      ' slash-delimited path using a JSON-Pointer-like syntax. See LaunchDarklyCreateReference
+      ' for more details.
+      '
+      ' For a multi-kind context, the only supported attribute name is "kind".
+      '
+      ' If the value is found, the return value is the attribute value;
+      ' otherwise, it is invalid.
+      getValueForReference: function(reference) as Object
+        if m.isValid() = false then
+          return invalid
+        end if
+
+        if reference.isValid() = false then
+          return invalid
+        end if
+
+        firstComponent = reference.component(0)
+        if firstComponent = invalid then
+          return invalid
+        end if
+
+        if m.isMulti() then
+          if reference.isKind() then
+            return m.private.kind
+          end if
+
+          return invalid
+        end if
+
+        value = m.private.getTopLevelAddressableAttributeSingleKind(firstComponent)
+        if value = invalid then
+          return invalid
+        end if
+
+        for i = 1 to reference.depth() - 1
+          name = reference.component(i)
+
+          if type(value) <> "roAssociativeArray" then
+            return invalid
+          else if value.DoesExist(name) = false then
+            return invalid
+          end if
+
+          value = value[name]
+        end for
+
+        return value
       end function
     }
   end function
@@ -148,13 +220,13 @@ function LaunchDarklyContextUtilities(createContext as Function) as Object
       end if
 
       attributes = custom
-      for each key in data
-        if key = "ip" or key = "email" or key = "avatar" or key = "firstName" or key = "lastName" or key = "country" then
+      for each k in data
+        if k = "ip" or k = "email" or k = "avatar" or k = "firstName" or k = "lastName" or k = "country" then
           if attributes = invalid then
             attributes = {}
           end if
 
-          attributes[key] = data[key]
+          attributes[k] = data[k]
         end if
       end for
 
@@ -218,13 +290,13 @@ function LaunchDarklyContextUtilities(createContext as Function) as Object
       ' We only need to create an attribute hash if there are keys set outside
       ' of the ones we store in dedicated instance variables.
       attributes = invalid
-      for each key in data
-        if key <> "kind" and key <> "key" and key <> "name" and key <> "anonymous" and key <> "_meta" then
+      for each k in data
+        if k <> "kind" and k <> "k" and k <> "name" and k <> "anonymous" and k <> "_meta" then
           if attributes = invalid then
             attributes = {}
           end if
 
-          attributes[key] = data[key]
+          attributes[k] = data[k]
         end if
       end for
 
