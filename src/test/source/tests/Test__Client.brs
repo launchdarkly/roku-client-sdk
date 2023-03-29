@@ -2,28 +2,22 @@ function makeTestClientUninitialized() as Object
     messagePort = CreateObject("roMessagePort")
     config = LaunchDarklyConfig("mob-abc123")
     config.setOffline(true)
-    user = LaunchDarklyUser("user-key")
-    return LaunchDarklyClient(config, user, messagePort)
+    context = LaunchDarklyCreateContext({key: "user-key", kind: "user"})
+    return LaunchDarklyClient(config, context, messagePort)
 end function
 
 function makeTestClientInitialized() as Object
-    return makeTestClientInitializedWithUser(LaunchDarklyUser("user-key"))
-end function
-
-function makeTestClientInitializedWithUser(user as Object) as Object
+    context = LaunchDarklyCreateContext({key: "user-key", kind: "user"})
     config = LaunchDarklyConfig("mob-abc123")
     config.setOffline(true)
-    return makeTestClientInitializedWithUserAndConfig(user, config)
-end function
 
-function makeTestClientInitializedWithUserAndConfig(user as Object, config as Object) as Object
     messagePort = CreateObject("roMessagePort")
-    client = LaunchDarklyClient(config, user, messagePort)
+    client = LaunchDarklyClient(config, context, messagePort)
     client.status.private.setStatus(client.status.map.initialized)
     return client
 end function
 
-function assertIdentifyEvent(ctx as Object, event as Object, user as Object) as String
+function assertIdentifyEvent(ctx as Object, event as Object, context as Object) as String
     a = ctx.assertTrue(event.creationDate > 0)
     if a <> "" then
         return a
@@ -31,14 +25,12 @@ function assertIdentifyEvent(ctx as Object, event as Object, user as Object) as 
     event.delete("creationDate")
     expected = {
         kind: "identify",
-        key: user.private.key,
-        user: {
-            key: user.private.key
+        key: context.key(),
+        context: {
+            key: context.key(),
+            kind: context.kind()
         }
     }
-    if user.private.anonymous then
-        expected.user.anonymous = true
-    end if
     return ctx.assertEqual(FormatJSON(event), FormatJSON(expected))
 end function
 
@@ -113,7 +105,7 @@ function TestCase__Client_Eval_Tracked() as String
 
     return m.assertEqual(event, {
         kind: "feature",
-        userKey: "user-key",
+        contextKeys: {user: "user-key"},
         key: "flag1",
         value: expectedValue,
         variation: expectedVariation,
@@ -337,7 +329,7 @@ function TestCase__Client_Track() as String
         data: eventData
     }
 
-    expected["userKey"] = "user-key"
+    expected["contextKeys"] = {user: "user-key"}
     expected["metricValue"] = 52
 
     return m.assertEqual(FormatJSON(event), FormatJSON(expected))
@@ -346,12 +338,12 @@ end function
 function TestCase__Client_Identify() as String
     client = makeTestClientUninitialized()
 
-    newUserKey = "user-key2"
-    newUser = LaunchDarklyUser(newUserKey)
+    newContextKey = "user-key2"
+    newContext = LaunchDarklyCreateContext({key: newContextKey, kind: "user"})
 
-    client.identify(newUser)
+    client.identify(newContext)
 
-    a = m.assertEqual(client.private.user.private.key, newUserKey)
+    a = m.assertEqual(client.private.context.key(), newContextKey)
     if a <> "" then
         return a
     end if
@@ -363,7 +355,7 @@ function TestCase__Client_Identify() as String
         return a
     end if
 
-    return assertIdentifyEvent(m, eventQueue.getEntry(1), newUser)
+    return assertIdentifyEvent(m, eventQueue.getEntry(1), newContext)
 end function
 
 function testVariation(ctx as Object, functionName as String, flagValue as Dynamic, fallback as Dynamic, expectedValue as Dynamic) as String

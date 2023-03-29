@@ -15,7 +15,6 @@ sub main(params as object)
             TestSuite__Store_Memory
             TestSuite__Store_Registry
             TestSuite__Store_Registry_Bypass
-            TestSuite__User
             TestSuite__Utility
         ])
 

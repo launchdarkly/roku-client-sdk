@@ -1,3 +1,133 @@
+function LaunchDarklyContextPublicFunctions() as Object
+  return {
+    ' @return A string if an error exists; invalid otherwise.
+    error: function() as Object
+      if m.private.error = invalid then
+        return ""
+      end if
+
+      return m.private.error
+    end function,
+
+    ' @return A string representing the key for single-kind contexts; invalid otherwise.
+    key: function() as Object
+      return m.private.key
+    end function,
+
+    keys: function() as Object
+      result = {}
+      if m.isValid() = false then
+        return result
+      end if
+
+      if m.isMulti() = false then
+        result[m.private.kind] = m.private.key
+      else
+        for each context in m.private.contexts
+          result[context.private.kind] = context.private.key
+        end for
+      end if
+
+      return result
+    end function,
+
+    fullKey: function() as Object
+      return m.private.fullyQualifiedKey
+    end function,
+
+    ' @return A string representing the kind for valid contexts; invalid otherwise.
+    kind: function() as Object
+      return m.private.kind
+    end function,
+
+    ' @return Boolean determining whether or not the context is valid
+    isValid: function() as Boolean
+      if m.private.error = invalid then
+        return true
+      end if
+
+      return false
+    end function,
+
+    ' @return Boolean determining whether or not the context is a multi-kind context
+    isMulti: function() as Boolean
+      return m.private.isMulti
+    end function,
+
+    ' getValueForReference looks up the value of any attribute of the
+    ' context, or a value contained within an attribute, based on a reference
+    ' instance. This includes only attributes that are addressable in
+    ' evaluations-- not metadata such as private attributes.
+    '
+    ' This implements the same behavior that the SDK uses to resolve attribute
+    ' references during a flag evaluation. In a single-kind context, the
+    ' reference can represent a simple attribute name-- either a built-in one
+    ' like "name" or "key", or a custom attribute -- or, it can be a
+    ' slash-delimited path using a JSON-Pointer-like syntax. See LaunchDarklyCreateReference
+    ' for more details.
+    '
+    ' For a multi-kind context, the only supported attribute name is "kind".
+    '
+    ' If the value is found, the return value is the attribute value;
+    ' otherwise, it is invalid.
+    getValueForReference: function(reference) as Object
+      if m.isValid() = false then
+        return invalid
+      end if
+
+      if reference.isValid() = false then
+        return invalid
+      end if
+
+      firstComponent = reference.component(0)
+      if firstComponent = invalid then
+        return invalid
+      end if
+
+      if m.isMulti() then
+        if reference.isKind() then
+          return m.private.kind
+        end if
+
+        return invalid
+      end if
+
+      value = m.getTopLevelAddressableAttributeSingleKind(firstComponent)
+      if value = invalid then
+        return invalid
+      end if
+
+      for i = 1 to reference.depth() - 1
+        name = reference.component(i)
+
+        if type(value) <> "roAssociativeArray" then
+          return invalid
+        else if value.DoesExist(name) = false then
+          return invalid
+        end if
+
+        value = value[name]
+      end for
+
+      return value
+    end function,
+
+    getTopLevelAddressableAttributeSingleKind: function(attributeName) as Object
+      if attributeName = "kind" then
+        return m.private.kind
+      else if attributeName = "key"
+        return m.private.key
+      else if attributeName = "name"
+        return m.private.name
+      else if attributeName = "anonymous"
+        return m.private.anonymous
+      else
+        return m.private.attributes?.lookup?(attributeName)
+      end if
+    end function
+  }
+end function
+
 ' Create an evaluation context from the provided associative array.
 '
 ' A context is a collection of attributes that can be referenced in flag
@@ -16,8 +146,12 @@ function LaunchDarklyCreateContext(data as Object) as Object
       anonymous = false
     end if
 
-    return {
+    context = {
       private: {
+        ' The initial attribute here isn't a part of the context schema.
+        ' Rather, it is used to ensure that the first context received by the
+        ' LaunchDarklyTask doesn't trigger a call to the identify method.
+        initial: false,
         key: key,
         fullyQualifiedKey: fullyQualifiedKey,
         kind: kind,
@@ -27,114 +161,12 @@ function LaunchDarklyCreateContext(data as Object) as Object
         privateAttributes: privateAttributes,
         error: error,
         contexts: contexts,
-        isMulti: contexts <> invalid,
-
-        getTopLevelAddressableAttributeSingleKind: function(attributeName) as Object
-          if attributeName = "kind" then
-            return m.kind
-          else if attributeName = "key"
-            return m.key
-          else if attributeName = "name"
-            return m.name
-          else if attributeName = "anonymous"
-            return m.anonymous
-          else
-            return m.attributes?.lookup?(attributeName)
-          end if
-        end function
-      },
-
-      ' @return A string if an error exists; invalid otherwise.
-      error: function() as Object
-        if m.private.error = invalid then
-          return ""
-        end if
-
-        return m.private.error
-      end function,
-
-      ' @return A string representing the key for single-kind contexts; invalid otherwise.
-      key: function() as Object
-        return m.private.key
-      end function,
-
-      ' @return A string representing the kind for valid contexts; invalid otherwise.
-      kind: function() as Object
-        return m.private.kind
-      end function,
-
-      ' @return Boolean determining whether or not the context is valid
-      isValid: function() as Boolean
-        if m.private.error = invalid then
-          return true
-        end if
-
-        return false
-      end function,
-
-      ' @return Boolean determining whether or not the context is a multi-kind context
-      isMulti: function() as Boolean
-        return m.private.isMulti
-      end function,
-
-      ' getValueForReference looks up the value of any attribute of the
-      ' context, or a value contained within an attribute, based on a reference
-      ' instance. This includes only attributes that are addressable in
-      ' evaluations-- not metadata such as private attributes.
-      '
-      ' This implements the same behavior that the SDK uses to resolve attribute
-      ' references during a flag evaluation. In a single-kind context, the
-      ' reference can represent a simple attribute name-- either a built-in one
-      ' like "name" or "key", or a custom attribute -- or, it can be a
-      ' slash-delimited path using a JSON-Pointer-like syntax. See LaunchDarklyCreateReference
-      ' for more details.
-      '
-      ' For a multi-kind context, the only supported attribute name is "kind".
-      '
-      ' If the value is found, the return value is the attribute value;
-      ' otherwise, it is invalid.
-      getValueForReference: function(reference) as Object
-        if m.isValid() = false then
-          return invalid
-        end if
-
-        if reference.isValid() = false then
-          return invalid
-        end if
-
-        firstComponent = reference.component(0)
-        if firstComponent = invalid then
-          return invalid
-        end if
-
-        if m.isMulti() then
-          if reference.isKind() then
-            return m.private.kind
-          end if
-
-          return invalid
-        end if
-
-        value = m.private.getTopLevelAddressableAttributeSingleKind(firstComponent)
-        if value = invalid then
-          return invalid
-        end if
-
-        for i = 1 to reference.depth() - 1
-          name = reference.component(i)
-
-          if type(value) <> "roAssociativeArray" then
-            return invalid
-          else if value.DoesExist(name) = false then
-            return invalid
-          end if
-
-          value = value[name]
-        end for
-
-        return value
-      end function
+        isMulti: contexts <> invalid
+      }
     }
+
+    context.Append(LaunchDarklyContextPublicFunctions())
+    return context
   end function
 
   util = LaunchDarklyContextUtilities(createContext)
@@ -148,7 +180,7 @@ function LaunchDarklyCreateContext(data as Object) as Object
     return util.createLegacyContext(data)
   end if
 
-  if type(kind) <> "roString" then
+  if type(kind) <> "String" and type(kind) <> "roString" then
     return util.createInvalidContext("context kind must be a string")
   end if
 
@@ -357,7 +389,7 @@ function LaunchDarklyContextUtilities(createContext as Function) as Object
     end function,
 
     validateKind: function(kind as Object) as Object
-      if type(kind) <> "roString" then
+      if type(kind) <> "String" and type(kind) <> "roString" then
         return "context kind must be a string"
       end if
 
@@ -375,7 +407,7 @@ function LaunchDarklyContextUtilities(createContext as Function) as Object
     end function,
 
     validateKey: function(key as Object) as Object
-      if type(key) <> "roString" then
+      if type(key) <> "String" and type(key) <> "roString" then
         return "context key must be a string"
       end if
 
@@ -387,7 +419,7 @@ function LaunchDarklyContextUtilities(createContext as Function) as Object
     end function,
 
     validateName: function(name as Object) as Object
-      if name = invalid or type(name) = "roString" then
+      if name = invalid or type(name) = "roString" or type(name) = "String" then
         return invalid
       end if
 
@@ -415,4 +447,29 @@ function LaunchDarklyContextUtilities(createContext as Function) as Object
       return kind + ":" + encoded
     end function
   }
+end function
+
+function LaunchDarklyContextEncode(context as Object) as Object
+  attributes = {}
+
+  if context.isMulti() or context.isValid() = false then
+    return attributes
+  end if
+
+  if context.private.attributes <> invalid then
+    attributes = context.private.attributes
+  end if
+
+  attributes["key"] = context.key()
+  attributes["kind"] = context.kind()
+
+  if context.private.name <> invalid then
+    attributes["name"] = context.private.name
+  end if
+
+  if context.private.anonymous = true then
+    attributes["anonymous"] = context.private.anonymous
+  end if
+
+  return attributes
 end function

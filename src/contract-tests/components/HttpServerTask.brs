@@ -276,73 +276,25 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
         end function,
 
         identify: function(client as Object, requestBody as Object) as Object
-            userJson = requestBody["user"]
+            context = m.getContext(requestBody)
 
-            if userJson = invalid then
-                return m.makeResponse(400, "Bad Request", "expected user in body")
+            if context = invalid then
+                return m.makeResponse(400, "Bad Request", "expected context or user in body")
             end if
 
-            user = m.makeUser(userJson)
-            if user = invalid then
-                return m.makeResponse(400, "Bad Request", "invalid user")
-            end if
-
-            client.identify(user)
+            client.identify(context)
             m.waitForInitialized(client)
 
             return invalid
         end function,
 
-        makeUser: function(userJson as Object) as Object
-            if userJson["key"] = invalid then
-                return invalid
-            end if
+        getContext: function(request as Object, contextKey = "context" as String, userKey = "user" as String) as Object
+          context = request[contextKey]
+          if context <> invalid then
+            return LaunchDarklyCreateContext(context)
+          end if
 
-            user = LaunchDarklyUser(userJson["key"])
-
-            if userJson["anonymous"] <> invalid then
-                user.setAnonymous(userJson["anonymous"])
-            end if
-
-            if userJson["custom"] <> invalid then
-                user.setCustom(userJson["custom"])
-            end if
-
-            if userJson["firstName"] <> invalid then
-                user.setFirstName(userJson["firstName"])
-            end if
-
-            if userJson["lastName"] <> invalid then
-                user.setLastName(userJson["lastName"])
-            end if
-
-            if userJson["country"] <> invalid then
-                user.setCountry(userJson["country"])
-            end if
-
-            if userJson["email"] <> invalid then
-                user.setEmail(userJson["email"])
-            end if
-
-            if userJson["name"] <> invalid then
-                user.setName(userJson["name"])
-            end if
-
-            if userJson["avatar"] <> invalid then
-                user.setAvatar(userJson["avatar"])
-            end if
-
-            if userJson["ip"] <> invalid then
-                user.setIP(userJson["ip"])
-            end if
-
-            if userJson["privateAttributeNames"] <> invalid then
-                for each attribute in userJson["privateAttributeNames"]
-                    user.addPrivateAttribute(attribute)
-                end for
-            end if
-
-            return user
+          return LaunchDarklyCreateContext(request[userKey])
         end function,
 
         handle404: function() as Object
@@ -362,7 +314,8 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
               "client-side",
               "singleton",
               "strongly-typed",
-              "tags"
+              "tags",
+              "user-type"
             ]
 
             return m.makeResponse(200, "OK", status)
@@ -379,9 +332,9 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
 
           clientSide = configuration["clientSide"]
 
-          initialUser = m.makeUser(clientSide["initialUser"])
-          if initialUser = invalid then
-            return m.makeResponse(400, "Bad Request", "invalid user")
+          initialContext = m.getContext(clientSide, "initialContext", "initialUser")
+          if initialContext = invalid then
+            return m.makeResponse(400, "Bad Request", "invalid context or user")
           end if
 
           if clientSide["evaluationReasons"] <> invalid then
@@ -446,7 +399,7 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
             end if
           end if
 
-          LaunchDarklySGInit(config, initialUser)
+          LaunchDarklySGInit(config, initialContext)
           m.private.clientIndex += 1
           client = LaunchDarklySG(m.private.launchDarklyNode)
           m.private.clients[m.private.clientIndex.toStr()] = client

@@ -1,11 +1,11 @@
-function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, launchDarklyParamUser as Object)
+function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, context as Object)
     launchDarklyLocalThis = {
         private: {
             config: launchDarklyParamConfig,
             util: LaunchDarklyUtility(),
 
-            user: launchDarklyParamUser,
-            encodedUser: LaunchDarklyUserEncode(launchDarklyParamUser, true, launchDarklyParamConfig),
+            context: context,
+            encodedContext: LaunchDarklyContextEncode(context),
 
             events: createObject("roArray", 0, true),
             summary: {},
@@ -30,7 +30,7 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, launchDar
             makeBaseEvent: function(launchDarklyParamKind as String) as Object
                 launchDarklyLocalBaseEvent = {
                     kind: launchDarklyParamKind,
-                    user: m.encodedUser
+                    context: m.encodedContext
                 }
 
                 launchDarklyLocalBaseEvent["creationDate"] = m.util.getMilliseconds()
@@ -44,8 +44,8 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, launchDar
                 if isDebugEvent then
                   launchDarklyLocalEvent.kind = "debug"
                 else
-                  launchDarklyLocalEvent.delete("user")
-                  launchDarklyLocalEvent["userKey"] = m.user.private.key
+                  launchDarklyLocalEvent.delete("context")
+                  launchDarklyLocalEvent["contextKeys"] = m.context.keys()
                 end if
 
                 launchDarklyLocalEvent.key = launchDarklyParamBundle.flagKey
@@ -105,9 +105,9 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, launchDar
                 return launchDarklyLocalEvent
             end function,
 
-            makeIdentifyEvent: function(launchDarklyParamUser as Object) as Object
+            makeIdentifyEvent: function(context as Object) as Object
                 launchDarklyLocalEvent = m.makeBaseEvent("identify")
-                launchDarklyLocalEvent.key = launchDarklyParamUser.private.key
+                launchDarklyLocalEvent.key = context.fullKey()
                 return launchDarklyLocalEvent
             end function,
 
@@ -179,12 +179,9 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, launchDar
         track: function(launchDarklyParamKey as String, launchDarklyParamData=invalid as Object, launchDarklyParamMetric=invalid as Dynamic) as Void
             launchDarklyLocalEvent = m.private.makeBaseEvent("custom")
             launchDarklyLocalEvent.key = launchDarklyParamKey
-            if m.private.user.private.anonymous = true then
-              launchDarklyLocalEvent["contextKind"] = "anonymousUser"
-            end if
 
-            launchDarklyLocalEvent.delete("user")
-            launchDarklyLocalEvent["userKey"] = m.private.user.private.key
+            launchDarklyLocalEvent.delete("context")
+            launchDarklyLocalEvent["contextKeys"] = m.private.context.keys()
 
             if launchDarklyParamData <> invalid then
                 launchDarklyLocalEvent.data = launchDarklyParamData
@@ -197,10 +194,11 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, launchDar
             m.private.enqueueEvent(launchDarklyLocalEvent)
         end function,
 
-        identify: function(launchDarklyParamUser as Object) as Void
-            m.private.user = launchDarklyParamUser
-            m.private.encodedUser = LaunchDarklyUserEncode(m.private.user, true, m.private.config)
-            m.private.enqueueEvent(m.private.makeIdentifyEvent(launchDarklyParamUser))
+        identify: function(context as Object) as Void
+            m.private.context = context
+            m.private.encodedContext = LaunchDarklyContextEncode(m.private.context)
+
+            m.private.enqueueEvent(m.private.makeIdentifyEvent(context))
         end function,
 
         handleEventsForEval: function(launchDarklyParamBundle as Object) as Void
