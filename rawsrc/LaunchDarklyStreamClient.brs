@@ -336,7 +336,16 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
 
                 launchDarklyLocalSendAddress = createObject("roSocketAddress")
                 launchDarklyLocalSendAddress.setHostname(uriParts["host"])
-                launchDarklyLocalSendAddress.setPort(uriParts["port"])
+
+                ' By default we should be connecting on port 80 since this
+                ' doesn't support TLS. However, for the SDK test harness, we
+                ' might need to use alternative ports if specified as part of
+                ' the URL.
+                if uriParts["port"] = invalid then
+                  launchDarklyLocalSendAddress.setPort(80)
+                else
+                  launchDarklyLocalSendAddress.setPort(uriParts["port"])
+                end if
 
                 launchDarklyLocalSocket = createObject("roStreamSocket")
                 launchDarklyLocalSocket.setSendToAddress(launchDarklyLocalSendAddress)
