@@ -315,7 +315,6 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
               "singleton",
               "strongly-typed",
               "tags",
-              "context-type",
               "user-type",
             ]
 
@@ -429,10 +428,6 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
           else if command = "flushEvents" then
             client.flush()
             return m.makeResponse(200, "OK", "")
-          else if command = "contextBuild" then
-            return m.contextBuild(client, jsonBody["contextBuild"])
-          else if command = "contextConvert" then
-            return m.contextConvert(client, jsonBody["contextConvert"])
           endif
         end function,
 
@@ -495,51 +490,6 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
         customEvent: function(client as Object, params as Object) as Object
           client.track(params["eventKey"], params["data"], params["metricValue"])
           return m.makeResponse(200, "OK", "")
-        end function,
-
-        contextConvert: function(client as Object, params as Object) as Object
-          payload = ParseJson(params["input"])
-          if payload = invalid then
-            payload = {error: "invalid json"}
-            return m.makeResponse(200, "OK", payload)
-          end if
-
-          context = LaunchDarklyCreateContext(payload)
-
-          if context.isValid() then
-            payload = { output: FormatJson(LaunchDarklyContextEncode(context)) }
-            return m.makeResponse(200, "OK", payload)
-          end if
-
-          payload = { error: context.error() }
-          return m.makeResponse(200, "OK", payload)
-        end function,
-
-        contextBuild: function(client as Object, params as Object) as Object
-          if params["single"] <> invalid then
-            context = m.formatSingleAsContext(params["single"])
-            print context
-            context = LaunchDarklyCreateContext(context)
-          else
-            multiContext = {kind: "multi"}
-            for each single in params["multi"]
-              print single
-              context = m.formatSingleAsContext(single)
-              multiContext[context["kind"]] = context
-            end for
-
-            print multiContext
-            context = LaunchDarklyCreateContext(multiContext)
-            print context.private
-          end if
-
-          if context.isValid() then
-            payload = { output: FormatJson(LaunchDarklyContextEncode(context)) }
-            return m.makeResponse(200, "OK", payload)
-          end if
-
-          payload = { error: context.error() }
-          return m.makeResponse(200, "OK", payload)
         end function,
 
         formatSingleAsContext: function(payload as Object) as Object

@@ -1,65 +1,5 @@
-' Reference is an attribute name or path expression identifying a value
-' within a context.
-'
-' It can be used to retrieve a value with context.getValueForReference()
-' or to identify an attribute or nested value that should be considered
-' private.
-'
-' Parsing and validation are done at the time that the Reference is
-' constructed. If a reference instance was created from an invalid string, it
-' is considered invalid and calling reference.error() will return a string
-' containing the error condition.
-'
-' ## Syntax
-'
-' The string representation of an attribute reference in LaunchDarkly JSON
-' data uses the following syntax:
-'
-' If the first character is not a slash, the string is interpreted literally
-' as an attribute name. An attribute name can contain any characters, but
-' must not be empty.
-'
-' If the first character is a slash, the string is interpreted as a
-' slash-delimited path where the first path component is an attribute name,
-' and each subsequent path component is the name of a property in a JSON
-' object. Any instances of the characters "/" or "~" in a path component are
-' escaped as "~1" or "~0" respectively. This syntax deliberately resembles
-' JSON Pointer, but no JSON Pointer behaviors other than those mentioned here
-' are supported.
-'
-' ## Examples
-'
-' Suppose there is a context whose JSON implementation looks like this:
-'
-' {
-'   "kind": "user",
-'   "key": "value1",
-'   "address": {
-'     "street": {
-'       "line1": "value2",
-'       "line2": "value3"
-'     },
-'     "city": "value4"
-'   },
-'   "good/bad": "value5"
-' }
-'
-' The attribute references "key" and "/key" would both point to "value1".
-'
-' The attribute reference "/address/street/line1" would point to "value2".
-'
-' The attribute references "good/bad" and "/good~1bad" would both point to
-' "value5".
-'
-function LaunchDarklyCreateReference(value as String, asLiteral = false as Boolean) as Object
-  createReference = function(rawPath as Object, components as Object, error = invalid) as Object
-    return {
-      private: {
-        rawPath: rawPath,
-        components: components,
-        error: error,
-      },
-
+function LaunchDarklyAttachReferencePublicFunctions(reference) as Object
+    functions = {
       rawPath: function() as String
         return m.private.rawPath
       end function,
@@ -118,6 +58,75 @@ function LaunchDarklyCreateReference(value as String, asLiteral = false as Boole
         return m.private.components.Count()
       end function
     }
+
+    reference.Append(functions)
+end function
+
+' Reference is an attribute name or path expression identifying a value
+' within a context.
+'
+' It can be used to retrieve a value with context.getValueForReference()
+' or to identify an attribute or nested value that should be considered
+' private.
+'
+' Parsing and validation are done at the time that the Reference is
+' constructed. If a reference instance was created from an invalid string, it
+' is considered invalid and calling reference.error() will return a string
+' containing the error condition.
+'
+' ## Syntax
+'
+' The string representation of an attribute reference in LaunchDarkly JSON
+' data uses the following syntax:
+'
+' If the first character is not a slash, the string is interpreted literally
+' as an attribute name. An attribute name can contain any characters, but
+' must not be empty.
+'
+' If the first character is a slash, the string is interpreted as a
+' slash-delimited path where the first path component is an attribute name,
+' and each subsequent path component is the name of a property in a JSON
+' object. Any instances of the characters "/" or "~" in a path component are
+' escaped as "~1" or "~0" respectively. This syntax deliberately resembles
+' JSON Pointer, but no JSON Pointer behaviors other than those mentioned here
+' are supported.
+'
+' ## Examples
+'
+' Suppose there is a context whose JSON implementation looks like this:
+'
+' {
+'   "kind": "user",
+'   "key": "value1",
+'   "address": {
+'     "street": {
+'       "line1": "value2",
+'       "line2": "value3"
+'     },
+'     "city": "value4"
+'   },
+'   "good/bad": "value5"
+' }
+'
+' The attribute references "key" and "/key" would both point to "value1".
+'
+' The attribute reference "/address/street/line1" would point to "value2".
+'
+' The attribute references "good/bad" and "/good~1bad" would both point to
+' "value5".
+'
+function LaunchDarklyCreateReference(value as String, asLiteral = false as Boolean) as Object
+  createReference = function(rawPath as Object, components as Object, error = invalid) as Object
+    reference = {
+      private: {
+        rawPath: rawPath,
+        components: components,
+        error: error,
+      },
+    }
+
+    LaunchDarklyAttachReferencePublicFunctions(reference)
+    return reference
   end function
 
   util = LaunchDarklyReferenceUtilities(createReference)

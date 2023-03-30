@@ -251,7 +251,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, context as Object
     launchDarklyLocalThis = {
         private: {
             context: context,
-            encodedContext: LaunchDarklyContextEncode(context),
+            encodedContext: LaunchDarklyContextEncode(context, true, launchDarklyParamConfig),
 
             config: launchDarklyParamConfig,
             messagePort: launchDarklyParamMessagePort,
@@ -336,7 +336,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, context as Object
 
             preparePolling: function() as Void
                 launchDarklyLocalBuffer = createObject("roByteArray")
-                launchDarklyLocalBuffer.fromAsciiString(FormatJSON(LaunchDarklyContextEncode(m.context)))
+                launchDarklyLocalBuffer.fromAsciiString(FormatJSON(LaunchDarklyContextEncode(m.context, false)))
                 launchDarklyLocalContextBase64JSON = launchDarklyLocalBuffer.toBase64String()
                 launchDarklyLocalUrl = m.config.private.appURI + "/msdk/evalx/contexts/" + launchDarklyLocalContextBase64JSON
 

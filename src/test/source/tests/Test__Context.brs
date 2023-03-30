@@ -115,7 +115,7 @@ function TestCase__Context_SingleKind_ValidatesTypes() as String
     ' Validate kind
     {"context": {"key": "my-key", "kind": "kind"}, "error": "'kind' is not a valid context kind"},
     {"context": {"key": "my-key", "kind": "invalid characters"}, "error": "context kind contains disallowed characters"},
-    {"context": {"key": "my-key", "kind": ""}, "error": "context kind contains disallowed characters"},
+    {"context": {"key": "my-key", "kind": ""}, "error": "context kind must not be empty"},
     {"context": {"key": "my-key", "kind": 3}, "error": "context kind must be a string"},
 
     ' Validate key
@@ -217,6 +217,46 @@ function TestCase__Context_SingleKind_CanRetrieveComplexAttributes() as String
 
   return ""
 end function
+
+function TestCase__Context_SingleKind_ReturnsIndividualContexts() as String
+  context = LaunchDarklyCreateContext({"key": "my-key", "kind": "org", "name": "LaunchDarkly", "anonymous": false})
+
+  r = m.assertEqual(1, context.getIndividualContextCount())
+  if r <> "" then
+    return r
+  end if
+
+  r = m.assertEqual(context, context.getIndividualContext(0))
+  if r <> "" then
+    return r
+  end if
+
+  return m.assertInvalid(context.getIndividualContext(1))
+end function
+
+function TestCase__Context_SingleKind_RedactsNestedAttributes() as String
+  context = LaunchDarklyCreateContext({"key": "my-key", "kind": "org", "nested": {"prop1": "remove me", "prop2": "keep me"}, "_meta": {"privateAttributes": ["/nested/prop1"]}})
+  config = LaunchDarklyConfig("mob")
+
+  encoded = LaunchDarklyContextEncode(context, true, config)
+  r = m.assertTrue(encoded.DoesExist("nested"))
+  if r <> "" then
+    return r
+  end if
+
+  nested = encoded["nested"]
+  r = m.assertFalse(nested.DoesExist("prop1"))
+  if r <> "" then
+    return r
+  end if
+
+  r = m.assertTrue(nested.DoesExist("prop2"))
+  if r <> "" then
+    return r
+  end if
+
+  return ""
+end function
 ' }}}
 
 ' {{{ Multi-kind context tests
@@ -303,6 +343,35 @@ function TestCase__Context_MultiKind_CanOnlyRetrieveKindValue() as String
 
   return ""
 end function
+
+function TestCase__Context_MultiKind_ReturnsIndividualContexts() as String
+  data = {
+    "kind": "multi",
+    "user": {"key": "user-key"},
+    "org": {"key": "org-key"},
+  }
+  context = LaunchDarklyCreateContext(data)
+
+  r = m.assertEqual(2, context.getIndividualContextCount())
+  if r <> "" then
+    return r
+  end if
+
+  kinds = [context.getIndividualContext(0).kind(), context.getIndividualContext(1).kind()]
+  kinds.Sort()
+
+  r = m.assertEqual(["org", "user"], kinds)
+  if r <> "" then
+    return r
+  end if
+
+  r = m.assertInvalid(context.getIndividualContext(-1))
+  if r <> "" then
+    return r
+  end if
+
+  return m.assertInvalid(context.getIndividualContext(2))
+end function
 ' }}}
 
 function TestSuite__Context() as Object
@@ -321,11 +390,14 @@ function TestSuite__Context() as Object
     this.addTest("TestCase__Context_SingleKind_CanCreate", TestCase__Context_SingleKind_CanCreate)
     this.addTest("TestCase__Context_SingleKind_CanRetrieveBasicAttributes", TestCase__Context_SingleKind_CanRetrieveBasicAttributes)
     this.addTest("TestCase__Context_SingleKind_CanRetrieveComplexAttributes", TestCase__Context_SingleKind_CanRetrieveComplexAttributes)
+    this.addTest("TestCase__Context_SingleKind_ReturnsIndividualContexts", TestCase__Context_SingleKind_ReturnsIndividualContexts)
+    this.addTest("TestCase__Context_SingleKind_RedactsNestedAttributes", TestCase__Context_SingleKind_RedactsNestedAttributes)
 
     this.addTest("TestCase__Context_MultiKind_ValidatesTypes", TestCase__Context_MultiKind_ValidatesTypes)
     this.addTest("TestCase__Context_MultiKind_CanCreate", TestCase__Context_MultiKind_CanCreate)
     this.addTest("TestCase__Context_MultiKind_WithOneCreatesSingleKind", TestCase__Context_MultiKind_WithOneCreatesSingleKind)
     this.addTest("TestCase__Context_MultiKind_CanOnlyRetrieveKindValue", TestCase__Context_MultiKind_CanOnlyRetrieveKindValue)
+    this.addTest("TestCase__Context_MultiKind_ReturnsIndividualContexts", TestCase__Context_MultiKind_ReturnsIndividualContexts)
 
     return this
 end function

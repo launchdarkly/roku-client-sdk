@@ -5,7 +5,7 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, context a
             util: LaunchDarklyUtility(),
 
             context: context,
-            encodedContext: LaunchDarklyContextEncode(context),
+            encodedContext: LaunchDarklyContextEncode(context, true, launchDarklyParamConfig),
 
             events: createObject("roArray", 0, true),
             summary: {},
@@ -199,7 +199,7 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, context a
 
         identify: function(context as Object) as Void
             m.private.context = context
-            m.private.encodedContext = LaunchDarklyContextEncode(m.private.context)
+            m.private.encodedContext = LaunchDarklyContextEncode(m.private.context, true, m.private.config)
 
             m.private.enqueueEvent(m.private.makeIdentifyEvent(context))
         end function,

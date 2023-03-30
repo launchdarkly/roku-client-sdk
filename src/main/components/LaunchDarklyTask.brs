@@ -17,7 +17,7 @@ end function
 
 function mainThread() as Void
     context = m.top.context
-    context.append(LaunchDarklyContextPublicFunctions())
+    LaunchDarklyAttachContextPublicFunctions(context)
     config = m.top.config
 
     loggerBackend = invalid
@@ -49,7 +49,7 @@ function mainThread() as Void
                 client.flush()
             else if field = "context" then
                 context = msg.getData()
-                context.append(LaunchDarklyContextPublicFunctions())
+                LaunchDarklyAttachContextPublicFunctions(context)
                 REM don't call identify for first context
                 if context.private.initial <> true then
                     client.identify(context)

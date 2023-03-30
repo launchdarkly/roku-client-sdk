@@ -33,7 +33,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                 if m.config.private.offline = false then
                     m.config.private.logger.debug("stream client starting handshake transfer")
 
-                    encodedContext = FormatJSON(LaunchDarklyContextEncode(m.context))
+                    encodedContext = FormatJSON(LaunchDarklyContextEncode(m.context, false))
                     m.handshakeTransfer.asyncPostFromString(encodedContext)
                     m.stage = m.stageMap.handshake
 

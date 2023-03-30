@@ -1,5 +1,5 @@
-function LaunchDarklyContextPublicFunctions() as Object
-  return {
+function LaunchDarklyAttachContextPublicFunctions(context) as Object
+  functions = {
     ' @return A string if an error exists; invalid otherwise.
     error: function() as Object
       if m.private.error = invalid then
@@ -53,6 +53,80 @@ function LaunchDarklyContextPublicFunctions() as Object
     isMulti: function() as Boolean
       return m.private.isMulti
     end function,
+
+    ' Returns the number of context kinds in this context.
+    '
+    ' For a valid individual context, this returns 1. For a multi-context, it
+    ' returns the number of context kinds. For an invalid context, it returns
+    ' zero.
+    getIndividualContextCount: function() as Integer
+      if m.isValid() = false then
+        return 0
+      end if
+
+      if m.isMulti() then
+        return m.private.contexts.Count()
+      end if
+
+      return 1
+    end function,
+
+    ' Returns the single-kind context corresponding to the index provided.
+    '
+    ' If this method is called on a single-kind LDContext, then the only
+    ' allowable value for `index` is zero, and the return value on success
+    ' is the same `m`.
+    '
+    ' If the method is called on a multi-context, `index` it must be a
+    ' non-negative index that is less than the number of kinds (that is, less
+    ' than the return value of `individual_context_count`, and the return value
+    ' on success is one of the individual contexts within.
+    '
+    ' If there is no context corresponding to `kind`, the method returns nil.
+    getIndividualContext: function(index as Integer) as Object
+      if m.isMulti() then
+        if index >= 0 and index < m.private.contexts.Count() then
+          return m.private.contexts[index]
+        end if
+
+        return invalid
+      end if
+
+      if index = 0 then
+        return m
+      end if
+
+      return invalid
+    end function,
+
+    ' Return an array of top level attribute keys (excluding built-in attributes)
+    getCustomAttributeNames: function() as Object
+      if m.private.attributes = invalid then
+        return []
+      end if
+
+      return m.private.attributes.Keys()
+    end function
+
+    ' getValue looks up the value of any attribute of the context by name.
+    ' This includes only attributes that are addressable in evaluations-- not
+    ' metadata such as private attributes.
+    '
+    ' For a single-kind context, the attribute name can be any custom attribute.
+    ' It can also be one of the built-in ones like "kind", "key", or "name".
+    '
+    ' For a multi-kind context, the only supported attribute name is "kind".
+    '
+    ' This method does not support complex expressions for getting individual
+    ' values out of JSON objects or arrays, such as "/address/street". Use
+    ' getValueForReference for that purpose.
+    '
+    ' If the value is found, the return value is the attribute value;
+    ' otherwise, it is invalid.
+    getValue: function(attribute) as Object
+      reference = LaunchDarklyCreateReference(attribute, true)
+      return m.getValueForReference(reference)
+    end function
 
     ' getValueForReference looks up the value of any attribute of the
     ' context, or a value contained within an attribute, based on a reference
@@ -112,6 +186,14 @@ function LaunchDarklyContextPublicFunctions() as Object
       return value
     end function,
 
+    privateAttributes: function() as Object
+      if m.private.privateAttributes = invalid then
+        return []
+      end if
+
+      return m.private.privateAttributes
+    end function,
+
     getTopLevelAddressableAttributeSingleKind: function(attributeName) as Object
       if attributeName = "kind" then
         return m.private.kind
@@ -126,6 +208,19 @@ function LaunchDarklyContextPublicFunctions() as Object
       end if
     end function
   }
+
+  context.Append(functions)
+  if context.private.contexts <> invalid then
+    for each c in context.private.contexts
+      LaunchDarklyAttachContextPublicFunctions(c)
+    end for
+  end if
+
+  if context.private.privateAttributes <> invalid then
+    for each p in context.private.privateAttributes
+      LaunchDarklyAttachReferencePublicFunctions(p)
+    end for
+  end if
 end function
 
 ' Create an evaluation context from the provided associative array.
@@ -146,6 +241,19 @@ function LaunchDarklyCreateContext(data as Object) as Object
       anonymous = false
     end if
 
+    privateAttributeReferences = invalid
+    if privateAttributes <> invalid then
+      privateAttributeReferences = CreateObject("roArray", privateAttributes.Count(), false)
+
+      for each privateAttribute in privateAttributes
+        reference = LaunchDarklyCreateReference(privateAttribute)
+        if reference.isValid() then
+          privateAttributeReferences.Push(reference)
+        end if
+      end for
+    end if
+
+
     context = {
       private: {
         ' The initial attribute here isn't a part of the context schema.
@@ -158,14 +266,14 @@ function LaunchDarklyCreateContext(data as Object) as Object
         name: name,
         anonymous: anonymous,
         attributes: attributes,
-        privateAttributes: privateAttributes,
+        privateAttributes: privateAttributeReferences,
         error: error,
         contexts: contexts,
         isMulti: contexts <> invalid
       }
     }
 
-    context.Append(LaunchDarklyContextPublicFunctions())
+    LaunchDarklyAttachContextPublicFunctions(context)
     return context
   end function
 
@@ -464,32 +572,165 @@ function LaunchDarklyContextUtilities(createContext as Function) as Object
   }
 end function
 
-function LaunchDarklyContextEncode(context as Object) as Object
-  attributes = {}
+function LaunchDarklyContextEncode(context as Object, redact as Boolean, config = invalid as Object) as Object
+  if redact then
+    return LaunchDarklyContextFilter(config.private.allAttributesPrivate, config.private.privateAttributeNames.Keys()).filter(context)
+  else
+    return LaunchDarklyContextFilter(false, []).filter(context, true)
+  end if
+end function
 
-  if context.isMulti() or context.isValid() = false then
-    return attributes
+function LaunchDarklyContextFilter(allAttributesPrivate as Boolean, privateAttributes as Object) as Object
+  if type(privateAttributes) <> "roArray" then
+    privateAttributes = []
   end if
 
-  if context.private.attributes <> invalid then
-    for each key in context.private.attributes
-      value = context.private.attributes[key]
-      if value <> invalid then
-        attributes[key] = value
+  return {
+    private: {
+      allAttributesPrivate: allAttributesPrivate
+      privateAttributes: privateAttributes,
+
+      filterSingleContext: function(context as Object, includeKind as Boolean, includePrivateAttributes as Boolean) as Object
+        filtered = {key: context.key()}
+
+        if includeKind then
+          filtered["kind"] = context.kind()
+        end if
+
+        anonymous = context.getValue("anonymous")
+        if anonymous = true then
+          filtered["anonymous"] = true
+        end if
+
+        privateAttributes = []
+        if includePrivateAttributes = false then
+          if type(m.privateAttributes) = "roArray" then
+            for each attr in m.privateAttributes
+              reference = LaunchDarklyCreateReference(attr)
+              if reference.isValid() then
+                privateAttributes.Push(reference)
+              end if
+            end for
+          end if
+          privateAttributes.Append(context.privateAttributes())
+        end if
+
+        redacted = []
+        name = context.getValue("name")
+        if name <> invalid and m.checkWholeAttributePrivate("name", privateAttributes, redacted) = false
+          filtered["name"] = name
+        end if
+
+        for each attribute in context.getCustomAttributeNames()
+          if m.checkWholeAttributePrivate(attribute, privateAttributes, redacted) = false
+            value = context.getValue(attribute)
+            redactedValue = m.redactJsonValue(invalid, attribute, value, privateAttributes, redacted)
+
+            if redactedValue <> invalid then
+              filtered[attribute] = redactedValue
+            end if
+          end if
+        end for
+
+        if includePrivateAttributes = false and redacted.Count() > 0 then
+          filtered["_meta"] = {"redactedAttributes": redacted}
+        else if includePrivateAttributes then
+          attributes = []
+          for each attr in context.privateAttributes()
+            attributes.Push(attr.rawPath())
+          end for
+          filtered["_meta"] = {"privateAttributes": attributes}
+        end if
+
+        return filtered
+      end function,
+
+      checkWholeAttributePrivate: function(attribute as String, privateAttributes as Object, redacted as Object) as Object
+        if m.allAttributesPrivate then
+          redacted.Push(attribute)
+          return true
+        end if
+
+        for each privateAttribute in privateAttributes
+          if privateAttribute.component(0) = attribute and privateAttribute.depth() = 1 then
+            redacted.Push(attribute)
+            return true
+          end if
+        end for
+
+        return false
+      end function,
+
+      redactJsonValue: function(parentPath as Object, name as String, value as Object, privateAttributes as Object, redacted as Object) as Object
+        if type(value) <> "roAssociativeArray" then
+          return value
+        end if
+
+        ret = {}
+
+        if parentPath = invalid then
+          currentPath = []
+        else
+          currentPath = LaunchDarklyUtility().deepCopy(parentPath)
+        end if
+
+        currentPath.Push(name)
+
+        for each k in value
+          v = value[k]
+
+          wasRedacted = false
+
+          for each privateAttribute in privateAttributes
+            if privateAttribute.depth() <> currentPath.Count() + 1 then
+              continue for
+            end if
+
+            component = privateAttribute.component(currentPath.Count())
+            if component <> k then
+              continue for
+            end if
+
+            match = true
+            for i = 0 to currentPath.Count() - 1
+              if privateAttribute.component(i) <> currentPath[i]
+                match = false
+                exit for
+              end if
+            end for
+
+            if match then
+              redacted.Push(privateAttribute.rawPath())
+              wasRedacted = true
+            end if
+          end for
+
+          if wasRedacted = false then
+            ret[k] = m.redactJsonValue(currentPath, k, v, privateAttributes, redacted)
+          end if
+        end for
+
+        return ret
+      end function
+    },
+
+    filter: function(context as Object, includePrivateAttributes = false As Boolean) as Object
+      if context.isMulti() = false then
+        return m.private.filterSingleContext(context, true, includePrivateAttributes)
       end if
-    end for
-  end if
 
-  attributes["key"] = context.key()
-  attributes["kind"] = context.kind()
+      filtered = {kind: "multi"}
 
-  if context.private.name <> invalid then
-    attributes["name"] = context.private.name
-  end if
+      for i = 0 to context.getIndividualContextCount() - 1
+        c = context.getIndividualContext(i)
+        if c = invalid then
+          continue for
+        end if
 
-  if context.private.anonymous = true then
-    attributes["anonymous"] = context.private.anonymous
-  end if
+        filtered[c.kind()] = m.private.filterSingleContext(c, false, includePrivateAttributes)
+      end for
 
-  return attributes
+      return filtered
+    end function
+  }
 end function
