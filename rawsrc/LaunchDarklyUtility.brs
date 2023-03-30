@@ -320,11 +320,11 @@ function LaunchDarklyUtility() as Object
         ' an object containing:
         '
         ' - host
-        ' - port :: If not provided, defaults to 80 for http and 443 for https
+        ' - port :: Only included if specified in the URI; otherwise invalid
         ' - path :: URL path without a trailing slash. A path of "/" is returned as ""
         ' - scheme :: e.g. http or https. Defaults to http
         extractUriParts: function(uri as String) as Object
-            parts = { scheme: "http", port: 80, path: "" }
+            parts = { scheme: "http", port: invalid, path: "" }
 
             launchDarklyLocalHTTPS = "https://"
             launchDarklyLocalHTTP = "http://"
@@ -332,11 +332,9 @@ function LaunchDarklyUtility() as Object
             withoutScheme = uri
             if left(uri, len(launchDarklyLocalHTTPS)) = launchdarklyLocalHTTPS then
                 parts["scheme"] = "https"
-                parts["port"] = 443
                 withoutScheme = mid(uri, len(launchDarklyLocalHTTPS) + 1)
             else if left(uri, len(launchDarklyLocalHTTP)) = launchDarklyLocalHTTP then
                 parts["scheme"] = "http"
-                parts["port"] = 80
                 withoutScheme = mid(uri, len(launchDarklyLocalHTTP) + 1)
             end if
 
