@@ -375,6 +375,7 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
 
           configuration = jsonBody["configuration"]
           config = LaunchDarklyConfig(configuration["credential"], m.private.launchDarklyNode)
+          config.private.forcePlainTextInStream = true
           config.setLogLevel(LaunchDarklyLogLevels().debug)
 
           clientSide = configuration["clientSide"]

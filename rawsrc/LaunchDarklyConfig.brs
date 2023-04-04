@@ -1,6 +1,9 @@
 function LaunchDarklyConfig(launchDarklyParamMobileKey as String, launchDarklyParamSceneGraphNode=invalid as Dynamic) as Object
     launchDarklyLocalThis = {
         private: {
+            ' WARN: Internally used flag to disable encryption handling for SDK
+            ' contract testing
+            forcePlainTextInStream: false,
             util: launchDarklyUtility(),
             appURI: "https://app.launchdarkly.com",
             eventsURI: "https://mobile.launchdarkly.com",

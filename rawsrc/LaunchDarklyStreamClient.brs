@@ -328,7 +328,11 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                 launchDarklyLocalRequestText += "Connection: close" + chr(13) + chr(10)
                 launchDarklyLocalRequestText += chr(13) + chr(10)
 
-                m.streamCrypto = LaunchDarklyCryptoReader(launchDarklyLocalCipherKey, launchDarklyLocalAuthKey)
+                if m.config.private.forcePlainTextInStream then
+                  m.streamCrypto = LaunchDarklyPlainTextReader(launchDarklyLocalCipherKey, launchDarklyLocalAuthKey)
+                else
+                  m.streamCrypto = LaunchDarklyCryptoReader(launchDarklyLocalCipherKey, launchDarklyLocalAuthKey)
+                end if
 
                 m.streamRequestContent = createObject("roByteArray")
                 m.streamRequestContent.fromAsciiString(launchDarklyLocalRequestText)
