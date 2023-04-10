@@ -2,6 +2,4 @@
 
 set -e
 
-mkdir -p artifacts
-
-cp package.zip artifacts/
+cp package.zip "$LD_RELEASE_ARTIFACTS_DIR"
