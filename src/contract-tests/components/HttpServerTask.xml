@@ -1,0 +1,9 @@
+<component name="HttpServerTask" extends="Task">
+  <children>
+    <!-- <LaunchDarklyTask id="launchDarkly"/> -->
+  </children>
+
+    <!-- you made need to update these paths depending on your project configuration -->
+    <script type="text/brightscript" uri="pkg:/components/HttpServerTask.brs"/>
+    <script type="text/brightscript" uri="pkg:/source/LaunchDarkly.brs"/>
+</component>

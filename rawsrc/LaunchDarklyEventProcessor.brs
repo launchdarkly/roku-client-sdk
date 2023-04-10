@@ -5,6 +5,7 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, launchDar
             util: LaunchDarklyUtility(),
 
             user: launchDarklyParamUser,
+            inlineUsers: launchDarklyParamConfig.private.inlineUsers,
             encodedUser: LaunchDarklyUserEncode(launchDarklyParamUser, true, launchDarklyParamConfig),
 
             events: createObject("roArray", 0, true),
@@ -38,8 +39,17 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, launchDar
                 return launchDarklyLocalBaseEvent
             end function,
 
-            makeFeatureEvent: function(launchDarklyParamBundle as Object) as Object
+            makeFeatureEvent: function(launchDarklyParamBundle as Object, isDebugEvent as Boolean) as Object
                 launchDarklyLocalEvent = m.makeBaseEvent("feature")
+
+                if isDebugEvent then
+                  launchDarklyLocalEvent.kind = "debug"
+                end if
+
+                if isDebugEvent = false and m.inlineUsers = false then
+                  launchDarklyLocalEvent.delete("user")
+                  launchDarklyLocalEvent["userKey"] = m.user.private.key
+                end if
 
                 launchDarklyLocalEvent.key = launchDarklyParamBundle.flagKey
                 launchDarklyLocalEvent.version = m.getFlagVersion(launchDarklyParamBundle.flag)
@@ -124,8 +134,10 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, launchDar
                     launchDarklyLocalCounterKey = "unknown"
                 else if launchDarklyParamTypeMatch = false then
                     launchDarklyLocalCounterKey = "default"
-                else
+                else if launchDarklyParamFlag.variation <> invalid then
                     launchDarklyLocalCounterKey = m.getFlagVersion(launchDarklyParamFlag).toStr() + " " + launchDarklyParamFlag.variation.toStr()
+                else
+                    launchDarklyLocalCounterKey = m.getFlagVersion(launchDarklyParamFlag).toStr()
                 end if
 
                 launchDarklyLocalCounter = launchDarklyLocalSummary.counters.lookup(launchDarklyLocalCounterKey)
@@ -170,6 +182,15 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, launchDar
         track: function(launchDarklyParamKey as String, launchDarklyParamData=invalid as Object, launchDarklyParamMetric=invalid as Dynamic) as Void
             launchDarklyLocalEvent = m.private.makeBaseEvent("custom")
             launchDarklyLocalEvent.key = launchDarklyParamKey
+            contextKind = m.private.util.contextKindForUser(m.private.user)
+            if contextKind <> "user" then
+              launchDarklyLocalEvent["contextKind"] = contextKind
+            end if
+
+            if m.private.inlineUsers = false then
+              launchDarklyLocalEvent.delete("user")
+              launchDarklyLocalEvent["userKey"] = m.private.user.private.key
+            end if
 
             if launchDarklyParamData <> invalid then
                 launchDarklyLocalEvent.data = launchDarklyParamData
@@ -209,7 +230,7 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, launchDar
                 launchDarklyLocalShouldDebug = launchDarklyParamBundle.flag.debugEventsUntilDate <> invalid AND launchDarklyParamBundle.flag.debugEventsUntilDate > launchDarklyLocalNow
 
                 if launchDarklyLocalShouldTrack OR launchDarklyLocalShouldDebug then
-                   launchDarklyLocalEvent = m.private.makeFeatureEvent(launchDarklyParamBundle)
+                   launchDarklyLocalEvent = m.private.makeFeatureEvent(launchDarklyParamBundle, launchDarklyLocalShouldDebug)
 
                    m.private.enqueueEvent(launchDarklyLocalEvent)
                 end if

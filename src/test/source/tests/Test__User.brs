@@ -9,6 +9,7 @@ function TestCase__User_Encode_AllAttributes() as String
     anonymous = false
     firstName = "Alice"
     lastName = "Smith"
+    country = "US"
     email = "alicesmith@example.com"
     name = "Alice Smith"
     avatar = "alice avatar"
@@ -21,6 +22,7 @@ function TestCase__User_Encode_AllAttributes() as String
     user.setAnonymous(anonymous)
     user.setFirstName(firstName)
     user.setLastName(lastName)
+    user.setCountry(country)
     user.setEmail(email)
     user.setName(name)
     user.setAvatar(avatar)
@@ -32,6 +34,7 @@ function TestCase__User_Encode_AllAttributes() as String
         key: key,
         firstName: firstName,
         lastName: lastName,
+        country: country,
         email: email,
         name: name,
         avatar: avatar,

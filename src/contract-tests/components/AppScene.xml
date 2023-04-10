@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<component name="AppScene" extends="Scene">
+  <children>
+    <HttpServerTask id="httpServerTask" />
+
+    <Label id="title"
+      text="LaunchDarkly Client-Side Roku SDK"
+      width="1280"
+      height="100"
+      horizAlign="center"
+      vertAlign="center"
+      />
+    <Label id="subtitle"
+      text="SDK Test Harness Integration"
+      width="1280"
+      height="200"
+      horizAlign="center"
+      vertAlign="center"
+      />
+  </children>
+
+    <script type="text/brightscript" uri="pkg:/components/AppScene.brs"/>
+</component>

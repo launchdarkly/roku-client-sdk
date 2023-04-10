@@ -256,12 +256,46 @@ function LaunchDarklyUtility() as Object
             return launchDarklyLocalCreationDate#
         end function,
 
-        prepareNetworkingCommon: function(launchDarklyParamMessagePort as Object, launchDarklyParamConfig as Object, launchDarklyParamTransfer as Object) as Void
+        prepareNetworkingCommon: function(launchDarklyParamMessagePort as Object, launchDarklyParamConfig as Object, launchDarklyParamTransfer as Object, headers as Object) as Void
             launchDarklyParamTransfer.setPort(launchDarklyParamMessagePort)
-            launchDarklyParamTransfer.addHeader("User-Agent", "RokuClient/" + LaunchDarklySDKVersion())
-            launchDarklyParamTransfer.addHeader("Authorization", launchDarklyParamConfig.private.mobileKey)
+            launchDarklyParamTransfer.setHeaders(m.addDefaultHeaders(headers, launchDarklyParamConfig))
             launchDarklyParamTransfer.setCertificatesFile("common:/certs/ca-bundle.crt")
             launchDarklyParamTransfer.initClientCertificates()
+        end function,
+
+        addDefaultHeaders: function(headers as Object, launchDarklyParamConfig as Object) as Object
+            headers["User-Agent"] = "RokuClient/" + LaunchDarklySDKVersion()
+            headers["Authorization"] = launchDarklyParamConfig.private.mobileKey
+
+            appInfoHeader = m.createApplicationInfoHeader(launchDarklyParamConfig)
+            if appInfoHeader <> "" then
+              headers["X-LaunchDarkly-Tags"] = appInfoHeader
+            end if
+
+            return headers
+        end function
+
+        ' When given the LaunchDarkly configuration object, generate the appropriate X-LaunchDarkly-Tags header value.
+        '
+        ' This method will return an empty string if no valid application info values have been set on the config;
+        ' otherwise, it will return the formatted header value.
+        createApplicationInfoHeader: function(config as Object) as String
+          if config.private.applicationInfo = invalid then
+            return ""
+          end if
+
+          ' NOTE: The spec calls for tags to be in sorted order by tag name.
+          ' Additional tags added should maintain this ordering.
+          values = CreateObject("roArray", 2, false)
+          if config.private.applicationInfo["id"] <> invalid then
+            values.push("application-id/" + config.private.applicationInfo["id"])
+          end if
+
+          if config.private.applicationInfo["version"] <> invalid then
+            values.push("application-version/" + config.private.applicationInfo["version"])
+          end if
+
+          return values.Join(" ")
         end function,
 
         stripHTTPProtocol: function(launchDarklyParamRawURI as String) as String
@@ -276,6 +310,71 @@ function LaunchDarklyUtility() as Object
                 REM impossible in usage
                 return ""
             end if
+        end function,
+
+        ' Provides a simplistic approach at parsing out the bits of a URI.
+        '
+        ' WARNING: This does not support IPv6.
+        '
+        ' This function assumes the provided URI is well-formed. It will return
+        ' an object containing:
+        '
+        ' - host
+        ' - port :: Only included if specified in the URI; otherwise invalid
+        ' - path :: URL path without a trailing slash. A path of "/" is returned as ""
+        ' - scheme :: e.g. http or https. Defaults to http
+        extractUriParts: function(uri as String) as Object
+            parts = { scheme: "http", port: invalid, path: "" }
+
+            launchDarklyLocalHTTPS = "https://"
+            launchDarklyLocalHTTP = "http://"
+
+            withoutScheme = uri
+            if left(uri, len(launchDarklyLocalHTTPS)) = launchdarklyLocalHTTPS then
+                parts["scheme"] = "https"
+                withoutScheme = mid(uri, len(launchDarklyLocalHTTPS) + 1)
+            else if left(uri, len(launchDarklyLocalHTTP)) = launchDarklyLocalHTTP then
+                parts["scheme"] = "http"
+                withoutScheme = mid(uri, len(launchDarklyLocalHTTP) + 1)
+            end if
+
+            slashIndex = withoutScheme.Instr("/")
+            questionIndex = withoutScheme.Instr("?")
+
+            if questionIndex < slashIndex and questionIndex <> -1 then
+              return invalid
+            end if
+
+            if slashIndex = -1 and questionIndex = -1 then
+              parts["host"] = withoutScheme
+            else if slashIndex <> -1 and questionIndex = -1 then
+              parts["host"] = withoutScheme.Left(slashIndex)
+              parts["path"] = withoutScheme.Mid(slashIndex)
+            else if slashIndex <> -1 and questionIndex <> -1 then
+              parts["host"] = withoutScheme.Left(slashIndex)
+              parts["path"] = withoutScheme.Mid(slashIndex, questionIndex - slashIndex)
+            else if slashIndex = -1 then
+              parts["host"] = withoutScheme.Left(questionIndex)
+            end if
+            parts["path"] = m.trimTrailingSlash(parts["path"])
+
+            hostParts = parts["host"].Split(":")
+            if hostParts.Count() = 2 then
+              parts["host"] = hostParts[0]
+              parts["port"] = hostParts[1].ToInt()
+            else if hostParts.Count() > 2 then
+              return invalid
+            end if
+
+            return parts
+        end function,
+
+        trimTrailingSlash: function(input as String) as String
+          while input.EndsWith("/")
+            input = input.Left(input.Len() - 1)
+          end while
+
+          return input
         end function,
 
         deepCopy: function(launchDarklyParamValue as Dynamic) as Dynamic

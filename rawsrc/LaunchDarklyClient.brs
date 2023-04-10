@@ -14,7 +14,7 @@ function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Ob
             else
                 launchDarklyLocalFlag = m.private.lookupFlag(launchDarklyParamFlagKey)
 
-                if launchDarklyLocalFlag = invalid then
+                if launchDarklyLocalFlag = invalid or launchDarklyLocalFlag.deleted = true then
                     m.private.logger.error("missing flag")
 
                     launchDarklyLocalReason = {}
@@ -85,7 +85,10 @@ function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Ob
                     launchDarklyLocalDetails = {}
                     launchDarklyLocalDetails["result"] = launchDarklyLocalValue
                     launchDarklyLocalDetails["reason"] = launchDarklyLocalReason
-                    launchDarklyLocalDetails["variationIndex"] = launchDarklyLocalFlag.variation
+
+                    if launchDarklyLocalTypeMatch = true then
+                      launchDarklyLocalDetails["variationIndex"] = launchDarklyLocalFlag.variation
+                    end if
 
                     return launchDarklyLocalDetails
                 end if
@@ -175,6 +178,25 @@ function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Ob
             return launchDarklyLocalResult
         end function,
 
+        allFlagsState: function() as Object
+            results = {
+              "$flagsState": {},
+              "$valid": true
+            }
+
+            launchDarklyLocalAllFlags = m.private.lookupAll()
+            for each launchDarklyLocalKey in launchDarklyLocalAllFlags
+                result = launchDarklyLocalAllFlags[launchDarklyLocalKey]
+
+                if result.lookup("deleted") <> true then
+                  results[launchDarklyLocalKey] = result.value
+                  results["$flagsState"][launchDarklyLocalKey] = { "variation": result.variation, "version": result.version }
+                end if
+            end for
+
+            return results
+        end function
+
         status: {
             private: {
                 status: 0,
@@ -253,6 +275,11 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
 
             util: LaunchDarklyUtility(),
 
+            eventHeaders: {
+              "Content-Type": "application/json",
+              "X-LaunchDarkly-Event-Schema": "3",
+            },
+
             handlePollingMessage: function(launchDarklyParamCtx as Object, launchDarklyParamMessage as Dynamic) as Void
                 launchDarklyLocalResponseCode = launchDarklyParamMessage.getResponseCode()
 
@@ -320,7 +347,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
                 m.config.private.logger.debug("polling url: " + launchDarklyLocalUrl)
 
                 m.pollingTransfer = createObject("roUrlTransfer")
-                m.util.prepareNetworkingCommon(m.messagePort, m.config, m.pollingTransfer)
+                m.util.prepareNetworkingCommon(m.messagePort, m.config, m.pollingTransfer, {})
                 m.pollingTransfer.setURL(launchDarklyLocalUrl)
             end function,
 
@@ -329,9 +356,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
 
                 m.config.private.logger.debug("events url: " + launchDarklyLocalUrl)
 
-                m.util.prepareNetworkingCommon(m.messagePort, m.config, m.eventsTransfer)
-                m.eventsTransfer.addHeader("Content-Type", "application/json")
-                m.eventsTransfer.addHeader("X-LaunchDarkly-Event-Schema", "3")
+                m.util.prepareNetworkingCommon(m.messagePort, m.config, m.eventsTransfer, m.eventHeaders)
                 m.eventsTransfer.setURL(launchDarklyLocalUrl)
             end function
 
@@ -402,7 +427,8 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
 
                     m.private.eventsFlushActive = true
 
-                    m.private.eventsTransfer.addHeader("X-LaunchDarkly-Payload-ID", m.private.eventsPayloadId)
+                    m.private.eventHeaders["X-LaunchDarkly-Payload-ID"] = m.private.eventsPayloadId
+                    m.private.eventsTransfer.setHeaders(m.private.eventHeaders)
 
                     m.private.eventsTransfer.asyncPostFromString(m.private.eventsPayload)
                 end if

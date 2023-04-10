@@ -1,0 +1,20 @@
+# Roku does not yet support using REPORT verb
+polling/requests/method and headers/REPORT
+polling/requests/URL path is computed correctly/no environment filter/base URI has no trailing slash/REPORT
+polling/requests/URL path is computed correctly/no environment filter/base URI has a trailing slash/REPORT
+polling/requests/user properties/REPORT
+
+# Roku streaming support is limited in the contract tests
+streaming/requests
+
+# SDK doesn't parse server date header
+events/debug events/should not see debug event/debugEventsUntilDate is after SDK time/SDK knows LD time is after debugEventsUntilDate/without reasons/type: bool
+events/debug events/should not see debug event/debugEventsUntilDate is after SDK time/SDK knows LD time is after debugEventsUntilDate/without reasons/type: int
+events/debug events/should not see debug event/debugEventsUntilDate is after SDK time/SDK knows LD time is after debugEventsUntilDate/without reasons/type: double
+events/debug events/should not see debug event/debugEventsUntilDate is after SDK time/SDK knows LD time is after debugEventsUntilDate/without reasons/type: string
+events/debug events/should not see debug event/debugEventsUntilDate is after SDK time/SDK knows LD time is after debugEventsUntilDate/without reasons/type: any
+events/debug events/should not see debug event/debugEventsUntilDate is after SDK time/SDK knows LD time is after debugEventsUntilDate/with reasons/type: bool
+events/debug events/should not see debug event/debugEventsUntilDate is after SDK time/SDK knows LD time is after debugEventsUntilDate/with reasons/type: int
+events/debug events/should not see debug event/debugEventsUntilDate is after SDK time/SDK knows LD time is after debugEventsUntilDate/with reasons/type: double
+events/debug events/should not see debug event/debugEventsUntilDate is after SDK time/SDK knows LD time is after debugEventsUntilDate/with reasons/type: string
+events/debug events/should not see debug event/debugEventsUntilDate is after SDK time/SDK knows LD time is after debugEventsUntilDate/with reasons/type: any
