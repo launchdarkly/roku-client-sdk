@@ -2,6 +2,17 @@
 
 All notable changes to the LaunchDarkly Roku SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.3.0] - 2023-04-11
+### Added:
+- New config method `setApplicationInfoValue` allows setting application metadata that may be used in LaunchDarkly analytics or other product features. This does not affect feature flag evaluations.
+- Added support for country as a top level property on the user object.
+- Added support for inline user configuration option.
+- Introduced a simplified version of the allFlagsState method.
+
+### Fixed:
+- Event payload ID was not changing between successful payloads as expected.
+- Updated event payloads to match expected schema.
+
 ## [1.2.0] - 2021-07-23
 ### Added:
 - Added the `Alias` method. This can be used to associate two user objects for analytics purposes with an alias event.
