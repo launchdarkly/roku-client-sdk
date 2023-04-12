@@ -166,18 +166,6 @@ function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Ob
             return m.doubleVariationDetail(launchDarklyParamFlagKey, launchDarklyParamFallback, false).result
         end function,
 
-        allFlags: function() as Object
-            launchDarklyLocalResult = {}
-
-            launchDarklyLocalAllFlags = m.private.lookupAll()
-
-            for each launchDarklyLocalKey in launchDarklyLocalAllFlags
-                launchDarklyLocalResult[launchDarklyLocalKey] = launchDarklyLocalAllFlags[launchDarklyLocalKey].value
-            end for
-
-            return launchDarklyLocalResult
-        end function,
-
         allFlagsState: function() as Object
             results = {
               "$flagsState": {},

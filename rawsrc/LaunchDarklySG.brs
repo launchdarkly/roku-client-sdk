@@ -49,10 +49,6 @@ function LaunchDarklySG(launchDarklyParamClientNode as Dynamic) as Object
                 data: launchDarklyParamData,
                 metric: launchDarklyParamMetric
             }
-        end function,
-
-        allFlags: function() as Object
-            return m.private.storeNode.flags
         end function
     }
 

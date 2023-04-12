@@ -482,20 +482,36 @@ function TestCase__Client_AllFlags() as String
     flags = {
         flag1: {
             value: 3
+            variation: 1,
+            version: 100,
         },
         flag2: {
-            value: 5
+            value: 5,
+            variation: 2,
+            version: 200,
         }
     }
 
     client.private.store.putAll(flags)
 
-    allFlags = client.allFlags()
+    allFlagsState = client.allFlagsState()
 
-    return m.assertEqual(formatJSON(allFlags), formatJSON({
-        flag1: 3,
-        flag2: 5
-    }))
+    r = m.assertTrue(allFlagsState["$valid"])
+    if r <> "" then
+      return r
+    end if
+
+    expected = {
+      "$valid": true,
+      flag1: 3,
+      flag2: 5,
+      "$flagsState": {
+        flag1: { variation: 1, version: 100 },
+        flag2: { variation: 2, version: 200 }
+      }
+    }
+
+    return m.assertEqual(formatJSON(allFlagsState), formatJSON(expected))
 end function
 
 function TestSuite__Client() as Object
