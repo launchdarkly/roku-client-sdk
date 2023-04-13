@@ -2,6 +2,21 @@
 
 All notable changes to the LaunchDarkly Roku SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.0.0] - 2023-04-13
+The latest version of this SDK supports LaunchDarkly's new custom contexts feature. Contexts are an evolution of a previously-existing concept, "users." Contexts let you create targeting rules for feature flags based on a variety of different information, including attributes pertaining to users, organizations, devices, and more. You can even combine contexts to create "multi-contexts." 
+
+For detailed information about this version, please refer to the list below. For information on how to upgrade from the previous version, please read the [migration guide](https://docs.launchdarkly.com/sdk/client-side/roku/migration-1-to-2).
+
+### Added:
+- A new context type can be created by providing an associative array to the `LaunchDarklyCreateContext` function.
+- A new reference type can be created by providing a string path to the `LaunchDarklyCreateReference` function.
+- For all SDK methods that took a user parameter, you can now pass the new context type instead.
+
+### Removed:
+- Removed the `LaunchDarklyUser` function and all supporting user related functionality.
+- The `alias` method no longer exists because alias events are not needed in the new context model.
+- The `setInlineUsers` and `setAutoAliasingOptOut` configuration functions no longer exists because they are not relevant in the new context model.
+
 ## [1.3.0] - 2023-04-11
 ### Added:
 - New config method `setApplicationInfoValue` allows setting application metadata that may be used in LaunchDarkly analytics or other product features. This does not affect feature flag evaluations.
