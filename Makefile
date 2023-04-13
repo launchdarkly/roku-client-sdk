@@ -56,7 +56,7 @@ start-contract-test-service:
 .PHONY: run-contract-tests
 run-contract-tests: guard-HOST_IP guard-ROKU_IP
 	curl -s https://raw.githubusercontent.com/launchdarkly/sdk-test-harness/main/downloader/run.sh \
-      | VERSION=v1 PARAMS="-host $(HOST_IP) -url http://$(ROKU_IP):9000 -debug -stop-service-at-end -skip-from ./src/contract-tests/testharness-suppressions.txt $(TEST_HARNESS_PARAMS)" sh
+      | VERSION=v2 PARAMS="-host $(HOST_IP) -url http://$(ROKU_IP):9000 -debug -stop-service-at-end -skip-from ./src/contract-tests/testharness-suppressions.txt $(TEST_HARNESS_PARAMS)" sh
 
 .PHONY: contract-tests
 contract-tests: #! Run the SDK test harness contract tests

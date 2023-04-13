@@ -1,8 +1,8 @@
-function LaunchDarklySGInit(launchDarklyParamConfig as Object, launchDarklyParamUser as Object) as Void
-    REM ensure we don't call identify for this user
-    launchDarklyParamUser.private.initial = true
+function LaunchDarklySGInit(launchDarklyParamConfig as Object, context as Object) as Void
+    REM ensure we don't call identify for this context
+    context.private.initial = true
     launchDarklyLocalNode = launchDarklyParamConfig.private.sceneGraphNode
-    launchDarklyLocalNode.user = launchDarklyParamUser
+    launchDarklyLocalNode.context = context
     launchDarklyLocalNode.config = launchDarklyParamConfig
 end function
 
@@ -38,9 +38,9 @@ function LaunchDarklySG(launchDarklyParamClientNode as Dynamic) as Object
             m.private.clientNode.flush = true
         end function,
 
-        identify: function(launchDarklyParamUser as Object) as Void
+        identify: function(context as Object) as Void
             m.status.private.setStatus(m.status.map.uninitialized)
-            m.private.clientNode.user = launchDarklyParamUser
+            m.private.clientNode.context = context
         end function,
 
         track: function(launchDarklyParamKey as String, launchDarklyParamData=invalid as Object, launchDarklyParamMetric=invalid as Dynamic) as Void
@@ -49,17 +49,6 @@ function LaunchDarklySG(launchDarklyParamClientNode as Dynamic) as Object
                 data: launchDarklyParamData,
                 metric: launchDarklyParamMetric
             }
-        end function,
-
-        alias: function(launchDarklyParamUser as Object, launchDarklyParamPreviousUser as Object) as Void
-            m.private.clientNode.alias = {
-                user: launchDarklyParamUser,
-                previousUser: launchDarklyParamPreviousUser
-            }
-        end function,
-
-        allFlags: function() as Object
-            return m.private.storeNode.flags
         end function
     }
 

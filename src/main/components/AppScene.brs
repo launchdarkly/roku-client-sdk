@@ -24,9 +24,9 @@ function init() as Void
     config.setLogLevel(LaunchDarklyLogLevels().debug)
     REM config.setStreaming(false)
 
-    user = LaunchDarklyUser("user-key")
+    context = LaunchDarklyCreateContext({key: "user-key", kind: "user"})
 
-    LaunchDarklySGInit(config, user)
+    LaunchDarklySGInit(config, context)
 
     m.ld = LaunchDarklySG(launchDarklyNode)
 

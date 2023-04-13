@@ -5,9 +5,8 @@ function init()
     m.top.observeField("event", m.messagePort)
     m.top.observeField("log", m.messagePort)
     m.top.observeField("flush", m.messagePort)
-    m.top.observeField("user", m.messagePort)
+    m.top.observeField("context", m.messagePort)
     m.top.observeField("track", m.messagePort)
-    m.top.observeField("alias", m.messagePort)
     m.top.observeField("config", "startThread")
 end function
 
@@ -17,7 +16,8 @@ function startThread() as Void
 end function
 
 function mainThread() as Void
-    user = m.top.user
+    context = m.top.context
+    LaunchDarklyAttachContextPublicFunctions(context)
     config = m.top.config
 
     loggerBackend = invalid
@@ -31,7 +31,7 @@ function mainThread() as Void
     store = LaunchDarklyStoreSG(config.private.storeBackendNode)
     config.private.storeBackend = store
 
-    client = LaunchDarklyClient(config, user, m.messagePort)
+    client = LaunchDarklyClient(config, context, m.messagePort)
 
     while (true)
         msg = wait(3000, m.messagePort)
@@ -47,18 +47,16 @@ function mainThread() as Void
                 loggerBackend.log(value.level, value.message)
             else if field = "flush" then
                 client.flush()
-            else if field = "user" then
-                user = msg.getData()
-                REM don't call identify for first user
-                if user.private.initial <> true then
-                    client.identify(user)
+            else if field = "context" then
+                context = msg.getData()
+                LaunchDarklyAttachContextPublicFunctions(context)
+                REM don't call identify for first context
+                if context.private.initial <> true then
+                    client.identify(context)
                 end if
             else if field = "track" then
                 value = msg.getData()
                 client.track(value.key, value.data, value.metric)
-            else if field = "alias" then
-                value = msg.getData()
-                client.alias(value.user, value.previousUser)            
             end if
         end if
     end while

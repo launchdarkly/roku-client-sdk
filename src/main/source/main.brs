@@ -7,13 +7,14 @@ sub main(params as object)
         runner.SetFunctions([
             TestSuite__Client
             TestSuite__Config
+            TestSuite__Context
             TestSuite__Crypto
             TestSuite__HTTP
+            TestSuite__Reference
             TestSuite__SSE
             TestSuite__Store_Memory
             TestSuite__Store_Registry
             TestSuite__Store_Registry_Bypass
-            TestSuite__User
             TestSuite__Utility
         ])
 

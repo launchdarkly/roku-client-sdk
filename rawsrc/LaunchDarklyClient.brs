@@ -166,18 +166,6 @@ function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Ob
             return m.doubleVariationDetail(launchDarklyParamFlagKey, launchDarklyParamFallback, false).result
         end function,
 
-        allFlags: function() as Object
-            launchDarklyLocalResult = {}
-
-            launchDarklyLocalAllFlags = m.private.lookupAll()
-
-            for each launchDarklyLocalKey in launchDarklyLocalAllFlags
-                launchDarklyLocalResult[launchDarklyLocalKey] = launchDarklyLocalAllFlags[launchDarklyLocalKey].value
-            end for
-
-            return launchDarklyLocalResult
-        end function,
-
         allFlagsState: function() as Object
             results = {
               "$flagsState": {},
@@ -245,13 +233,13 @@ function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Ob
     }
 end function
 
-function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParamUser as Object, launchDarklyParamMessagePort as Object) as Object
+function LaunchDarklyClient(launchDarklyParamConfig as Object, context as Object, launchDarklyParamMessagePort as Object) as Object
     launchDarklyLocalStore = LaunchDarklyStore(launchDarklyParamConfig.private.storeBackend)
 
     launchDarklyLocalThis = {
         private: {
-            user: launchDarklyParamUser,
-            encodedUser: LaunchDarklyUserEncode(launchDarklyParamUser, true, launchDarklyParamConfig),
+            context: context,
+            encodedContext: LaunchDarklyContextEncode(context, true, launchDarklyParamConfig),
 
             config: launchDarklyParamConfig,
             messagePort: launchDarklyParamMessagePort,
@@ -263,7 +251,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
             pollingTimer: createObject("roTimeSpan"),
             pollingActive: false,
 
-            eventProcessor: LaunchDarklyEventProcessor(launchDarklyParamConfig, launchDarklyParamUser),
+            eventProcessor: LaunchDarklyEventProcessor(launchDarklyParamConfig, context),
             eventsTransfer: createObject("roUrlTransfer"),
             eventsFlushTimer: createObject("roTimeSpan"),
             eventsFlushActive: false,
@@ -277,7 +265,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
 
             eventHeaders: {
               "Content-Type": "application/json",
-              "X-LaunchDarkly-Event-Schema": "3",
+              "X-LaunchDarkly-Event-Schema": "4",
             },
 
             handlePollingMessage: function(launchDarklyParamCtx as Object, launchDarklyParamMessage as Dynamic) as Void
@@ -336,9 +324,9 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
 
             preparePolling: function() as Void
                 launchDarklyLocalBuffer = createObject("roByteArray")
-                launchDarklyLocalBuffer.fromAsciiString(FormatJSON(LaunchDarklyUserEncode(m.user, false)))
-                launchDarklyLocalUserBase64JSON = launchDarklyLocalBuffer.toBase64String()
-                launchDarklyLocalUrl = m.config.private.appURI + "/msdk/evalx/users/" + launchDarklyLocalUserBase64JSON
+                launchDarklyLocalBuffer.fromAsciiString(FormatJSON(LaunchDarklyContextEncode(m.context, false)))
+                launchDarklyLocalContextBase64JSON = launchDarklyLocalBuffer.toBase64String()
+                launchDarklyLocalUrl = m.config.private.appURI + "/msdk/evalx/contexts/" + launchDarklyLocalContextBase64JSON
 
                 if m.config.private.useReasons then
                     launchDarklyLocalUrl += "?withReasons=true"
@@ -402,10 +390,6 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
             m.private.eventProcessor.track(launchDarklyParamKey, launchDarklyParamData, launchDarklyParamMetric)
         end function,
 
-        alias: function(launchDarklyParamUser as Object, launchDarklyParamPreviousUser as Object) as Void
-            m.private.eventProcessor.alias(launchDarklyParamUser, launchDarklyParamPreviousUser)
-        end function,
-
         flush: function() as Void
             if m.private.config.private.offline = false then
                 if m.private.eventsFlushActive = false then
@@ -435,26 +419,17 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
             end if
         end function,
 
-        identify: function(launchDarklyParamUser as Object) as Void
+        identify: function(context as Object) as Void
             m.status.private.setStatus(m.status.map.uninitialized)
 
-            launchDarklyLocalPreviousUser = m.private.user
-            m.private.user = launchDarklyParamUser
+            m.private.context = context
 
-            m.private.eventProcessor.identify(launchDarklyParamUser)
-            m.private.streamClient.changeUser(launchDarklyParamUser)
+            m.private.eventProcessor.identify(context)
+            m.private.streamClient.changeContext(context)
 
             m.private.resetPollingTransfer()
             m.private.preparePolling()
             m.private.pollingInitial = true
-
-            if launchDarklyLocalPreviousUser <> invalid then
-                if m.private.config.private.autoAliasingOptOut = false then
-                    if launchDarklyLocalPreviousUser.private.anonymous = true and launchDarklyParamUser.private.anonymous = false then
-                        m.alias(launchDarklyParamUser, launchDarklyLocalPreviousUser)
-                    end if
-                end if
-            end if
 
             m.handleMessage(invalid)
         end function,
@@ -513,12 +488,12 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, launchDarklyParam
 
     launchDarklyLocalThis.append(LaunchDarklyClientSharedFunctions(launchDarklyParamConfig.private.sceneGraphNode))
 
-    launchDarklyLocalThis.private.streamClient = LaunchDarklyStreamClient(launchDarklyParamConfig, launchDarklyLocalStore, launchDarklyParamMessagePort, launchDarklyParamUser, launchDarklyLocalThis.status)
+    launchDarklyLocalThis.private.streamClient = LaunchDarklyStreamClient(launchDarklyParamConfig, launchDarklyLocalStore, launchDarklyParamMessagePort, context, launchDarklyLocalThis.status)
 
     launchDarklyLocalThis.private.prepareEventTransfer()
     launchDarklyLocalThis.private.preparePolling()
 
-    launchDarklyLocalThis.private.eventProcessor.identify(launchDarklyParamUser)
+    launchDarklyLocalThis.private.eventProcessor.identify(context)
 
     launchDarklyLocalThis.handleMessage(invalid)
 

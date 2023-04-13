@@ -1,6 +1,6 @@
 <component name="LaunchDarklyTask" extends="Task">
     <interface>
-        <field id="user" type="assocarray"/>
+        <field id="context" type="assocarray"/>
         <field id="config" type="assocarray"/>
 
         <field id="flags" type="assocarray"/>
@@ -9,7 +9,6 @@
         <!-- boolean but only used for signalling, value is ignored -->
         <field id="flush" type="bool" alwaysNotify="true"/>
         <field id="track" type="assocarray" alwaysNotify="true"/>
-        <field id="alias" type="assocarray" alwaysNotify="true"/>
         <field id="status" type="integer" value="0"/>
     </interface>
 

@@ -1,10 +1,10 @@
-function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarklyParamStore as Object, launchDarklyParamMessagePort as Object, launchDarklyParamUser as Object, launchDarklyParamStatus as Object) as Object
+function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarklyParamStore as Object, launchDarklyParamMessagePort as Object, context as Object, launchDarklyParamStatus as Object) as Object
     launchDarklyLocalThis = {
         private: {
             config: launchDarklyParamConfig,
             store: launchDarklyParamStore,
             messagePort: launchDarklyParamMessagePort,
-            user: launchDarklyParamUser,
+            context: context,
             util: launchDarklyUtility(),
 
             stageMap: {
@@ -33,8 +33,8 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                 if m.config.private.offline = false then
                     m.config.private.logger.debug("stream client starting handshake transfer")
 
-                    launchDarklyLocalUser = FormatJSON(LaunchDarklyUserEncode(m.user, false))
-                    m.handshakeTransfer.asyncPostFromString(launchDarklyLocalUser)
+                    encodedContext = FormatJSON(LaunchDarklyContextEncode(m.context, false))
+                    m.handshakeTransfer.asyncPostFromString(encodedContext)
                     m.stage = m.stageMap.handshake
 
                     m.streamBackoff.started()
@@ -414,10 +414,10 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
             return false
         end function,
 
-        changeUser: function(launchDarklyParamUser as Object)
-            m.private.config.private.logger.debug("stream client switching user")
+        changeContext: function(context as Object)
+            m.private.config.private.logger.debug("stream client switching context")
 
-            m.private.user = launchDarklyParamUser
+            m.private.context = context
             m.private.killStream()
             m.private.streamBackoff.reset()
             m.handleMessage(invalid)
