@@ -1,6 +1,3 @@
-# This is a composite to allow sharing these steps into other workflows.
-# For instance it could be used by regular CI as well as the release process.
-
 name: CI Workflow
 description: 'Shared CI workflow.'
 
