@@ -1,0 +1,28 @@
+# This is a composite to allow sharing these steps into other workflows.
+# For instance it could be used by regular CI as well as the release process.
+
+name: CI Workflow
+description: 'Shared CI workflow.'
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+
+    - name: Install make
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install build-essential
+
+    - name: Install dev tools
+      shell: bash
+      run: npm install -g @willowtreeapps/ukor @willowtreeapps/wist
+
+    - name: Check quality
+      shell: bash
+      run: make lint
+
+    - name: Build package
+      shell: bash
+      run: make package

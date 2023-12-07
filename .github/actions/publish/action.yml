@@ -1,0 +1,16 @@
+name: Publish package.zip
+description: 'Publish package.zip'
+
+inputs:
+  tag_name:
+    description: 'The name of the release tag to publish against'
+    type: string
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Upload Release Artifact
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: gh release upload ${{ inputs.tag_name }} package.zip --clobber
