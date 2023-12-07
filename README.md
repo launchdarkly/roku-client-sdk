@@ -1,7 +1,7 @@
 LaunchDarkly SDK for Roku
 ===========================
 
-[![CircleCI](https://circleci.com/gh/launchdarkly/roku-client-sdk.svg?style=svg)](https://circleci.com/gh/launchdarkly/roku-client-sdk)
+[![Run CI](https://github.com/launchdarkly/roku-client-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/launchdarkly/roku-client-sdk/actions/workflows/ci.yml)
 
 LaunchDarkly overview
 -------------------------
