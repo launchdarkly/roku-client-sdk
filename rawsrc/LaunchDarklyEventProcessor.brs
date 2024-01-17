@@ -5,7 +5,8 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, context a
             util: LaunchDarklyUtility(),
 
             context: context,
-            encodedContext: LaunchDarklyContextEncode(context, true, launchDarklyParamConfig),
+            encodedContext: NewLaunchDarklyContextFilter(launchDarklyParamConfig).filter(context),
+            anonymousEncodedContext: NewLaunchDarklyContextFilter(launchDarklyParamConfig).filter(context, false, true),
 
             events: createObject("roArray", 0, true),
             summary: {},
@@ -43,6 +44,8 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, context a
 
                 if isDebugEvent then
                   launchDarklyLocalEvent.kind = "debug"
+                else
+                  launchDarklyLocalEvent.context = m.anonymousEncodedContext
                 end if
 
                 launchDarklyLocalEvent.key = launchDarklyParamBundle.flagKey
@@ -196,7 +199,8 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, context a
 
         identify: function(context as Object) as Void
             m.private.context = context
-            m.private.encodedContext = LaunchDarklyContextEncode(m.private.context, true, m.private.config)
+            m.private.encodedContext = NewLaunchDarklyContextFilter(m.private.config).filter(m.private.context)
+            m.private.anonymousEncodedContext = NewLaunchDarklyContextFilter(m.private.config).filter(m.private.context, false, true)
 
             m.private.enqueueEvent(m.private.makeIdentifyEvent(context))
         end function,
