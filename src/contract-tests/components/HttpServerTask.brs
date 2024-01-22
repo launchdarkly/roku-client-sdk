@@ -316,6 +316,7 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
               "strongly-typed",
               "tags",
               "user-type",
+              "inline-context",
             ]
 
             return m.makeResponse(200, "OK", status)
