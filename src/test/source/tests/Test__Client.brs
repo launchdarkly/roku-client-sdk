@@ -105,7 +105,10 @@ function TestCase__Client_Eval_Tracked() as String
 
     return m.assertEqual(event, {
         kind: "feature",
-        contextKeys: {user: "user-key"},
+        context: {
+            key: "user-key",
+            kind: "user"
+        },
         key: "flag1",
         value: expectedValue,
         variation: expectedVariation,

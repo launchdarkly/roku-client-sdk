@@ -43,9 +43,6 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, context a
 
                 if isDebugEvent then
                   launchDarklyLocalEvent.kind = "debug"
-                else
-                  launchDarklyLocalEvent.delete("context")
-                  launchDarklyLocalEvent["contextKeys"] = m.context.keys()
                 end if
 
                 launchDarklyLocalEvent.key = launchDarklyParamBundle.flagKey
