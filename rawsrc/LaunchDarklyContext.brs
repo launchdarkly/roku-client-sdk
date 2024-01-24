@@ -572,11 +572,11 @@ function LaunchDarklyContextUtilities(createContext as Function) as Object
   }
 end function
 
-function LaunchDarklyContextEncode(context as Object, redact as Boolean, config = invalid as Object) as Object
-  if redact then
-    return LaunchDarklyContextFilter(config.private.allAttributesPrivate, config.private.privateAttributeNames.Keys()).filter(context)
+function NewLaunchDarklyContextFilter(config = invalid as Object) as Object
+  if config <> invalid then
+    return LaunchDarklyContextFilter(config.private.allAttributesPrivate, config.private.privateAttributeNames.Keys())
   else
-    return LaunchDarklyContextFilter(false, []).filter(context, true)
+    return LaunchDarklyContextFilter(false, [])
   end if
 end function
 
@@ -590,16 +590,21 @@ function LaunchDarklyContextFilter(allAttributesPrivate as Boolean, privateAttri
       allAttributesPrivate: allAttributesPrivate
       privateAttributes: privateAttributes,
 
-      filterSingleContext: function(context as Object, includeKind as Boolean, includePrivateAttributes as Boolean) as Object
+      filterSingleContext: function(context as Object, includeKind as Boolean, includePrivateAttributes as Boolean, redactAnonymous as Boolean) as Object
         filtered = {key: context.key()}
 
         if includeKind then
           filtered["kind"] = context.kind()
         end if
 
+        redactAll = m.allAttributesPrivate
         anonymous = context.getValue("anonymous")
         if anonymous = true then
           filtered["anonymous"] = true
+
+          if redactAnonymous = true then
+            redactAll = true
+          end if
         end if
 
         privateAttributes = []
@@ -617,12 +622,12 @@ function LaunchDarklyContextFilter(allAttributesPrivate as Boolean, privateAttri
 
         redacted = []
         name = context.getValue("name")
-        if name <> invalid and m.checkWholeAttributePrivate("name", privateAttributes, redacted) = false
+        if name <> invalid and m.checkWholeAttributePrivate("name", privateAttributes, redacted, redactAll) = false
           filtered["name"] = name
         end if
 
         for each attribute in context.getCustomAttributeNames()
-          if m.checkWholeAttributePrivate(attribute, privateAttributes, redacted) = false
+          if m.checkWholeAttributePrivate(attribute, privateAttributes, redacted, redactAll) = false
             value = context.getValue(attribute)
             redactedValue = m.redactJsonValue(invalid, attribute, value, privateAttributes, redacted)
 
@@ -645,8 +650,8 @@ function LaunchDarklyContextFilter(allAttributesPrivate as Boolean, privateAttri
         return filtered
       end function,
 
-      checkWholeAttributePrivate: function(attribute as String, privateAttributes as Object, redacted as Object) as Object
-        if m.allAttributesPrivate then
+      checkWholeAttributePrivate: function(attribute as String, privateAttributes as Object, redacted as Object, redactAll as Boolean) as Object
+        if redactAll then
           redacted.Push(attribute)
           return true
         end if
@@ -714,9 +719,9 @@ function LaunchDarklyContextFilter(allAttributesPrivate as Boolean, privateAttri
       end function
     },
 
-    filter: function(context as Object, includePrivateAttributes = false As Boolean) as Object
+    filter: function(context as Object, includePrivateAttributes = false As Boolean, redactAnonymous = false As Boolean) as Object
       if context.isMulti() = false then
-        return m.private.filterSingleContext(context, true, includePrivateAttributes)
+        return m.private.filterSingleContext(context, true, includePrivateAttributes, redactAnonymous)
       end if
 
       filtered = {kind: "multi"}
@@ -727,7 +732,7 @@ function LaunchDarklyContextFilter(allAttributesPrivate as Boolean, privateAttri
           continue for
         end if
 
-        filtered[c.kind()] = m.private.filterSingleContext(c, false, includePrivateAttributes)
+        filtered[c.kind()] = m.private.filterSingleContext(c, false, includePrivateAttributes, redactAnonymous)
       end for
 
       return filtered

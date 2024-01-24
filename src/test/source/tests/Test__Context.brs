@@ -238,7 +238,7 @@ function TestCase__Context_SingleKind_RedactsNestedAttributes() as String
   context = LaunchDarklyCreateContext({"key": "my-key", "kind": "org", "nested": {"prop1": "remove me", "prop2": "keep me"}, "_meta": {"privateAttributes": ["/nested/prop1"]}})
   config = LaunchDarklyConfig("mob")
 
-  encoded = LaunchDarklyContextEncode(context, true, config)
+  encoded = NewLaunchDarklyContextFilter(config).filter(context)
   r = m.assertTrue(encoded.DoesExist("nested"))
   if r <> "" then
     return r

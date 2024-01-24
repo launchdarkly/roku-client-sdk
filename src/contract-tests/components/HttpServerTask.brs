@@ -317,6 +317,7 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
               "tags",
               "user-type",
               "inline-context",
+              "anonymous-redaction",
             ]
 
             return m.makeResponse(200, "OK", status)
