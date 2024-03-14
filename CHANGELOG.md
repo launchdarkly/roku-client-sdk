@@ -2,6 +2,14 @@
 
 All notable changes to the LaunchDarkly Roku SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.1.0](https://github.com/launchdarkly/roku-client-sdk/compare/2.0.0...2.1.0) (2024-03-14)
+
+
+### Features
+
+* Inline contexts for all evaluation events ([#23](https://github.com/launchdarkly/roku-client-sdk/issues/23)) ([8609905](https://github.com/launchdarkly/roku-client-sdk/commit/86099052dcad6deb8dc26250b687eb65baa7c310))
+* Redact anonymous attributes within feature events ([#24](https://github.com/launchdarkly/roku-client-sdk/issues/24)) ([729098f](https://github.com/launchdarkly/roku-client-sdk/commit/729098f82ffb053215430736ee484b0503d565e3))
+
 ## [2.0.0] - 2023-04-13
 The latest version of this SDK supports LaunchDarkly's new custom contexts feature. Contexts are an evolution of a previously-existing concept, "users." Contexts let you create targeting rules for feature flags based on a variety of different information, including attributes pertaining to users, organizations, devices, and more. You can even combine contexts to create "multi-contexts." 
 
