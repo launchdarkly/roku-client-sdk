@@ -17,7 +17,7 @@ jobs:
     # Needed to get tokens during publishing.
     permissions:
       id-token: write
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
