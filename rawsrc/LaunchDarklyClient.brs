@@ -1,7 +1,7 @@
 function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Object) as Object
     return {
         variationDetail: function(launchDarklyParamFlagKey as String, launchDarklyParamFallback as Dynamic, launchDarklyParamEmbedReason=true as Boolean, launchDarklyParamStrong=invalid as Dynamic) as Object
-            if m.status.getStatus() <> m.status.map.initialized then
+            if m.status.getStatus() <> m.status.map.initialized and not m.private.store.initialized() then
                 launchDarklyLocalReason = {}
                 launchDarklyLocalReason["kind"] = "ERROR"
                 launchDarklyLocalReason["errorKind"] = "CLIENT_NOT_READY"

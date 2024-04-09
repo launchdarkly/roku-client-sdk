@@ -4,6 +4,21 @@ function LaunchDarklyStoreSG(launchDarklyParamNode) as Object
             node: launchDarklyParamNode
         },
 
+        initialized: function() as Boolean
+          ' WARN: If the environment has 0 flags, this store will report that
+          ' it is not initialized even though it technically is.
+          '
+          ' Ideally we would have a way to distinguish between those two states
+          ' but doing so requires extending the surface interface of the
+          ' SceneGraph by adding another field or changing the format of the
+          ' existing data.
+          '
+          ' Long term it would be good to change the payloads in the flags node
+          ' to store the initialization status along with the flag values
+          ' instead of treating them separately.
+          return m.private.node.flags.Count() > 0
+        end function,
+
         get: function(launchDarklyParamKey as String) as Object
             return m.private.node.flags.lookup(launchDarklyParamKey)
         end function,
@@ -71,8 +86,13 @@ function LaunchDarklyStore(launchDarklyParamBackend=invalid as Object) as Object
         private: {
             cache: {},
             backend: launchDarklyParamBackend,
-            bypassReadCache: false
+            bypassReadCache: false,
+            initialized: false
         },
+
+        initialized: function() as Boolean
+          return m.private.initialized
+        end function,
 
         get: function(launchDarklyParamKey as String) as Object
             launchDarklyLocalFlag = invalid
@@ -131,6 +151,7 @@ function LaunchDarklyStore(launchDarklyParamBackend=invalid as Object) as Object
 
         putAll: function(launchDarklyParamFlags as Object) as Void
             m.private.cache = launchDarklyParamFlags
+            m.private.initialized = true
 
             if m.private.backend <> invalid then
                 m.private.backend.putAll(launchDarklyParamFlags)
