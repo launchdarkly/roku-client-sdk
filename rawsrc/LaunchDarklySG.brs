@@ -16,6 +16,7 @@ function LaunchDarklySG(launchDarklyParamClientNode as Dynamic) as Object
             logger: launchDarklyLocalLogger,
             offline: launchDarklyParamClientNode.config.private.offline,
             storeNode: launchDarklyParamClientNode.config.private.storeBackendNode,
+            store: LaunchDarklyStoreSG(launchDarklyParamClientNode.config.private.storeBackendNode),
 
             isOffline: function() as Boolean
                 return m.offline
