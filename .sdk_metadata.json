@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "sdks": {
+    "roku": {
+      "name": "Roku SDK",
+      "type": "client-side",
+      "languages": [
+        "BrightScript"
+      ]
+    }
+  }
+}
