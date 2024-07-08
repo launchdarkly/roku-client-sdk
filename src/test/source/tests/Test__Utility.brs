@@ -117,22 +117,6 @@ function TestCase__Utility_Backoff() as String
     return m.assertFalse(backoff.shouldWait())
 end function
 
-function TestCase__Utility_StripHTTPProtocol() as String
-    u = LaunchDarklyUtility()
-
-    a = m.assertEqual(u.stripHTTPProtocol("https://test.com"), "test.com")
-    if a <> "" then
-        return a
-    end if
-
-    a = m.assertEqual(u.stripHTTPProtocol("http://test.com"), "test.com")
-    if a <> "" then
-        return a
-    end if
-
-    return m.assertEqual(u.stripHTTPProtocol("test.com"), "")
-end function
-
 function TestCase__Utility_ExtractUriParts() as String
     u = LaunchDarklyUtility()
 
@@ -198,7 +182,6 @@ function TestSuite__Utility() as Object
     this.addTest("TestCase__Utility_IsValidHex", TestCase__Utility_IsValidHex)
     this.addTest("TestCase__Utility_GetMilliseconds", TestCase__Utility_GetMilliseconds)
     this.addTest("TestCase__Utility_Backoff", TestCase__Utility_Backoff)
-    this.addTest("TestCase__Utility_StripHTTPProtocol", TestCase__Utility_StripHTTPProtocol)
     this.addTest("TestCase__Utility_ExtractUriParts", TestCase__Utility_ExtractUriParts)
     this.addTest("TestCase__Utility_RandomBytes", TestCase__Utility_RandomBytes)
     this.addTest("TestCase__Utility_UnsignedIntegerToLittleEndian", TestCase__Utility_UnsignedIntegerToLittleEndian)

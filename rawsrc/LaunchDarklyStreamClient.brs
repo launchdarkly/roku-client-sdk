@@ -215,7 +215,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                 end while
             end function
 
-            handleStreamMessage: function(launchDarklyParamMessage as Dynamic) as Void
+            handleStreamMessage: function() as Void
                 m.config.private.logger.debug("socket event")
 
                 if m.streamSocket = invalid then
@@ -297,9 +297,6 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
 
                 m.config.private.logger.debug("got shared secret")
 
-                launchDarklyLocalCipherKeyBuffer = launchDarklyLocalDecoded.cipherKey
-                launchDarklyLocalAuthKeyBuffer = launchDarklyLocalDecoded.authenticationKey
-
                 launchDarklyLocalCipherKey = createObject("roByteArray")
                 launchDarklyLocalCipherKey.fromBase64String(launchDarklyLocalDecoded.cipherKey)
 
@@ -311,7 +308,6 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
 
                 uriParts = m.util.extractUriParts(m.config.private.streamURI)
                 path = uriParts["path"] + "/mevalalternate"
-                launchDarklyLocalHostname = m.util.stripHTTPProtocol(m.config.private.streamURI)
 
                 launchDarklyLocalRequestText = ""
                 launchDarklyLocalRequestText += "POST " + path + " HTTP/1.1" + chr(13) + chr(10)
@@ -329,7 +325,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                 launchDarklyLocalRequestText += chr(13) + chr(10)
 
                 if m.config.private.forcePlainTextInStream then
-                  m.streamCrypto = LaunchDarklyPlainTextReader(launchDarklyLocalCipherKey, launchDarklyLocalAuthKey)
+                  m.streamCrypto = LaunchDarklyPlainTextReader()
                 else
                   m.streamCrypto = LaunchDarklyCryptoReader(launchDarklyLocalCipherKey, launchDarklyLocalAuthKey)
                 end if
@@ -405,7 +401,7 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                 end if
             else if type(launchDarklyParamMessage) = "roSocketEvent" then
                 if m.private.streamSocket <> invalid AND launchDarklyParamMessage.getSocketID() = m.private.streamSocket.getID() then
-                    m.private.handleStreamMessage(launchDarklyParamMessage)
+                    m.private.handleStreamMessage()
 
                     return true
                 end if

@@ -1,4 +1,4 @@
-function LaunchDarklyPlainTextReader(launchDarklyParamCipherKey as Object, launchDarklyParamAuthKey as Object) as Object
+function LaunchDarklyPlainTextReader() as Object
     return {
         private: {
             stream: LaunchDarklyStream(),

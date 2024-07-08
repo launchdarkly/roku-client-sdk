@@ -476,7 +476,7 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
           return m.makeResponse(200, "OK", result)
         end function,
 
-        evaluateAll: function(client as Object, params as Object) as Object
+        evaluateAll: function(client as Object, _params as Object) as Object
           result = {
             state: client.allFlagsState()
           }

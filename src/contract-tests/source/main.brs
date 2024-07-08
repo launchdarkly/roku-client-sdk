@@ -1,11 +1,11 @@
-sub main(params as object)
+sub main(_params as object)
   print "in showChannelSGScreen"
 
   screen = createObject("roSGScreen")
   messagePort = createObject("roMessagePort")
   screen.setMessagePort(messagePort)
 
-  scene = screen.CreateScene("AppScene")
+  _scene = screen.CreateScene("AppScene")
 
   screen.show()
 
