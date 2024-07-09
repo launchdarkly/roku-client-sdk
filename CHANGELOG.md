@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly Roku SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.1.2](https://github.com/launchdarkly/roku-client-sdk/compare/2.1.1...2.1.2) (2024-07-09)
+
+
+### Bug Fixes
+
+* Remove unused variables ([#33](https://github.com/launchdarkly/roku-client-sdk/issues/33)) ([83d7213](https://github.com/launchdarkly/roku-client-sdk/commit/83d721300c7afbc95396f70f598f1938f6c0202d))
+
 ## [2.1.1](https://github.com/launchdarkly/roku-client-sdk/compare/2.1.0...2.1.1) (2024-04-10)
 
 
