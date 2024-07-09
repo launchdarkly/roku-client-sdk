@@ -196,7 +196,6 @@ function LaunchDarklyUtility() as Object
         end function,
 
         littleEndianUnsignedToInteger: function(launchDarklyParamBytes as Object) as Integer
-            launchDarklyLocalCounter = 0
             launchDarklyLocalOutput = 0
 
             for launchDarklyLocalX = 0 to launchDarklyParamBytes.count() - 1 step + 1
@@ -296,20 +295,6 @@ function LaunchDarklyUtility() as Object
           end if
 
           return values.Join(" ")
-        end function,
-
-        stripHTTPProtocol: function(launchDarklyParamRawURI as String) as String
-            launchDarklyLocalHTTPS = "https://"
-            launchDarklyLocalHTTP = "http://"
-
-            if left(launchDarklyParamRawURI, len(launchDarklyLocalHTTPS)) = launchdarklyLocalHTTPS then
-                return mid(launchDarklyParamRawURI, len(launchDarklyLocalHTTPS) + 1)
-            else if left(launchDarklyParamRawURI, len(launchDarklyLocalHTTP)) = launchDarklyLocalHTTP then
-                return mid(launchDarklyParamRawURI, len(launchDarklyLocalHTTP) + 1)
-            else
-                REM impossible in usage
-                return ""
-            end if
         end function,
 
         ' Provides a simplistic approach at parsing out the bits of a URI.
