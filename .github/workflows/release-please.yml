@@ -17,15 +17,15 @@ jobs:
         id: release
 
       - uses: actions/checkout@v4
-        if: ${{ steps.release.outputs.releases_created }}
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
         with:
           fetch-depth: 0 # If you only need the current version keep this.
 
       - uses: ./.github/actions/ci
-        if: ${{ steps.release.outputs.releases_created }}
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
 
       - name: Upload Release Artifact
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release.outputs.release_created == 'true' }}
         uses: ./.github/actions/publish
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
