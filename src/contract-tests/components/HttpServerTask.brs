@@ -318,6 +318,7 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
               "user-type",
               "inline-context",
               "anonymous-redaction",
+              "client-prereq-events",
             ]
 
             return m.makeResponse(200, "OK", status)

@@ -82,6 +82,12 @@ function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Ob
 
                     m.private.handleEventsForEval(launchDarklyLocalState)
 
+                    if launchDarklyLocalFlag.prerequisites <> invalid then
+                      For Each prereqKey in launchDarklyLocalFlag.prerequisites
+                        m.variationDetail(prereqKey, invalid, launchDarklyParamEmbedReason, launchDarklyParamStrong)
+                      End For
+                    end if
+
                     launchDarklyLocalDetails = {}
                     launchDarklyLocalDetails["result"] = launchDarklyLocalValue
                     launchDarklyLocalDetails["reason"] = launchDarklyLocalReason

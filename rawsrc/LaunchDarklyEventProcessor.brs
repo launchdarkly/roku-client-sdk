@@ -72,10 +72,13 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, context a
                     launchdarklyLocalFeature = m.summary.lookup(launchDarklyLocalFeatureKey)
 
                     launchDarklyLocalFeatureNode = {
-                        default: launchDarklyLocalFeature.default,
                         "contextKinds": launchdarklyLocalFeature["contextKinds"].Keys(),
                         counters: createObject("roArray", 0, true)
                     }
+
+                    if launchDarklyLocalFeature.default <> invalid then
+                        launchDarklyLocalFeatureNode.default = launchDarklyLocalFeature.default
+                    end if
 
                     for each launchDarklyLocalCounterKey in launchDarklyLocalFeature.counters
                         launchDarklyLocalCounter = launchDarklyLocalFeature.counters.lookup(launchDarklyLocalCounterKey)
