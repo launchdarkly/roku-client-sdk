@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly Roku SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.2.0](https://github.com/launchdarkly/roku-client-sdk/compare/2.1.2...2.2.0) (2024-10-30)
+
+
+### Features
+
+* Add support for client-side prerequisite events ([#37](https://github.com/launchdarkly/roku-client-sdk/issues/37)) ([2d530a7](https://github.com/launchdarkly/roku-client-sdk/commit/2d530a77fca31ad6f22d438bb1a4c8185d583988))
+
 ## [2.1.2](https://github.com/launchdarkly/roku-client-sdk/compare/2.1.1...2.1.2) (2024-07-09)
 
 
