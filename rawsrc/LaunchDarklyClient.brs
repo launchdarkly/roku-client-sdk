@@ -340,6 +340,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, context as Object
                 m.config.private.logger.debug("polling url: " + launchDarklyLocalUrl)
 
                 m.pollingTransfer = createObject("roUrlTransfer")
+                m.pollingTransfer.EnableEncodings(true)
                 m.util.prepareNetworkingCommon(m.messagePort, m.config, m.pollingTransfer, {})
                 m.pollingTransfer.setURL(launchDarklyLocalUrl)
             end function,
