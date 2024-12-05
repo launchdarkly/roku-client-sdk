@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly Roku SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.3.0](https://github.com/launchdarkly/roku-client-sdk/compare/2.2.0...2.3.0) (2024-12-05)
+
+
+### Features
+
+* Enable gzip compression on polling requests ([#39](https://github.com/launchdarkly/roku-client-sdk/issues/39)) ([7879ffd](https://github.com/launchdarkly/roku-client-sdk/commit/7879ffd9e319aa741bb969cbeae2a8b5ec15bb4b))
+
 ## [2.2.0](https://github.com/launchdarkly/roku-client-sdk/compare/2.1.2...2.2.0) (2024-10-30)
 
 
