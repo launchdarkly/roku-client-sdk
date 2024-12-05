@@ -319,6 +319,7 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
               "inline-context",
               "anonymous-redaction",
               "client-prereq-events",
+              "polling-gzip",
             ]
 
             return m.makeResponse(200, "OK", status)
