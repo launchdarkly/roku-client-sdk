@@ -186,9 +186,6 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, context a
             launchDarklyLocalEvent = m.private.makeBaseEvent("custom")
             launchDarklyLocalEvent.key = launchDarklyParamKey
 
-            launchDarklyLocalEvent.delete("context")
-            launchDarklyLocalEvent["contextKeys"] = m.private.context.keys()
-
             if launchDarklyParamData <> invalid then
                 launchDarklyLocalEvent.data = launchDarklyParamData
             end if

@@ -316,7 +316,7 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
               "strongly-typed",
               "tags",
               "user-type",
-              "inline-context",
+              "inline-context-all",
               "anonymous-redaction",
               "client-prereq-events",
               "polling-gzip",

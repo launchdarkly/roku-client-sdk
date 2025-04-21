@@ -331,10 +331,13 @@ function TestCase__Client_Track() as String
     expected = {
         kind: "custom",
         key: eventName,
-        data: eventData
+        data: eventData,
+        context: {
+            key: "user-key",
+            kind: "user"
+        }
     }
 
-    expected["contextKeys"] = {user: "user-key"}
     expected["metricValue"] = 52
 
     return m.assertEqual(FormatJSON(event), FormatJSON(expected))
