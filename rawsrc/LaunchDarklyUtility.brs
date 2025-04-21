@@ -286,11 +286,11 @@ function LaunchDarklyUtility() as Object
           ' NOTE: The spec calls for tags to be in sorted order by tag name.
           ' Additional tags added should maintain this ordering.
           values = CreateObject("roArray", 2, false)
-          if config.private.applicationInfo["id"] <> invalid then
+          if config.private.applicationInfo["id"] <> invalid and config.private.applicationInfo["id"] <> "" then
             values.push("application-id/" + config.private.applicationInfo["id"])
           end if
 
-          if config.private.applicationInfo["version"] <> invalid then
+          if config.private.applicationInfo["version"] <> invalid and config.private.applicationInfo["version"] <> "" then
             values.push("application-version/" + config.private.applicationInfo["version"])
           end if
 
