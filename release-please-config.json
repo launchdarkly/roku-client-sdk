@@ -6,6 +6,7 @@
       "versioning": "default",
       "include-v-in-tag": false,
       "include-component-in-tag": false,
+      "draft": true,
       "extra-files": [
         "rawsrc/LaunchDarklyClient.brs"
       ]
