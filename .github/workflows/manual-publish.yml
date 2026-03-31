@@ -10,6 +10,11 @@ on:
         description: 'Is this a dry run. If so no package will be published.'
         type: boolean
         required: true
+      publish_release:
+        description: 'Publish (un-draft) the release after all artifacts are uploaded?'
+        type: boolean
+        required: false
+        default: true
 
 jobs:
   build-publish:
@@ -28,3 +33,19 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ inputs.tag_name }}
+
+  publish-release:
+    needs: ['build-publish']
+    if: ${{ !inputs.dry_run && inputs.publish_release }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ inputs.tag_name }}
+        run: >
+          gh release edit "$TAG_NAME"
+          --repo ${{ github.repository }}
+          --draft=false
