@@ -71,7 +71,7 @@ jobs:
 
   publish-release:
     needs: ['release-please', 'release-package']
-    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    if: ${{ needs.release-please.outputs.releases_created == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
