@@ -62,7 +62,6 @@ jobs:
       - uses: ./.github/actions/ci
 
       - name: Upload Release Artifact
-        if: ${{ needs.release-please.outputs.release_created == 'true' }}
         uses: ./.github/actions/publish
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
