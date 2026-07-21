@@ -520,6 +520,129 @@ function TestCase__Client_AllFlags() as String
     return m.assertEqual(formatJSON(allFlagsState), formatJSON(expected))
 end function
 
+' Cycle-detection tests exercise the ancestor-set cycle guard added to variationDetail.
+' Each test constructs a cyclic prereq graph in the store, evaluates one flag on the cycle,
+' and asserts (a) the requested flag returns its cached value unchanged and (b) the recorded
+' feature events match exactly one entry per cycle-safe descent.
+
+function countFeatureEventsInOrder(events as Object) as Object
+    keys = createObject("roArray", 0, true)
+    for i = 0 to events.count() - 1
+        e = events[i]
+        if type(e) = "roAssociativeArray" and e.kind = "feature" then
+            keys.push(e.key)
+        end if
+    end for
+    return keys
+end function
+
+function TestCase__Client_CycleDetection_SelfLoop() as String
+    client = makeTestClientInitialized()
+    ' flagA's only prerequisite is itself; the cycle guard skips descent.
+    client.private.store.putAll({
+        flagA: {
+            value: "cached",
+            variation: 0,
+            version: 1,
+            trackEvents: true,
+            prerequisites: ["flagA"]
+        }
+    })
+
+    actualValue = client.variation("flagA", "default")
+    a = m.assertEqual(actualValue, "cached")
+    if a <> "" then
+        return a
+    end if
+
+    events = client.private.eventProcessor.flush()
+    featureKeys = countFeatureEventsInOrder(events)
+    ' Only flagA emits a feature event; the self-prereq is cycle-skipped.
+    return m.assertEqual(FormatJSON(featureKeys), FormatJSON(["flagA"]))
+end function
+
+function TestCase__Client_CycleDetection_TwoCycleEvaluatingA() as String
+    client = makeTestClientInitialized()
+    client.private.store.putAll({
+        flagA: {value: "cached", variation: 0, version: 1, trackEvents: true, prerequisites: ["flagB"]},
+        flagB: {value: "cached", variation: 0, version: 1, trackEvents: true, prerequisites: ["flagA"]}
+    })
+
+    actualValue = client.variation("flagA", "default")
+    a = m.assertEqual(actualValue, "cached")
+    if a <> "" then
+        return a
+    end if
+
+    events = client.private.eventProcessor.flush()
+    featureKeys = countFeatureEventsInOrder(events)
+    ' A -> B -> [A skipped]. Events deepest-first: B (as prereq of A), then A.
+    return m.assertEqual(FormatJSON(featureKeys), FormatJSON(["flagB", "flagA"]))
+end function
+
+function TestCase__Client_CycleDetection_TwoCycleEvaluatingB() as String
+    client = makeTestClientInitialized()
+    client.private.store.putAll({
+        flagA: {value: "cached", variation: 0, version: 1, trackEvents: true, prerequisites: ["flagB"]},
+        flagB: {value: "cached", variation: 0, version: 1, trackEvents: true, prerequisites: ["flagA"]}
+    })
+
+    actualValue = client.variation("flagB", "default")
+    a = m.assertEqual(actualValue, "cached")
+    if a <> "" then
+        return a
+    end if
+
+    events = client.private.eventProcessor.flush()
+    featureKeys = countFeatureEventsInOrder(events)
+    ' Symmetric: same graph, entry from B. Events: A (as prereq of B), then B.
+    return m.assertEqual(FormatJSON(featureKeys), FormatJSON(["flagA", "flagB"]))
+end function
+
+function TestCase__Client_CycleDetection_ThreeCycle() as String
+    client = makeTestClientInitialized()
+    client.private.store.putAll({
+        flagA: {value: "cached", variation: 0, version: 1, trackEvents: true, prerequisites: ["flagB"]},
+        flagB: {value: "cached", variation: 0, version: 1, trackEvents: true, prerequisites: ["flagC"]},
+        flagC: {value: "cached", variation: 0, version: 1, trackEvents: true, prerequisites: ["flagA"]}
+    })
+
+    actualValue = client.variation("flagA", "default")
+    a = m.assertEqual(actualValue, "cached")
+    if a <> "" then
+        return a
+    end if
+
+    events = client.private.eventProcessor.flush()
+    featureKeys = countFeatureEventsInOrder(events)
+    ' A -> B -> C -> [A skipped]. Events emitted deepest-first: C, B, A.
+    return m.assertEqual(FormatJSON(featureKeys), FormatJSON(["flagC", "flagB", "flagA"]))
+end function
+
+function TestCase__Client_CycleDetection_Diamond() as String
+    ' Diamond: A -> [B, C], B -> [D], C -> [D]. Not a cycle. Ancestor-set (current-path)
+    ' semantics let D be reached on each of the two independent paths, so D emits twice.
+    ' A naive "visited across the whole walk" implementation would drop the second event.
+    client = makeTestClientInitialized()
+    client.private.store.putAll({
+        flagA: {value: "cached", variation: 0, version: 1, trackEvents: true, prerequisites: ["flagB", "flagC"]},
+        flagB: {value: "cached", variation: 0, version: 1, trackEvents: true, prerequisites: ["flagD"]},
+        flagC: {value: "cached", variation: 0, version: 1, trackEvents: true, prerequisites: ["flagD"]},
+        flagD: {value: "cached", variation: 0, version: 1, trackEvents: true}
+    })
+
+    actualValue = client.variation("flagA", "default")
+    a = m.assertEqual(actualValue, "cached")
+    if a <> "" then
+        return a
+    end if
+
+    events = client.private.eventProcessor.flush()
+    featureKeys = countFeatureEventsInOrder(events)
+    ' Events (deepest-first per path): D (via B), B, D (via C), C, A. D appears twice.
+    return m.assertEqual(FormatJSON(featureKeys), FormatJSON(["flagD", "flagB", "flagD", "flagC", "flagA"]))
+end function
+
 function TestSuite__Client() as Object
     this = BaseTestSuite()
 
@@ -546,6 +669,11 @@ function TestSuite__Client() as Object
     this.addTest("TestCase__Client_VariationDetail_WrongType", TestCase__Client_VariationDetail_WrongType)
     this.addTest("TestCase__Client_VariationDetail_ClientNotReady", TestCase__Client_VariationDetail_ClientNotReady)
     this.addTest("TestCase__Client_AllFlags", TestCase__Client_AllFlags)
+    this.addTest("TestCase__Client_CycleDetection_SelfLoop", TestCase__Client_CycleDetection_SelfLoop)
+    this.addTest("TestCase__Client_CycleDetection_TwoCycleEvaluatingA", TestCase__Client_CycleDetection_TwoCycleEvaluatingA)
+    this.addTest("TestCase__Client_CycleDetection_TwoCycleEvaluatingB", TestCase__Client_CycleDetection_TwoCycleEvaluatingB)
+    this.addTest("TestCase__Client_CycleDetection_ThreeCycle", TestCase__Client_CycleDetection_ThreeCycle)
+    this.addTest("TestCase__Client_CycleDetection_Diamond", TestCase__Client_CycleDetection_Diamond)
 
     return this
 end function

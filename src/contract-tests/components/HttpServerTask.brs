@@ -319,6 +319,7 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
               "inline-context-all",
               "anonymous-redaction",
               "client-prereq-events",
+              "client-prereq-cycle-detection",
               "polling-gzip",
             ]
 
