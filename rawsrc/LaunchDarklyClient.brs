@@ -83,16 +83,9 @@ function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Ob
                     m.private.handleEventsForEval(launchDarklyLocalState)
 
                     if launchDarklyLocalFlag.prerequisites <> invalid AND launchDarklyLocalFlag.prerequisites.count() > 0 then
-                      ' Recurse on prerequisites to emulate prereq evaluations occurring with
-                      ' desirable side effects such as events for prereqs.
-                      '
-                      ' launchDarklyParamVisited tracks the chain of prerequisite dependencies
-                      ' from the top-level evaluation to (but not including) the current flag.
-                      ' It is allocated lazily: variation calls on prereq-less flags allocate
-                      ' no associative array. Once created it is shared for the rest of the
-                      ' walk via add-before-recurse / delete-after-recurse. A prerequisite key
-                      ' already in the map closes a cycle; descent is skipped and the loop
-                      ' continues with the remaining prerequisites at the current level.
+                      ' Recurse on prerequisites to emit their evaluation events.
+                      ' launchDarklyParamVisited tracks the current path so a cyclic
+                      ' prerequisite graph terminates instead of recursing without bound.
                       launchDarklyLocalAncestors = launchDarklyParamVisited
                       if launchDarklyLocalAncestors = invalid then
                           launchDarklyLocalAncestors = {}
@@ -100,8 +93,7 @@ function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Ob
                       launchDarklyLocalAncestors[launchDarklyParamFlagKey] = true
                       For Each prereqKey in launchDarklyLocalFlag.prerequisites
                         if launchDarklyLocalAncestors.doesExist(prereqKey) then
-                          ' Cyclic edge: skip descent, continue with remaining prerequisites
-                          ' at this level. The requested flag's value and reason are unaffected.
+                          ' Cyclic edge: skip descent.
                         else
                           m.variationDetail(prereqKey, invalid, launchDarklyParamEmbedReason, launchDarklyParamStrong, launchDarklyLocalAncestors)
                         end if
