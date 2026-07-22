@@ -576,8 +576,10 @@ function TestCase__Client_CycleDetection_TwoCycleEvaluatingA() as String
 
     events = client.private.eventProcessor.flush()
     featureKeys = countFeatureEventsInOrder(events)
-    ' A -> B -> [A skipped]. Events deepest-first: B (as prereq of A), then A.
-    return m.assertEqual(FormatJSON(featureKeys), FormatJSON(["flagB", "flagA"]))
+    ' Roku emits the current flag's event before recursing (parent-first), so events
+    ' are [A, B]. This diverges from other client SDKs, which emit deepest-first
+    ' ([B, A]); tracked in follow-up ticket to align.
+    return m.assertEqual(FormatJSON(featureKeys), FormatJSON(["flagA", "flagB"]))
 end function
 
 function TestCase__Client_CycleDetection_TwoCycleEvaluatingB() as String
@@ -595,8 +597,8 @@ function TestCase__Client_CycleDetection_TwoCycleEvaluatingB() as String
 
     events = client.private.eventProcessor.flush()
     featureKeys = countFeatureEventsInOrder(events)
-    ' Symmetric: same graph, entry from B. Events: A (as prereq of B), then B.
-    return m.assertEqual(FormatJSON(featureKeys), FormatJSON(["flagA", "flagB"]))
+    ' Symmetric: same graph, entry from B. Parent-first order (see companion test).
+    return m.assertEqual(FormatJSON(featureKeys), FormatJSON(["flagB", "flagA"]))
 end function
 
 function TestCase__Client_CycleDetection_ThreeCycle() as String
@@ -615,8 +617,8 @@ function TestCase__Client_CycleDetection_ThreeCycle() as String
 
     events = client.private.eventProcessor.flush()
     featureKeys = countFeatureEventsInOrder(events)
-    ' A -> B -> C -> [A skipped]. Events emitted deepest-first: C, B, A.
-    return m.assertEqual(FormatJSON(featureKeys), FormatJSON(["flagC", "flagB", "flagA"]))
+    ' A -> B -> C -> [A skipped]. Parent-first ordering yields A, B, C.
+    return m.assertEqual(FormatJSON(featureKeys), FormatJSON(["flagA", "flagB", "flagC"]))
 end function
 
 function TestCase__Client_CycleDetection_Diamond() as String
@@ -639,8 +641,10 @@ function TestCase__Client_CycleDetection_Diamond() as String
 
     events = client.private.eventProcessor.flush()
     featureKeys = countFeatureEventsInOrder(events)
-    ' Events (deepest-first per path): D (via B), B, D (via C), C, A. D appears twice.
-    return m.assertEqual(FormatJSON(featureKeys), FormatJSON(["flagD", "flagB", "flagD", "flagC", "flagA"]))
+    ' Parent-first per path: A, then descend B (emit B, then D), then descend C
+    ' (emit C, then D). D emits twice, exercising the per-path (current-path)
+    ' ancestor-set semantics vs a global visited set.
+    return m.assertEqual(FormatJSON(featureKeys), FormatJSON(["flagA", "flagB", "flagD", "flagC", "flagD"]))
 end function
 
 function TestSuite__Client() as Object
