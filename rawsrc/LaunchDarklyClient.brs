@@ -80,8 +80,6 @@ function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Ob
                         launchDarklyLocalState.reason = LaunchDarklyUtility().deepCopy(launchDarklyLocalReason)
                     end if
 
-                    m.private.handleEventsForEval(launchDarklyLocalState)
-
                     if launchDarklyLocalFlag.prerequisites <> invalid AND launchDarklyLocalFlag.prerequisites.count() > 0 then
                       ' Recurse on prerequisites to emit their evaluation events.
                       ' launchDarklyParamVisited tracks the current path so a cyclic
@@ -100,6 +98,8 @@ function LaunchDarklyClientSharedFunctions(launchDarklyParamSceneGraphNode as Ob
                       End For
                       launchDarklyLocalAncestors.delete(launchDarklyParamFlagKey)
                     end if
+
+                    m.private.handleEventsForEval(launchDarklyLocalState)
 
                     launchDarklyLocalDetails = {}
                     launchDarklyLocalDetails["result"] = launchDarklyLocalValue
