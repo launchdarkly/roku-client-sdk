@@ -53,6 +53,7 @@ function LaunchDarklySG(launchDarklyParamClientNode as Dynamic) as Object
         end function
     }
 
+    launchDarklyLocalThis.private.append(LaunchDarklyClientSharedPrivateFunctions())
     launchDarklyLocalThis.append(LaunchDarklyClientSharedFunctions(launchDarklyParamClientNode))
 
     return launchDarklyLocalThis
