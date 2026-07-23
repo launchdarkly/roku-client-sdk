@@ -2,6 +2,16 @@
 
 All notable changes to the LaunchDarkly Roku SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.4.1](https://github.com/launchdarkly/roku-client-sdk/compare/2.4.0...2.4.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* add defensive cycle guard to prerequisite evaluation ([ceab01d](https://github.com/launchdarkly/roku-client-sdk/commit/ceab01d26ee989ea842ed4e07acf49aadee96c9b))
+* add defensive cycle guard to prerequisite evaluation ([#54](https://github.com/launchdarkly/roku-client-sdk/issues/54)) ([d4d325f](https://github.com/launchdarkly/roku-client-sdk/commit/d4d325fd2e5b7f9a60915894e8b079a373bf5365))
+* emit prerequisite events deepest-first ([d729aa7](https://github.com/launchdarkly/roku-client-sdk/commit/d729aa7cd3bcb19ca2f4f59e37b8cebdb67287be))
+* emit prerequisite events deepest-first ([#55](https://github.com/launchdarkly/roku-client-sdk/issues/55)) ([3fe85d1](https://github.com/launchdarkly/roku-client-sdk/commit/3fe85d121b58ed95cac6e17abafcc9adf2283189))
+
 ## [2.4.0](https://github.com/launchdarkly/roku-client-sdk/compare/2.3.0...2.4.0) (2025-04-21)
 
 
