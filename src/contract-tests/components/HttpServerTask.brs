@@ -6,13 +6,19 @@ function init()
 end function
 
 function mainThread() as Void
+  port = 9000
+  monitor = ServiceMonitor(m.top, port)
+
   messagePort = CreateObject("roMessagePort")
-  server = createHttpServer(messagePort, 9000)
+  server = createHttpServer(messagePort, port, monitor)
 
   if server = invalid then
     print "failed to create server"
+    monitor.setState("failed")
     return
   end if
+
+  monitor.setState("listening")
 
   while true
     event = wait(0, messagePort)
@@ -23,7 +29,7 @@ function mainThread() as Void
   end while
 end function
 
-function createHttpServer(messagePort as Object, port as Integer) as Object
+function createHttpServer(messagePort as Object, port as Integer, monitor as Object) as Object
   socket = CreateObject("roStreamSocket")
   socket.setMessagePort(messagePort)
 
@@ -46,6 +52,7 @@ function createHttpServer(messagePort as Object, port as Integer) as Object
       clients: {},
       buffer: CreateObject("roByteArray"),
       messagePort: messagePort,
+      monitor: monitor,
       socket: socket,
     },
 
@@ -69,7 +76,7 @@ function createHttpServer(messagePort as Object, port as Integer) as Object
         newConnection.notifyReadable(true)
         newConnection.setMessagePort(m.private.messagePort)
 
-        localHandler = Handler(m.private.clients, CreateObject("roSGNode", "LaunchDarklyTask"))
+        localHandler = Handler(m.private.clients, CreateObject("roSGNode", "LaunchDarklyTask"), m.private.monitor)
         m.private.contexts[stri(newConnection.getID())] = ConnectionContext(newConnection, localHandler)
 
         return true
@@ -221,17 +228,25 @@ function ConnectionContext(socket as Dynamic, handlerParam as Object) as Object
 end function
 
 
-function Handler(clients as Object, launchDarklyNode as Object) as Object
+function Handler(clients as Object, launchDarklyNode as Object, monitor as Object) as Object
     return {
         private: {
           clientIndex: 0,
           clients: clients
           launchDarklyNode: launchDarklyNode
+          monitor: monitor,
+          lastStatus: 0,
+          lastMessage: ""
         },
 
         shutdown: false,
 
         makeResponse: function(responseCode as Integer, responseText as String, responseBody as Dynamic, locationHeader = "" as String) as Object
+            m.private.lastStatus = responseCode
+            if responseCode >= 400 and responseBody <> invalid and getInterface(responseBody, "ifString") <> invalid then
+                m.private.lastMessage = responseBody
+            end if
+
             response = ""
             response += "HTTP/1.1 " + responseCode.toStr() + " " + responseText + chr(13) + chr(10)
             response += "Connection: close" + chr(13) + chr(10)
@@ -330,6 +345,8 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
           if jsonBody = invalid then
             return m.makeResponse(400, "Bad Request", "expected a post body")
           end if
+
+          m.private.monitor.setCurrentTest(jsonBody["tag"])
 
           configuration = jsonBody["configuration"]
           config = LaunchDarklyConfig(configuration["credential"], m.private.launchDarklyNode)
@@ -531,19 +548,87 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
 
         clientRegex: CreateObject("roRegex", "/client/([0-9]+)", ""),
 
+        ' Dispatch a request and report it to the on-screen monitor.
         dispatch: function(request as Object, requestBody as Object) as Object
+            monitor = m.private.monitor
+            m.private.lastStatus = 0
+            m.private.lastMessage = ""
+
             parsedBody = invalid
             if requestBody <> invalid then
                 ' if there is a body, it must be JSON
                 parsedBody = parseJSON(requestBody.toAsciiString())
-                if parsedBody = invalid then
-                    return m.makeResponse(400, "Bad Request", "failed to parse JSON body")
-                end if
             end if
 
+            monitor.startRequest(request.requestVerb, request.requestPath, m.describe(request, parsedBody))
+
+            if requestBody <> invalid and parsedBody = invalid then
+                response = m.makeResponse(400, "Bad Request", "failed to parse JSON body")
+            else
+                response = m.route(request, parsedBody)
+            end if
+
+            monitor.finishRequest(m.private.lastStatus, m.private.lastMessage, m.private.clients.count())
+
+            return response
+        end function,
+
+        ' Make a short, readable summary of a request for the monitor.
+        describe: function(request as Object, body as Object) as String
+            verb = request.requestVerb
+
+            if request.requestPath = "/" then
+                if verb = "GET" then return "status check"
+                if verb = "DELETE" then return "end of test run"
+                if verb <> "POST" then return ""
+
+                mode = "streaming"
+                if body <> invalid and body["configuration"] <> invalid then
+                    configuration = body["configuration"]
+                    if configuration["streaming"] = invalid and configuration["polling"] <> invalid then
+                        mode = "polling"
+                    end if
+                end if
+
+                return "create client (" + mode + ")"
+            end if
+
+            if verb = "DELETE" then return "delete client"
+            if body = invalid then return ""
+
+            command = body["command"]
+            if command = "evaluate" then
+                params = body["evaluate"]
+                if params = invalid then return "evaluate"
+
+                label = "evaluate"
+                detail = params["detail"]
+                if detail <> invalid and detail then
+                    label = "evaluate detail"
+                end if
+
+                return label + " " + monitorText(params["valueType"]) + " " + monitorText(params["flagKey"])
+            else if command = "evaluateAll" then
+                return "evaluate all"
+            else if command = "identifyEvent" then
+                return "identify"
+            else if command = "customEvent" then
+                params = body["customEvent"]
+                if params = invalid then return "track"
+
+                return "track " + monitorText(params["eventKey"])
+            else if command = "flushEvents" then
+                return "flush events"
+            end if
+
+            return monitorText(command)
+        end function,
+
+        route: function(request as Object, parsedBody as Object) as Object
             if request.requestVerb = "GET" AND request.requestPath = "/" then
                 return m.handleStatus()
             else if request.requestVerb = "DELETE" AND request.requestPath = "/" then
+              m.private.monitor.setState("finished")
               return m.makeResponse(200, "OK", "shutdown request")
               ' TODO: implement server shutdown
             else if request.requestVerb = "POST" AND request.requestPath = "/" then
@@ -582,4 +667,112 @@ function Handler(clients as Object, launchDarklyNode as Object) as Object
             return m.handle404()
         end function
     }
+end function
+
+' Return a value as display text. Return "?" for a value that is not a string.
+function monitorText(value as Dynamic) as String
+    if value <> invalid and getInterface(value, "ifString") <> invalid then
+        return value
+    end if
+
+    return "?"
+end function
+
+' Collect service activity and publish it to the task "dashboard" field.
+' The scene observes that field and draws the status screen.
+function ServiceMonitor(node as Object, port as Integer) as Object
+    monitor = {
+        node: node,
+        port: port,
+        maxEntries: 8,
+        clock: CreateObject("roTimespan"),
+        snapshot: invalid,
+
+        now: function() as Integer
+            return CreateObject("roDateTime").asSeconds()
+        end function,
+
+        reset: function(state as String) as Void
+            m.snapshot = {
+                state: state,
+                port: m.port,
+                sdkVersion: LaunchDarklySDKVersion(),
+                startedAt: m.now(),
+                lastRequestAt: 0,
+                requests: 0,
+                errors: 0,
+                clientsCreated: 0,
+                activeClients: 0,
+                currentTest: "",
+                inFlight: invalid,
+                entries: []
+            }
+            m.publish()
+        end function,
+
+        setState: function(state as String) as Void
+            m.snapshot.state = state
+            m.publish()
+        end function,
+
+        setCurrentTest: function(tag as Dynamic) as Void
+            m.snapshot.clientsCreated += 1
+            if tag <> invalid then
+                m.snapshot.currentTest = monitorText(tag)
+            end if
+            m.publish()
+        end function,
+
+        startRequest: function(verb as String, path as String, summary as String) as Void
+            ' The harness checks the service status at the start of each run.
+            ' A status check after a finished run starts a new set of counters.
+            if verb = "GET" and path = "/" and m.snapshot.state = "finished" then
+                m.reset("listening")
+            end if
+
+            if m.snapshot.state = "listening" then
+                m.snapshot.state = "running"
+            end if
+
+            m.clock.mark()
+            m.snapshot.inFlight = {
+                time: m.now(),
+                method: verb,
+                path: path,
+                summary: summary
+            }
+            m.publish()
+        end function,
+
+        finishRequest: function(status as Integer, message as String, activeClients as Integer) as Void
+            entry = m.snapshot.inFlight
+            entry.status = status
+            entry.message = message
+            entry.durationMs = m.clock.totalMilliseconds()
+
+            m.snapshot.requests += 1
+            if status = 0 or status >= 400 then
+                m.snapshot.errors += 1
+            end if
+
+            m.snapshot.activeClients = activeClients
+            m.snapshot.lastRequestAt = m.now()
+            m.snapshot.inFlight = invalid
+
+            m.snapshot.entries.unshift(entry)
+            if m.snapshot.entries.count() > m.maxEntries then
+                m.snapshot.entries.pop()
+            end if
+
+            m.publish()
+        end function,
+
+        publish: function() as Void
+            m.node.dashboard = m.snapshot
+        end function
+    }
+
+    monitor.reset("starting")
+
+    return monitor
 end function
