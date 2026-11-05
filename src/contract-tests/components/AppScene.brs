@@ -185,10 +185,14 @@ function refreshTimers() as Void
     end if
 
     now = CreateObject("roDateTime").asSeconds()
-    if snapshot.state = "starting" or snapshot.state = "listening" then
-        m.tiles.runTime.text = "--"
-    else
+    ' The run time counts only while a run is active. It stops at the last
+    ' request of a finished run.
+    if snapshot.state = "running" then
         m.tiles.runTime.text = formatSeconds(now - snapshot.startedAt)
+    else if snapshot.state = "finished" then
+        m.tiles.runTime.text = formatSeconds(snapshot.lastRequestAt - snapshot.startedAt)
+    else
+        m.tiles.runTime.text = "--"
     end if
 
     inFlight = snapshot.inFlight
