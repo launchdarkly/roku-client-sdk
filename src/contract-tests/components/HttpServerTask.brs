@@ -426,6 +426,7 @@ function Handler(clients as Object, launchDarklyNode as Object, monitor as Objec
           m.private.clientIndex += 1
           client = LaunchDarklySG(m.private.launchDarklyNode)
           m.private.clients[m.private.clientIndex.toStr()] = client
+          m.private.monitor.clientCreated()
 
           m.waitForInitialized(client)
 
@@ -716,10 +717,14 @@ function ServiceMonitor(node as Object, port as Integer) as Object
         end function,
 
         setCurrentTest: function(tag as Dynamic) as Void
-            m.snapshot.clientsCreated += 1
             if tag <> invalid then
                 m.snapshot.currentTest = monitorText(tag)
             end if
+            m.publish()
+        end function,
+
+        clientCreated: function() as Void
+            m.snapshot.clientsCreated += 1
             m.publish()
         end function,
 
