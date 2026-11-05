@@ -730,8 +730,10 @@ function ServiceMonitor(node as Object, port as Integer) as Object
                 m.reset("listening")
             end if
 
+            ' The first request of a run starts the run time.
             if m.snapshot.state = "listening" then
                 m.snapshot.state = "running"
+                m.snapshot.startedAt = m.now()
             end if
 
             m.clock.mark()

@@ -185,7 +185,11 @@ function refreshTimers() as Void
     end if
 
     now = CreateObject("roDateTime").asSeconds()
-    m.tiles.runTime.text = formatSeconds(now - snapshot.startedAt)
+    if snapshot.state = "starting" or snapshot.state = "listening" then
+        m.tiles.runTime.text = "--"
+    else
+        m.tiles.runTime.text = formatSeconds(now - snapshot.startedAt)
+    end if
 
     inFlight = snapshot.inFlight
     if inFlight <> invalid then
