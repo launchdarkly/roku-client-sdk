@@ -1,3 +1,3 @@
 function LaunchDarklySDKVersion() as String
-    return "2.0.0" ' x-release-please-version
+    return "2.4.1" ' x-release-please-version
 end function
