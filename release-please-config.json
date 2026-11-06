@@ -9,7 +9,7 @@
       "draft": true,
       "force-tag-creation": true,
       "extra-files": [
-        "rawsrc/LaunchDarklyClient.brs"
+        "rawsrc/LaunchDarklyVersion.brs"
       ]
     }
   }
