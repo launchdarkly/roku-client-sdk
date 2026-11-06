@@ -1,4 +1,9 @@
 <component name="HttpServerTask" extends="Task">
+  <interface>
+    <!-- A snapshot of service activity. The scene draws its status screen from it. -->
+    <field id="dashboard" type="assocarray" />
+  </interface>
+
   <children>
     <!-- <LaunchDarklyTask id="launchDarkly"/> -->
   </children>
