@@ -324,7 +324,6 @@ function Handler(clients as Object, launchDarklyNode as Object, monitor as Objec
             status = {}
             status["clientVersion"] = LaunchDarklySDKVersion()
             status["capabilities"] = [
-              "roku",
               "mobile",
               "client-side",
               "singleton",
@@ -337,6 +336,12 @@ function Handler(clients as Object, launchDarklyNode as Object, monitor as Objec
               "client-prereq-cycle-detection",
               "polling-gzip",
             ]
+
+            ' The test harness uses the Roku handshake flow when "roku" is
+            ' present. The native stream client uses the standard mobile flow.
+            if LaunchDarklyNativeStreamSupported() = false then
+              status["capabilities"].push("roku")
+            end if
 
             return m.makeResponse(200, "OK", status)
         end function,
