@@ -109,6 +109,20 @@ function TestCase__Config_Streaming() as String
     return m.assertEqual(config.private.streaming, false)
 end function
 
+function TestCase__Config_UseNativeStream() as String
+    config = LaunchDarklyConfig("mob")
+
+    a = m.assertEqual(LaunchDarklyUseNativeStream(config), LaunchDarklyNativeStreamSupported())
+
+    if a <> "" then
+        return a
+    end if
+
+    config.setUseNativeStream(false)
+
+    return m.assertFalse(LaunchDarklyUseNativeStream(config))
+end function
+
 function TestCase__Config_URI_Validation() as String
     config = LaunchDarklyConfig("mob")
 
@@ -178,6 +192,7 @@ function TestSuite__Config() as Object
     this.addTest("TestCase__Config_EventsCapacity", TestCase__Config_EventsCapacity)
     this.addTest("TestCase__Config_FlushIntervalSeconds", TestCase__Config_EventsFlushIntervalSeconds)
     this.addTest("TestCase__Config_Streaming", TestCase__Config_Streaming)
+    this.addTest("TestCase__Config_UseNativeStream", TestCase__Config_UseNativeStream)
     this.addTest("TestCase__Config_URI_Validation", TestCase__Config_URI_Validation)
 
     this.addTest("TestCase__Config_AppInfo_CanSetValidValues", TestCase__Config_AppInfo_CanSetValidValues)

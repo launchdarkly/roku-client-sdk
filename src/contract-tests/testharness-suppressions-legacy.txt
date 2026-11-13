@@ -1,0 +1,4 @@
+# Extra suppressions for the alternate stream client. The harness supports few
+# streaming tests for it. The Makefile adds this file when the test service
+# reports the "roku" capability.
+streaming/requests
