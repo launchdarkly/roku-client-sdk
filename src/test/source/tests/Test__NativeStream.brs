@@ -315,6 +315,32 @@ function TestCase__NativeStream_NetworkUpWithoutDropKeepsStream() as String
     return m.assertFalse(transfer.cancelled)
 end function
 
+function TestCase__NativeStream_StartsWithoutInternet() as String
+    context = LaunchDarklyCreateContext({key: "user-key", kind: "user"})
+    stream = makeTestNativeStreamClient(context)
+    transfer = nativeStreamFakeTransfer()
+
+    stream.private.watchNetwork({
+        setMessagePort: function(port as Object) as Void
+        end function,
+        enableLinkStatusEvent: function(enable as Boolean) as Void
+        end function,
+        enableInternetStatusEvent: function(enable as Boolean) as Void
+        end function,
+        getLinkStatus: function() as Boolean
+            return true
+        end function,
+        getInternetStatus: function() as Boolean
+            return false
+        end function
+    })
+
+    stream.private.transfer = transfer
+    stream.private.handleNetworkMessage(nativeStreamFakeNetworkEvent({internetStatus: true}))
+
+    return m.assertTrue(transfer.cancelled, "internet up after a start without internet must replace the stream")
+end function
+
 function TestSuite__NativeStream() as Object
     this = BaseTestSuite()
 
@@ -334,6 +360,7 @@ function TestSuite__NativeStream() as Object
     this.addTest("TestCase__NativeStream_ConnectedEventKeepsStream", TestCase__NativeStream_ConnectedEventKeepsStream)
     this.addTest("TestCase__NativeStream_NetworkReturnReconnects", TestCase__NativeStream_NetworkReturnReconnects)
     this.addTest("TestCase__NativeStream_NetworkUpWithoutDropKeepsStream", TestCase__NativeStream_NetworkUpWithoutDropKeepsStream)
+    this.addTest("TestCase__NativeStream_StartsWithoutInternet", TestCase__NativeStream_StartsWithoutInternet)
 
     return this
 end function

@@ -172,12 +172,13 @@ function LaunchDarklyNativeStreamClient(config as Object, store as Object, messa
                 m.startStream()
             end function,
 
-            watchNetwork: function() as Void
-                m.deviceInfo = createObject("roDeviceInfo")
+            watchNetwork: function(deviceInfo as Object) as Void
+                m.deviceInfo = deviceInfo
                 m.deviceInfo.setMessagePort(m.messagePort)
                 m.deviceInfo.enableLinkStatusEvent(true)
                 m.deviceInfo.enableInternetStatusEvent(true)
                 m.linkUp = m.deviceInfo.getLinkStatus()
+                m.internetUp = m.deviceInfo.getInternetStatus()
             end function,
 
             handleNetworkMessage: function(message as Object) as Void
@@ -306,7 +307,7 @@ function LaunchDarklyNativeStreamClient(config as Object, store as Object, messa
     }
 
     if config.private.streaming then
-        this.private.watchNetwork()
+        this.private.watchNetwork(createObject("roDeviceInfo"))
     end if
 
     this.handleMessage(invalid)
