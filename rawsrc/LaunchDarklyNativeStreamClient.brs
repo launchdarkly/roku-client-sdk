@@ -4,27 +4,62 @@ function LaunchDarklyNativeStreamSupported() as Boolean
     return FindMemberFunction(createObject("roUrlTransfer"), "AsyncGetSSEvents") <> invalid
 end function
 
+' Returns true when the stream must retry after this HTTP status. The SDK
+' retries after 400, 408, 429 and all 5xx errors. All other 4xx errors stop
+' the stream.
+function LaunchDarklyIsRecoverableStreamStatus(code as Integer) as Boolean
+    if code >= 400 AND code < 500 then
+        return code = 400 OR code = 408 OR code = 429
+    end if
+
+    return true
+end function
+
+function LaunchDarklyIsInteger(value as Dynamic) as Boolean
+    return getInterface(value, "ifInt") <> invalid
+end function
+
 ' Applies one stream event to the store. It returns false when the event data
-' is not valid JSON. The caller must then close the stream.
+' is not valid. The caller must then close the stream. Events other than put,
+' patch and delete are ignored.
 function LaunchDarklyApplyStreamEvent(config as Object, store as Object, status as Object, name as String, data as String) as Boolean
+    if name <> "put" AND name <> "patch" AND name <> "delete" then
+        config.private.logger.debug("SSE stream ignored event: " + name)
+        return true
+    end if
+
     body = parseJSON(data)
 
-    if body = invalid then
-        config.private.logger.error("SSE stream failed to parse JSON")
+    if getInterface(body, "ifAssociativeArray") = invalid then
+        config.private.logger.error("SSE stream " + name + " data is not a JSON object")
         return false
     end if
 
     if name = "put" then
+        for each key in body
+            flag = body[key]
+
+            if getInterface(flag, "ifAssociativeArray") = invalid OR LaunchDarklyIsInteger(flag.version) = false then
+                config.private.logger.error("SSE stream put has an invalid flag: " + key)
+                return false
+            end if
+        end for
+
         store.putAll(body)
         status.private.setStatus(status.map.initialized)
-    else if name = "patch" then
-        if getInterface(body.key, "ifString") = invalid then
-            config.private.logger.error("SSE stream patch body invalid key")
-        else
-            store.upsert(body)
-        end if
-    else if name = "delete" then
-        store.delete(body["key"], body["version"])
+
+        return true
+    end if
+
+    if getInterface(body.key, "ifString") = invalid OR LaunchDarklyIsInteger(body.version) = false then
+        config.private.logger.error("SSE stream " + name + " data has an invalid key or version")
+        return false
+    end if
+
+    if name = "patch" then
+        store.upsert(body)
+    else
+        store.delete(body.key, body.version)
     end if
 
     return true
@@ -32,6 +67,10 @@ end function
 
 ' This stream client reads the standard client-side stream over HTTPS. Use it
 ' only when LaunchDarklyNativeStreamSupported returns true.
+'
+' The client cannot detect a connection that stops without a close, because
+' Roku does not deliver SSE comments. Thus the client reconnects when the
+' device network connection comes back.
 function LaunchDarklyNativeStreamClient(config as Object, store as Object, messagePort as Object, context as Object, status as Object) as Object
     this = {
         private: {
@@ -44,6 +83,14 @@ function LaunchDarklyNativeStreamClient(config as Object, store as Object, messa
 
             transfer: invalid,
             streamBackoff: LaunchDarklyBackoff(),
+
+            ' This is true after an unrecoverable error. The stream then
+            ' stays closed until the context changes.
+            halted: false,
+
+            deviceInfo: invalid,
+            linkUp: true,
+            internetUp: true,
 
             streamURL: function() as String
                 encoded = createObject("roByteArray")
@@ -59,6 +106,10 @@ function LaunchDarklyNativeStreamClient(config as Object, store as Object, messa
                 end if
 
                 return url
+            end function,
+
+            canStream: function() as Boolean
+                return m.config.private.streaming AND m.halted = false AND m.status.getStatus() <> m.status.map.unauthorized
             end function,
 
             startStream: function() as Void
@@ -83,13 +134,70 @@ function LaunchDarklyNativeStreamClient(config as Object, store as Object, messa
                 end if
             end function,
 
-            killStream: function() as Void
+            cancelTransfer: function() as Void
                 if m.transfer <> invalid then
                     m.transfer.asyncCancel()
                     m.transfer = invalid
                 end if
+            end function,
 
+            ' Closes the stream and starts the backoff before the next attempt.
+            killStream: function() as Void
+                m.cancelTransfer()
                 m.streamBackoff.finished()
+            end function,
+
+            ' Closes the stream and does not retry.
+            haltStream: function() as Void
+                m.cancelTransfer()
+                m.halted = true
+            end function,
+
+            ' Opens a new stream at once, without a backoff.
+            reconnectNow: function() as Void
+                if m.canStream() = false then
+                    return
+                end if
+
+                m.config.private.logger.debug("native stream reconnecting after network change")
+
+                m.cancelTransfer()
+                m.streamBackoff.reset()
+                m.startStream()
+            end function,
+
+            watchNetwork: function() as Void
+                m.deviceInfo = createObject("roDeviceInfo")
+                m.deviceInfo.setMessagePort(m.messagePort)
+                m.deviceInfo.enableLinkStatusEvent(true)
+                m.deviceInfo.enableInternetStatusEvent(true)
+                m.linkUp = m.deviceInfo.getLinkStatus()
+            end function,
+
+            handleNetworkMessage: function(message as Object) as Void
+                if message.isStatusMessage() = false then
+                    return
+                end if
+
+                info = message.getInfo()
+                wasUp = m.linkUp AND m.internetUp
+
+                if getInterface(info.linkStatus, "ifBoolean") <> invalid then
+                    m.linkUp = info.linkStatus
+                end if
+
+                if getInterface(info.internetStatus, "ifBoolean") <> invalid then
+                    m.internetUp = info.internetStatus
+                end if
+
+                isUp = m.linkUp AND m.internetUp
+
+                m.config.private.logger.debug("native stream network up: " + isUp.toStr())
+
+                ' The old connection can be dead without an error. Replace it.
+                if isUp AND wasUp = false then
+                    m.reconnectNow()
+                end if
             end function,
 
             isFromTransfer: function(message as Dynamic) as Boolean
@@ -98,25 +206,37 @@ function LaunchDarklyNativeStreamClient(config as Object, store as Object, messa
 
             handleTransferMessage: function(message as Object) as Void
                 code = message.getResponseCode()
+                kind = message.getInt()
 
-                if message.getInt() = 2 then
-                    m.config.private.logger.debug("native stream response code: " + code.toStr())
-                else if message.getInt() = 1 then
-                    m.config.private.logger.debug("native stream ended with code: " + code.toStr() + " reason: " + message.getFailureReason())
-                else
+                if kind <> 1 AND kind <> 2 then
                     return
                 end if
+
+                if code >= 200 AND code < 300 then
+                    if kind = 2 then
+                        m.config.private.logger.debug("native stream connected")
+                    else
+                        m.config.private.logger.debug("native stream closed by the server")
+                        m.killStream()
+                    end if
+
+                    return
+                end if
+
+                m.config.private.logger.debug("native stream failed with code: " + code.toStr() + " reason: " + message.getFailureReason())
 
                 if code = 401 OR code = 403 then
                     m.config.private.logger.error("streaming not authorized")
 
-                    m.killStream()
+                    m.haltStream()
                     m.status.private.setStatus(m.status.map.unauthorized)
-                else if code < 200 OR code >= 300 then
-                    m.config.private.logger.warn("stream http request fail")
+                else if code > 0 AND LaunchDarklyIsRecoverableStreamStatus(code) = false then
+                    m.config.private.logger.error("streaming stopped after unrecoverable HTTP error " + code.toStr())
 
-                    m.killStream()
-                else if message.getInt() = 1 then
+                    m.haltStream()
+                else
+                    m.config.private.logger.warn("stream connection failed, will retry")
+
                     m.killStream()
                 end if
             end function,
@@ -139,7 +259,13 @@ function LaunchDarklyNativeStreamClient(config as Object, store as Object, messa
                 return false
             end if
 
-            if m.private.status.getStatus() <> m.private.status.map.unauthorized AND m.private.transfer = invalid then
+            if type(message) = "roDeviceInfoEvent" then
+                ' The application can have its own roDeviceInfo on this port.
+                ' Do not consume the event.
+                m.private.handleNetworkMessage(message)
+            end if
+
+            if m.private.canStream() AND m.private.transfer = invalid then
                 if m.private.streamBackoff.shouldWait() = false then
                     m.private.config.private.logger.debug("streaming timeout hit")
 
@@ -166,11 +292,16 @@ function LaunchDarklyNativeStreamClient(config as Object, store as Object, messa
             m.private.config.private.logger.debug("stream client switching context")
 
             m.private.context = context
+            m.private.halted = false
             m.private.killStream()
             m.private.streamBackoff.reset()
             m.handleMessage(invalid)
         end function
     }
+
+    if config.private.streaming then
+        this.private.watchNetwork()
+    end if
 
     this.handleMessage(invalid)
 

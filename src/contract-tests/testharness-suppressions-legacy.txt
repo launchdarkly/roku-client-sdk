@@ -1,0 +1,4 @@
+# Extra suppressions for devices before Roku OS 16. These devices use the
+# alternate stream client, and the harness supports few streaming tests for it.
+# The Makefile adds this file when the device runs an older Roku OS.
+streaming/requests

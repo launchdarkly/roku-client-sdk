@@ -54,9 +54,20 @@ start-contract-test-service:
 	@$(MAKE) install FLAVOR=contract-tests
 
 .PHONY: run-contract-tests
+# Devices before Roku OS 16 use the alternate stream client. Those runs also
+# skip the tests in testharness-suppressions-legacy.txt.
 run-contract-tests: guard-HOST_IP guard-ROKU_IP
+	@suppressions=./src/contract-tests/testharness-suppressions.txt; \
+	major=$$(curl -s -m 5 http://$(ROKU_IP):8060/query/device-info | sed -n 's|.*<software-version>\([0-9]*\)\..*|\1|p'); \
+	if [ -z "$$major" ]; then \
+		echo "Cannot read the Roku OS version from $(ROKU_IP). Using the Roku OS 16 suppressions."; \
+	elif [ "$$major" -lt 16 ]; then \
+		echo "Roku OS $$major: adding the legacy suppressions."; \
+		suppressions=$$(mktemp); \
+		cat ./src/contract-tests/testharness-suppressions.txt ./src/contract-tests/testharness-suppressions-legacy.txt > $$suppressions; \
+	fi; \
 	curl -s https://raw.githubusercontent.com/launchdarkly/sdk-test-harness/main/downloader/run.sh \
-      | VERSION=v2 PARAMS="-host $(HOST_IP) -url http://$(ROKU_IP):9000 -debug -stop-service-at-end -skip-from ./src/contract-tests/testharness-suppressions.txt $(TEST_HARNESS_PARAMS)" sh
+      | VERSION=v2 PARAMS="-host $(HOST_IP) -url http://$(ROKU_IP):9000 -debug -stop-service-at-end -skip-from $$suppressions $(TEST_HARNESS_PARAMS)" sh
 
 .PHONY: contract-tests
 contract-tests: #! Run the SDK test harness contract tests
