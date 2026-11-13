@@ -54,15 +54,16 @@ start-contract-test-service:
 	@$(MAKE) install FLAVOR=contract-tests
 
 .PHONY: run-contract-tests
-# Devices before Roku OS 16 use the alternate stream client. Those runs also
-# skip the tests in testharness-suppressions-legacy.txt.
+# The test service reports the "roku" capability when it uses the alternate
+# stream client. Those runs also skip the tests in
+# testharness-suppressions-legacy.txt.
 run-contract-tests: guard-HOST_IP guard-ROKU_IP
 	@suppressions=./src/contract-tests/testharness-suppressions.txt; \
-	major=$$(curl -s -m 5 http://$(ROKU_IP):8060/query/device-info | sed -n 's|.*<software-version>\([0-9]*\)\..*|\1|p'); \
-	if [ -z "$$major" ]; then \
-		echo "Cannot read the Roku OS version from $(ROKU_IP). Using the Roku OS 16 suppressions."; \
-	elif [ "$$major" -lt 16 ]; then \
-		echo "Roku OS $$major: adding the legacy suppressions."; \
+	status=$$(curl -s -m 5 http://$(ROKU_IP):9000/); \
+	if [ -z "$$status" ]; then \
+		echo "Cannot read the test service status from $(ROKU_IP). Using the native stream suppressions."; \
+	elif echo "$$status" | grep -q '"roku"'; then \
+		echo "The test service uses the alternate stream client: adding the legacy suppressions."; \
 		suppressions=$$(mktemp); \
 		cat ./src/contract-tests/testharness-suppressions.txt ./src/contract-tests/testharness-suppressions-legacy.txt > $$suppressions; \
 	fi; \

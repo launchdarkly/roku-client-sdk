@@ -339,7 +339,7 @@ function Handler(clients as Object, launchDarklyNode as Object, monitor as Objec
 
             ' The test harness uses the Roku handshake flow when "roku" is
             ' present. The native stream client uses the standard mobile flow.
-            if LaunchDarklyNativeStreamSupported() = false then
+            if serviceUsesNativeStream() = false then
               status["capabilities"].push("roku")
             end if
 
@@ -356,6 +356,7 @@ function Handler(clients as Object, launchDarklyNode as Object, monitor as Objec
           configuration = jsonBody["configuration"]
           config = LaunchDarklyConfig(configuration["credential"], m.private.launchDarklyNode)
           config.private.forcePlainTextInStream = true
+          config.setUseNativeStream(serviceUsesNativeStream())
           config.setLogLevel(LaunchDarklyLogLevels().debug)
 
           clientSide = configuration["clientSide"]
@@ -676,6 +677,12 @@ function Handler(clients as Object, launchDarklyNode as Object, monitor as Objec
 end function
 
 ' Return a value as display text. Return "?" for a value that is not a string.
+' Set use_native_stream=false in the manifest to test the older stream client
+' on Roku OS 16 and later.
+function serviceUsesNativeStream() as Boolean
+    return LaunchDarklyNativeStreamSupported() AND createObject("roAppInfo").getValue("use_native_stream") <> "false"
+end function
+
 function monitorText(value as Dynamic) as String
     if value <> invalid and getInterface(value, "ifString") <> invalid then
         return value

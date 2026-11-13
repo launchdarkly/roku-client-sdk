@@ -516,7 +516,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, context as Object
     launchDarklyLocalThis.private.append(LaunchDarklyClientSharedPrivateFunctions())
     launchDarklyLocalThis.append(LaunchDarklyClientSharedFunctions(launchDarklyParamConfig.private.sceneGraphNode))
 
-    if LaunchDarklyNativeStreamSupported() then
+    if LaunchDarklyUseNativeStream(launchDarklyParamConfig) then
         launchDarklyParamConfig.private.logger.debug("using native SSE stream client")
         launchDarklyLocalThis.private.streamClient = LaunchDarklyNativeStreamClient(launchDarklyParamConfig, launchDarklyLocalStore, launchDarklyParamMessagePort, context, launchDarklyLocalThis.status)
     else

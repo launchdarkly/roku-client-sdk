@@ -4,6 +4,12 @@ function LaunchDarklyNativeStreamSupported() as Boolean
     return FindMemberFunction(createObject("roUrlTransfer"), "AsyncGetSSEvents") <> invalid
 end function
 
+' Returns true when the client must use the native stream client. The
+' application can turn off the native client in the config.
+function LaunchDarklyUseNativeStream(config as Object) as Boolean
+    return config.private.useNativeStream AND LaunchDarklyNativeStreamSupported()
+end function
+
 ' Returns true when the stream must retry after this HTTP status. The SDK
 ' retries after 400, 408, 429 and all 5xx errors. All other 4xx errors stop
 ' the stream.
@@ -66,7 +72,7 @@ function LaunchDarklyApplyStreamEvent(config as Object, store as Object, status 
 end function
 
 ' This stream client reads the standard client-side stream over HTTPS. Use it
-' only when LaunchDarklyNativeStreamSupported returns true.
+' only when LaunchDarklyUseNativeStream returns true.
 '
 ' The client cannot detect a connection that stops without a close, because
 ' Roku does not deliver SSE comments. Thus the client reconnects when the
