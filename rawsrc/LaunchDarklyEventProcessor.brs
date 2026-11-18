@@ -50,7 +50,10 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, context a
 
                 launchDarklyLocalEvent.key = launchDarklyParamBundle.flagKey
                 launchDarklyLocalEvent.version = m.getFlagVersion(launchDarklyParamBundle.flag)
-                launchDarklyLocalEvent.variation = launchDarklyParamBundle.flag.variation
+                ' A type mismatch serves the fallback, so no variation was selected.
+                if launchDarklyParamBundle.typeMatch <> false then
+                    launchDarklyLocalEvent.variation = launchDarklyParamBundle.flag.variation
+                end if
                 launchDarklyLocalEvent.value = launchDarklyParamBundle.value
                 launchDarklyLocalEvent.default = launchDarklyParamBundle.fallback
 
@@ -156,7 +159,9 @@ function LaunchDarklyEventProcessor(launchDarklyParamConfig as Object, context a
 
                 if launchDarklyParamFlag <> invalid AND launchDarklyLocalCounter.count = 0 then
                     launchDarklyLocalCounter.version = m.getFlagVersion(launchDarklyParamFlag)
-                    launchDarklyLocalCounter.variation = launchDarklyParamFlag.variation
+                    if launchDarklyParamTypeMatch then
+                        launchDarklyLocalCounter.variation = launchDarklyParamFlag.variation
+                    end if
                 end if
 
                 launchDarklyLocalCounter.count += 1
