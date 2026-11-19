@@ -117,6 +117,66 @@ function TestCase__Client_Eval_Tracked() as String
     })
 end function
 
+function TestCase__Client_Eval_WrongTypeOmitsVariation() as String
+    client = makeTestClientInitialized()
+
+    client.private.store.putAll({
+        flag1: {
+            value: "hello world!",
+            trackEvents: true,
+            variation: 3,
+            flagVersion: 5
+        }
+    })
+
+    a = m.assertEqual(client.intVariation("flag1", 50), 50)
+    if a <> "" then
+        return a
+    end if
+
+    eventQueue = client.private.eventProcessor.flush()
+
+    a = m.assertEqual(eventQueue.count(), 3)
+    if a <> "" then
+        return a
+    end if
+
+    event = eventQueue.getEntry(1)
+    event.delete("creationDate")
+
+    a = m.assertEqual(FormatJSON(event), FormatJSON({
+        kind: "feature",
+        context: {
+            key: "user-key",
+            kind: "user"
+        },
+        key: "flag1",
+        value: 50,
+        default: 50,
+        version: 5
+    }))
+    if a <> "" then
+        return a
+    end if
+
+    summary = eventQueue.getEntry(2)
+
+    counters = createObject("roArray", 0, true)
+    counters.push({
+        version: 5,
+        count: 1,
+        value: 50
+    })
+
+    return m.assertEqual(FormatJSON(summary.features), FormatJSON({
+        flag1: {
+            default: 50,
+            counters: counters,
+            "contextKinds": ["user"]
+        }
+    }))
+end function
+
 function TestCase__Client_Summary_Known() as String
     client = makeTestClientInitialized()
 
@@ -651,6 +711,7 @@ function TestSuite__Client() as Object
     this.addTest("TestCase__Client_Eval_Offline", TestCase__Client_Eval_Offline)
     this.addTest("TestCase__Client_Eval_NotTracked", TestCase__Client_Eval_NotTracked)
     this.addTest("TestCase__Client_Eval_Tracked", TestCase__Client_Eval_Tracked)
+    this.addTest("TestCase__Client_Eval_WrongTypeOmitsVariation", TestCase__Client_Eval_WrongTypeOmitsVariation)
     this.addTest("TestCase__Client_Track", TestCase__Client_Track)
     this.addTest("TestCase__Client_Identify", TestCase__Client_Identify)
     this.addTest("TestCase__Client_Summary_Unknown", TestCase__Client_Summary_Unknown)
