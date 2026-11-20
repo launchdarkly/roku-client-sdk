@@ -10,6 +10,7 @@ sub main(params as object)
             TestSuite__Context
             TestSuite__Crypto
             TestSuite__HTTP
+            TestSuite__NativeStream
             TestSuite__Reference
             TestSuite__SSE
             TestSuite__Store_Memory

@@ -22,30 +22,25 @@ function LaunchDarklyBackoff() as Object
             m.private.waitUntil = 0
         end function,
 
+        ' The delay doubles after each failure, from 1 second up to 30 seconds.
+        ' The wait is a random value between half the delay and the full delay.
+        ' A stream that stayed open for 60 seconds starts again at 1 second.
         finished: function() as Void
-            if m.private.gotStreamData AND m.private.streamStarted.totalSeconds() > 60 then
-                m.reset()
-                return
+            if m.private.gotStreamData AND m.private.streamStarted.totalSeconds() >= 60 then
+                m.private.attempts = 0
             end if
+
+            launchDarklyLocalDelay = 30 * 1000
+            if m.private.attempts < 5 then
+                launchDarklyLocalDelay = 1000 * (2 ^ m.private.attempts)
+            end if
+
+            launchDarklyLocalHalf = int(launchDarklyLocalDelay / 2)
+            launchDarklyLocalWait = launchDarklyLocalHalf + rnd(launchDarklyLocalHalf)
 
             m.private.attempts++
-
-            if m.private.attempts = 1 then
-                m.private.waitUntil = 1000 + m.private.u.getMilliseconds()
-                return
-            end if
-
-            launchDarklyLocalBackoff = 1000 * (2 ^ m.private.attempts) / 2
-            launchDarklyLocalBackoff /= 2
-            REM jitter random value between 0 and backoff
-            launchDarklyLocalBackoff += rnd(launchDarklyLocalBackoff)
-
-            launchDarklyLocalBackoffLimit = 30 * 1000
-            if launchDarklyLocalBackoff > launchDarklyLocalBackoffLimit then
-                launchDarklyLocalBackoff = launchdarklyLocalBackoffLimit
-            end if
-
-            m.private.waitUntil = launchDarklyLocalBackoff + m.private.u.getMilliseconds()
+            m.private.gotStreamData = false
+            m.private.waitUntil = launchDarklyLocalWait + m.private.u.getMilliseconds()
         end function,
 
         shouldWait: function() as Boolean
@@ -83,7 +78,7 @@ function LaunchDarklyStream(launchDarklyParamBuffer=invalid as Object) as Object
             return launchDarklyLocalResult
         end function,
 
-        REM Invalid or Integer
+        ' Invalid or Integer
         takeByte: function() as Dynamic
             if m.count() = 0 then
                 return invalid
@@ -168,7 +163,7 @@ function LaunchDarklyUtility() as Object
             return m.regexHex.isMatch(launchDarklyParamText)
         end function,
 
-        REM Integer or Invalid
+        ' Integer or Invalid
         hexToDecimal: function(launchDarklyParamHex as String) as Dynamic
             if m.isValidHex(launchDarklyParamHex) then
                 return val(launchDarklyParamHex, 16)
@@ -246,9 +241,9 @@ function LaunchDarklyUtility() as Object
         end function,
 
         getMilliseconds: function()
-            REM Clock is stopped on object creation
+            ' Clock is stopped on object creation
             launchDarklyLocalNow = createObject("roDateTime")
-            REM Ensure double is used
+            ' Ensure double is used
             launchDarklyLocalCreationDate# = launchDarklyLocalNow.asSeconds()
             launchDarklyLocalCreationDate# *= 1000
             launchDarklyLocalCreationDate# += launchDarklyLocalNow.getMilliseconds()

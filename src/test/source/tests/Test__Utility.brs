@@ -117,6 +117,39 @@ function TestCase__Utility_Backoff() as String
     return m.assertFalse(backoff.shouldWait())
 end function
 
+function TestCase__Utility_BackoffDelays() as String
+    backoff = LaunchDarklyBackoff()
+    u = backoff.private.u
+
+    ' Each entry is the full delay for that attempt. The wait is between half
+    ' the delay and the full delay.
+    for each delay in [1000, 2000, 4000, 8000, 16000, 30000, 30000]
+        backoff.started()
+        backoff.finished()
+
+        waitMs = backoff.private.waitUntil - u.getMilliseconds()
+
+        a = m.assertTrue(waitMs >= delay / 2 - 50 AND waitMs <= delay, "delay " + delay.toStr() + " wait " + waitMs.toStr())
+        if a <> "" then
+            return a
+        end if
+    end for
+
+    ' A stream that stayed open for 60 seconds starts again at 1 second, but still waits.
+    backoff.started()
+    backoff.gotStreamData()
+    backoff.private.streamStarted = {
+        totalSeconds: function() as Integer
+            return 61
+        end function
+    }
+    backoff.finished()
+
+    waitMs = backoff.private.waitUntil - u.getMilliseconds()
+
+    return m.assertTrue(waitMs >= 450 AND waitMs <= 1000, "wait after healthy stream " + waitMs.toStr())
+end function
+
 function TestCase__Utility_ExtractUriParts() as String
     u = LaunchDarklyUtility()
 
@@ -182,6 +215,7 @@ function TestSuite__Utility() as Object
     this.addTest("TestCase__Utility_IsValidHex", TestCase__Utility_IsValidHex)
     this.addTest("TestCase__Utility_GetMilliseconds", TestCase__Utility_GetMilliseconds)
     this.addTest("TestCase__Utility_Backoff", TestCase__Utility_Backoff)
+    this.addTest("TestCase__Utility_BackoffDelays", TestCase__Utility_BackoffDelays)
     this.addTest("TestCase__Utility_ExtractUriParts", TestCase__Utility_ExtractUriParts)
     this.addTest("TestCase__Utility_RandomBytes", TestCase__Utility_RandomBytes)
     this.addTest("TestCase__Utility_UnsignedIntegerToLittleEndian", TestCase__Utility_UnsignedIntegerToLittleEndian)

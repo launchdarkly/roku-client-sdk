@@ -20,6 +20,7 @@ function LaunchDarklyConfig(launchDarklyParamMobileKey as String, launchDarklyPa
             storeBackend: invalid,
             storeBackendNode: launchDarklyParamSceneGraphNode,
             streaming: true,
+            useNativeStream: true,
             logLevel: LaunchDarklyLogLevels().warn,
             sceneGraphNode: launchDarklyParamSceneGraphNode,
             useReasons: false,
@@ -107,6 +108,13 @@ function LaunchDarklyConfig(launchDarklyParamMobileKey as String, launchDarklyPa
 
         setStreaming: function(launchDarklyParamShouldStream as Boolean) as Void
             m.private.streaming = launchDarklyParamShouldStream
+        end function,
+
+        ' On Roku OS 16 and later, the SDK uses the native Roku SSE support for
+        ' streaming. Set this to false to use the older stream client instead.
+        ' The older client works on all Roku OS versions.
+        setUseNativeStream: function(launchDarklyParamUseNativeStream as Boolean) as Void
+            m.private.useNativeStream = launchDarklyParamUseNativeStream
         end function,
 
         setLogLevel: function(launchDarklyParamLogLevel as Integer) as Void
