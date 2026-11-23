@@ -17,7 +17,7 @@ Refer to the [SDK documentation](https://docs.launchdarkly.com/sdk/client-side/r
 Learn more
 -----------
 
-Read our [documentation](https://docs.launchdarkly.com) for in-depth instructions on configuring and using LaunchDarkly. You can also head straight to the [complete reference guide for this SDK](https://docs.launchdarkly.com/docs/roku-sdk-reference).
+Read our [documentation](https://docs.launchdarkly.com) for in-depth instructions on configuring and using LaunchDarkly. You can also head straight to the [complete reference guide for this SDK](https://launchdarkly.com/docs/sdk/client-side/roku).
 
 Testing
 -------
