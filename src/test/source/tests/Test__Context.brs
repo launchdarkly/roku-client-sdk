@@ -31,6 +31,11 @@ function TestCase__Context_LegacyFormat_ValidatesTypes() as String
     {"context": {"key": "my-key", "privateAttributeNames": "true"}, "error": "context private attributes must be an array"},
     {"context": {"key": "my-key", "privateAttributeNames": 3}, "error": "context private attributes must be an array"},
     {"context": {"key": "my-key", "privateAttributeNames": true}, "error": "context private attributes must be an array"},
+    {"context": {"key": "my-key", "privateAttributeNames": ["name", 3]}, "error": "context private attributes must be an array of strings"},
+    {"context": {"key": "my-key", "privateAttributeNames": [true]}, "error": "context private attributes must be an array of strings"},
+    {"context": {"key": "my-key", "privateAttributeNames": [{"name": "value"}]}, "error": "context private attributes must be an array of strings"},
+    {"context": {"key": "my-key", "privateAttributeNames": [["name"]]}, "error": "context private attributes must be an array of strings"},
+    {"context": {"key": "my-key", "privateAttributeNames": [invalid]}, "error": "context private attributes must be an array of strings"},
   ]
 
   for each testCase in testCases
@@ -141,6 +146,11 @@ function TestCase__Context_SingleKind_ValidatesTypes() as String
     {"context": {"kind": "user", "key": "my-key", "_meta": {"privateAttributes": "true"}}, "error": "context private attributes must be an array"},
     {"context": {"kind": "user", "key": "my-key", "_meta": {"privateAttributes": 3}}, "error": "context private attributes must be an array"},
     {"context": {"kind": "user", "key": "my-key", "_meta": {"privateAttributes": true}}, "error": "context private attributes must be an array"},
+    {"context": {"kind": "user", "key": "my-key", "_meta": {"privateAttributes": ["name", 3]}}, "error": "context private attributes must be an array of strings"},
+    {"context": {"kind": "user", "key": "my-key", "_meta": {"privateAttributes": [true]}}, "error": "context private attributes must be an array of strings"},
+    {"context": {"kind": "user", "key": "my-key", "_meta": {"privateAttributes": [{"name": "value"}]}}, "error": "context private attributes must be an array of strings"},
+    {"context": {"kind": "user", "key": "my-key", "_meta": {"privateAttributes": [["name"]]}}, "error": "context private attributes must be an array of strings"},
+    {"context": {"kind": "user", "key": "my-key", "_meta": {"privateAttributes": [invalid]}}, "error": "context private attributes must be an array of strings"},
   ]
 
   for each testCase in testCases

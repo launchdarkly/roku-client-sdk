@@ -384,8 +384,9 @@ function LaunchDarklyContextUtilities(createContext as Function) as Object
       end for
 
       privateAttributes = data["privateAttributeNames"]
-      if privateAttributes <> invalid and type(privateAttributes) <> "roArray" then
-        return m.createInvalidContext("context private attributes must be an array")
+      privateAttributesError = m.validatePrivateAttributes(privateAttributes)
+      if privateAttributesError <> invalid then
+        return m.createInvalidContext(privateAttributesError)
       end if
 
       return m.private.createContext(key, key, "user", name, anonymous, attributes, privateAttributes)
@@ -436,8 +437,9 @@ function LaunchDarklyContextUtilities(createContext as Function) as Object
       end if
 
       privateAttributes = meta["privateAttributes"]
-      if privateAttributes <> invalid and type(privateAttributes) <> "roArray" then
-        return m.createInvalidContext("context private attributes must be an array")
+      privateAttributesError = m.validatePrivateAttributes(privateAttributes)
+      if privateAttributesError <> invalid then
+        return m.createInvalidContext(privateAttributesError)
       end if
 
       ' We only need to create an attribute hash if there are keys set outside
@@ -547,6 +549,24 @@ function LaunchDarklyContextUtilities(createContext as Function) as Object
       end if
 
       return "context name must be a string"
+    end function,
+
+    validatePrivateAttributes: function(privateAttributes as Object) as Object
+      if privateAttributes = invalid then
+        return invalid
+      end if
+
+      if type(privateAttributes) <> "roArray" then
+        return "context private attributes must be an array"
+      end if
+
+      for each privateAttribute in privateAttributes
+        if type(privateAttribute) <> "String" and type(privateAttribute) <> "roString" then
+          return "context private attributes must be an array of strings"
+        end if
+      end for
+
+      return invalid
     end function,
 
     validateAnonymous: function(anonymous as Object, allowInvalid as Boolean) as Object
