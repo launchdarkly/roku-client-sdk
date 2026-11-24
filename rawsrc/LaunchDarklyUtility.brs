@@ -231,6 +231,12 @@ function LaunchDarklyUtility() as Object
             return launchDarklyLocalBytes
         end function,
 
+        ' Encodes bytes as URL-safe base64 (RFC 4648 section 5), which can go in
+        ' a URL path; standard base64 can contain "+" and "/".
+        base64UrlEncode: function(launchDarklyParamBytes as Object) as String
+            return launchDarklyParamBytes.toBase64String().Replace("+", "-").Replace("/", "_")
+        end function,
+
         byteArrayEq: function(launchDarklyParamLeft as Object, launchDarklyParamRight as Object) as Boolean
             if launchDarklyParamLeft.count() <> launchDarklyParamRight.count() then
                 return false

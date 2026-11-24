@@ -351,7 +351,7 @@ function LaunchDarklyClient(launchDarklyParamConfig as Object, context as Object
             preparePolling: function() as Void
                 launchDarklyLocalBuffer = createObject("roByteArray")
                 launchDarklyLocalBuffer.fromAsciiString(FormatJSON(NewLaunchDarklyContextFilter().filter(m.context, true)))
-                launchDarklyLocalContextBase64JSON = launchDarklyLocalBuffer.toBase64String()
+                launchDarklyLocalContextBase64JSON = m.util.base64UrlEncode(launchDarklyLocalBuffer)
                 launchDarklyLocalUrl = m.config.private.appURI + "/msdk/evalx/contexts/" + launchDarklyLocalContextBase64JSON
 
                 if m.config.private.useReasons then
