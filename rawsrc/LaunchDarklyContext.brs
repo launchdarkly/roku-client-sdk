@@ -363,7 +363,29 @@ function LaunchDarklyContextUtilities(createContext as Function) as Object
         return m.createInvalidContext("context custom must be an roAssociativeArray")
       end if
 
-      attributes = custom
+      ' Copy custom into a new map so we never mutate the caller's data.
+      ' Names that collide with built-in properties are ignored; the built-in
+      ' values come only from the top level of the legacy user.
+      attributes = invalid
+      if custom <> invalid then
+        for each k in custom
+          if k = "kind" or k = "key" or k = "name" or k = "anonymous" or k = "_meta" then
+            continue for
+          end if
+
+          value = custom[k]
+          if value = invalid then
+            continue for
+          end if
+
+          if attributes = invalid then
+            attributes = {}
+          end if
+
+          attributes[k] = value
+        end for
+      end if
+
       for each k in data
         if k = "ip" or k = "email" or k = "avatar" or k = "firstName" or k = "lastName" or k = "country" then
           value = data[k]

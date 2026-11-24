@@ -107,6 +107,74 @@ function TestCase__Context_LegacyFormat_CanRetrieveComplexAttributes() as String
 
   return ""
 end function
+
+' A legacy user's built-in properties come only from the top level. Custom
+' attributes that reuse a built-in name are ignored, as in go-sdk-common.
+function TestCase__Context_LegacyFormat_IgnoresBuiltInNamesInCustom() as String
+  custom = {"key": "fake", "kind": "org", "name": "custom-name", "anonymous": true, "_meta": {"privateAttributes": ["attr"]}, "attr": 1}
+  context = LaunchDarklyCreateContext({"key": "real", "custom": custom})
+
+  r = m.assertTrue(context.isValid())
+  if r <> "" then
+    return r
+  end if
+
+  r = m.assertEqual(context.key(), "real")
+  if r <> "" then
+    return r
+  end if
+
+  r = m.assertEqual(context.kind(), "user")
+  if r <> "" then
+    return r
+  end if
+
+  r = m.assertEqual(context.getCustomAttributeNames(), ["attr"])
+  if r <> "" then
+    return r
+  end if
+
+  r = m.assertInvalid(context.getValue("name"))
+  if r <> "" then
+    return r
+  end if
+
+  r = m.assertFalse(context.getValue("anonymous"))
+  if r <> "" then
+    return r
+  end if
+
+  return m.assertInvalid(context.getValue("_meta"))
+end function
+
+function TestCase__Context_LegacyFormat_EncodingIgnoresBuiltInNamesInCustom() as String
+  custom = {"key": "fake", "kind": "org", "name": "custom-name", "anonymous": true, "_meta": {"privateAttributes": ["attr"]}, "attr": 1}
+
+  testCases = [
+    {"user": {"key": "real", "custom": custom}, "allPrivate": false, "redactAnonymous": false, "expected": {"kind": "user", "key": "real", "attr": 1}},
+    {"user": {"key": "real", "custom": custom}, "allPrivate": true, "redactAnonymous": false, "expected": {"kind": "user", "key": "real", "_meta": {"redactedAttributes": ["attr"]}}},
+    {"user": {"key": "real", "anonymous": true, "custom": custom}, "allPrivate": false, "redactAnonymous": true, "expected": {"kind": "user", "key": "real", "anonymous": true, "_meta": {"redactedAttributes": ["attr"]}}},
+  ]
+
+  for each testCase in testCases
+    context = LaunchDarklyCreateContext(testCase["user"])
+    encoded = LaunchDarklyContextFilter(testCase["allPrivate"], []).filter(context, false, testCase["redactAnonymous"])
+
+    r = m.assertEqual(FormatJSON(encoded), FormatJSON(testCase["expected"]))
+    if r <> "" then
+      return r
+    end if
+  end for
+
+  return ""
+end function
+
+function TestCase__Context_LegacyFormat_DoesNotModifyCustom() as String
+  custom = {"attr": 1}
+  LaunchDarklyCreateContext({"key": "my-key", "email": "a@example.com", "custom": custom})
+
+  return m.assertEqual(FormatJSON(custom), FormatJSON({"attr": 1}))
+end function
 ' }}}
 
 ' {{{ Single-kind context tests
@@ -385,6 +453,9 @@ function TestSuite__Context() as Object
     this.addTest("TestCase__Context_LegacyFormat_CanCreate", TestCase__Context_LegacyFormat_CanCreate)
     this.addTest("TestCase__Context_LegacyFormat_CanRetrieveBasicAttributes", TestCase__Context_LegacyFormat_CanRetrieveBasicAttributes)
     this.addTest("TestCase__Context_LegacyFormat_CanRetrieveComplexAttributes", TestCase__Context_LegacyFormat_CanRetrieveComplexAttributes)
+    this.addTest("TestCase__Context_LegacyFormat_IgnoresBuiltInNamesInCustom", TestCase__Context_LegacyFormat_IgnoresBuiltInNamesInCustom)
+    this.addTest("TestCase__Context_LegacyFormat_EncodingIgnoresBuiltInNamesInCustom", TestCase__Context_LegacyFormat_EncodingIgnoresBuiltInNamesInCustom)
+    this.addTest("TestCase__Context_LegacyFormat_DoesNotModifyCustom", TestCase__Context_LegacyFormat_DoesNotModifyCustom)
 
     this.addTest("TestCase__Context_SingleKind_ValidatesTypes", TestCase__Context_SingleKind_ValidatesTypes)
     this.addTest("TestCase__Context_SingleKind_CanCreate", TestCase__Context_SingleKind_CanCreate)
