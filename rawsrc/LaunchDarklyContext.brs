@@ -236,7 +236,7 @@ end function
 ' context, and the associated errors by calling `context.isValid()` and
 ' `context.error()`.
 function LaunchDarklyCreateContext(data as Object) as Object
-  createContext = function (key, fullyQualifiedKey, kind, name = invalid, anonymous = invalid, attributes = invalid, privateAttributes = invalid, error = invalid, contexts = invalid) as Object
+  createContext = function (key, fullyQualifiedKey, kind, name = invalid, anonymous = invalid, attributes = invalid, privateAttributes = invalid, error = invalid, contexts = invalid, privateAttributesAreLiteral = false) as Object
     if anonymous = invalid then
       anonymous = false
     end if
@@ -246,7 +246,7 @@ function LaunchDarklyCreateContext(data as Object) as Object
       privateAttributeReferences = CreateObject("roArray", privateAttributes.Count(), false)
 
       for each privateAttribute in privateAttributes
-        reference = LaunchDarklyCreateReference(privateAttribute)
+        reference = LaunchDarklyCreateReference(privateAttribute, privateAttributesAreLiteral)
         if reference.isValid() then
           privateAttributeReferences.Push(reference)
         end if
@@ -389,7 +389,10 @@ function LaunchDarklyContextUtilities(createContext as Function) as Object
         return m.createInvalidContext(privateAttributesError)
       end if
 
-      return m.private.createContext(key, key, "user", name, anonymous, attributes, privateAttributes)
+      ' Legacy users predate attribute references, so each private attribute
+      ' name is a literal top-level attribute name; "/a" names an attribute
+      ' called "/a", not a path.
+      return m.private.createContext(key, key, "user", name, anonymous, attributes, privateAttributes, invalid, invalid, true)
     end function,
 
     ' Attempt to create a single-kind context using the new context format.
@@ -671,14 +674,16 @@ function LaunchDarklyContextFilter(allAttributesPrivate as Boolean, privateAttri
       end function,
 
       checkWholeAttributePrivate: function(attribute as String, privateAttributes as Object, redacted as Object, redactAll as Boolean) as Object
+        ' redactedAttributes holds attribute references, so a name that
+        ' starts with "/" must be escaped ("/a" becomes "/~1a").
         if redactAll then
-          redacted.Push(attribute)
+          redacted.Push(LaunchDarklyCreateReference(attribute, true).rawPath())
           return true
         end if
 
         for each privateAttribute in privateAttributes
           if privateAttribute.component(0) = attribute and privateAttribute.depth() = 1 then
-            redacted.Push(attribute)
+            redacted.Push(LaunchDarklyCreateReference(attribute, true).rawPath())
             return true
           end if
         end for
