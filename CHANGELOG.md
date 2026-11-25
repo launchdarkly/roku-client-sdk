@@ -2,6 +2,15 @@
 
 All notable changes to the LaunchDarkly Roku SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.4.4](https://github.com/launchdarkly/roku-client-sdk/compare/2.4.3...2.4.4) (2026-11-25)
+
+
+### Bug Fixes
+
+* Treat contexts with non-string private attribute entries as invalid ([#68](https://github.com/launchdarkly/roku-client-sdk/issues/68)) ([1a42fa1](https://github.com/launchdarkly/roku-client-sdk/commit/1a42fa10702cb5b9ebb464a75dd0689ae970ee78))
+* Treat legacy user privateAttributeNames as literal attribute names ([#72](https://github.com/launchdarkly/roku-client-sdk/issues/72)) ([505063e](https://github.com/launchdarkly/roku-client-sdk/commit/505063ed4237ac0fc671e1d5db7a1c452a679dae))
+* Use URL-safe base64 for the context in polling requests ([#71](https://github.com/launchdarkly/roku-client-sdk/issues/71)) ([cc28650](https://github.com/launchdarkly/roku-client-sdk/commit/cc28650f2c470a9b29dd8b6ebebd662095ee7a6e))
+
 ## [2.4.3](https://github.com/launchdarkly/roku-client-sdk/compare/2.4.2...2.4.3) (2026-11-19)
 
 
