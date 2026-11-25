@@ -1,14 +1,3 @@
-# Roku does not yet support using REPORT verb
-polling/requests/context properties/multi-kind/REPORT
-polling/requests/context properties/single kind minimal/REPORT
-polling/requests/context properties/single kind with all attributes/REPORT
-polling/requests/method and headers/REPORT
-polling/requests/URL path is computed correctly/no environment filter/base URI has a trailing slash/REPORT
-polling/requests/URL path is computed correctly/no environment filter/base URI has no trailing slash/REPORT
-
-# Roku streaming support is limited in the contract tests
-streaming/requests
-
 # SDK doesn't parse server date header
 events/debug events/should not see debug event/debugEventsUntilDate is after SDK time/SDK knows LD time is after debugEventsUntilDate/without reasons/type: any
 events/debug events/should not see debug event/debugEventsUntilDate is after SDK time/SDK knows LD time is after debugEventsUntilDate/without reasons/type: bool
