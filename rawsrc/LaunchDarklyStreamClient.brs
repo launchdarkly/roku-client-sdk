@@ -189,28 +189,12 @@ function LaunchDarklyStreamClient(launchDarklyParamConfig as Object, launchDarkl
                     else
                         m.config.private.logger.debug("SSE stream got event: " + launchDarklyLocalEvent.name)
 
-                        launchDarklyLocalBody = parseJSON(launchDarklyLocalEvent.value)
-
-                        if launchDarklyLocalBody = invalid then
-                            m.config.private.logger.error("SSE stream failed to parse JSON")
+                        if LaunchDarklyApplyStreamEvent(m.config, m.store, m.status, launchDarklyLocalEvent.name, launchDarklyLocalEvent.value) = false then
                             m.killStream()
                             return false
                         end if
 
                         m.streamBackoff.gotStreamData()
-
-                        if launchDarklyLocalEvent.name = "put" then
-                            m.store.putAll(launchDarklyLocalBody)
-                            m.status.private.setStatus(m.status.map.initialized)
-                        else if launchDarklyLocalEvent.name = "patch" then
-                            if getInterface(launchDarklyLocalBody.key, "ifString") = invalid then
-                                m.config.private.logger.error("SSE stream patch body invalid key")
-                            else
-                                m.store.upsert(launchDarklyLocalBody)
-                            end if
-                        else if launchDarklyLocalEvent.name = "delete" then
-                            m.store.delete(launchDarklyLocalBody["key"], launchDarklyLocalBody["version"])
-                        end if
                     end if
                 end while
             end function

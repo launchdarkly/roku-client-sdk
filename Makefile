@@ -54,9 +54,21 @@ start-contract-test-service:
 	@$(MAKE) install FLAVOR=contract-tests
 
 .PHONY: run-contract-tests
+# The test service reports the "roku" capability when it uses the alternate
+# stream client. Those runs also skip the tests in
+# testharness-suppressions-legacy.txt.
 run-contract-tests: guard-HOST_IP guard-ROKU_IP
+	@suppressions=./src/contract-tests/testharness-suppressions.txt; \
+	status=$$(curl -s -m 5 http://$(ROKU_IP):9000/); \
+	if [ -z "$$status" ]; then \
+		echo "Cannot read the test service status from $(ROKU_IP). Using the native stream suppressions."; \
+	elif echo "$$status" | grep -q '"roku"'; then \
+		echo "The test service uses the alternate stream client: adding the legacy suppressions."; \
+		suppressions=$$(mktemp); \
+		cat ./src/contract-tests/testharness-suppressions.txt ./src/contract-tests/testharness-suppressions-legacy.txt > $$suppressions; \
+	fi; \
 	curl -s https://raw.githubusercontent.com/launchdarkly/sdk-test-harness/main/downloader/run.sh \
-      | VERSION=v2 PARAMS="-host $(HOST_IP) -url http://$(ROKU_IP):9000 -debug -stop-service-at-end -skip-from ./src/contract-tests/testharness-suppressions.txt $(TEST_HARNESS_PARAMS)" sh
+      | VERSION=v2 PARAMS="-host $(HOST_IP) -url http://$(ROKU_IP):9000 -debug -stop-service-at-end -skip-from $$suppressions $(TEST_HARNESS_PARAMS)" sh
 
 .PHONY: contract-tests
 contract-tests: #! Run the SDK test harness contract tests
