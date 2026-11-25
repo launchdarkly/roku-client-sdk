@@ -83,6 +83,58 @@ function TestCase__Context_LegacyFormat_CanRetrieveBasicAttributes() as String
   return ""
 end function
 
+' Legacy privateAttributeNames are literal attribute names, not attribute
+' references, so a leading "/" does not start a path.
+function TestCase__Context_LegacyFormat_PrivateAttributeNamesAreLiteral() as String
+  context = LaunchDarklyCreateContext({
+    "key": "my-key",
+    "custom": {"/a": "secret", "/b/c": "secret", "/~x": "secret", "b": {"c": "keep me"}},
+    "privateAttributeNames": ["/a", "/b/c", "/~x"]
+  })
+  filter = NewLaunchDarklyContextFilter(LaunchDarklyConfig("mob"))
+  expectedRefs = ["/~1a", "/~1b~1c", "/~1~0x"]
+
+  encoded = filter.filter(context)
+  for each attribute in ["/a", "/b/c", "/~x"]
+    r = m.assertFalse(encoded.DoesExist(attribute), attribute + " should be redacted")
+    if r <> "" then
+      return r
+    end if
+  end for
+
+  r = m.assertEqual(encoded["b"], {"c": "keep me"})
+  if r <> "" then
+    return r
+  end if
+
+  r = m.assertSameRefs(encoded["_meta"]?.redactedAttributes, expectedRefs)
+  if r <> "" then
+    return r
+  end if
+
+  ' Flag requests send the private attributes as references in the new schema.
+  encoded = filter.filter(context, true)
+  return m.assertSameRefs(encoded["_meta"]?.privateAttributes, expectedRefs)
+end function
+
+' With allAttributesPrivate, redactedAttributes still lists attribute
+' references, so a name that starts with "/" is escaped.
+function TestCase__Context_AllAttributesPrivate_EscapesRedactedNames() as String
+  context = LaunchDarklyCreateContext({"key": "my-key", "kind": "user", "/a": "secret", "b/c": "secret"})
+
+  encoded = LaunchDarklyContextFilter(true, []).filter(context)
+  return m.assertSameRefs(encoded["_meta"]?.redactedAttributes, ["/~1a", "b/c"])
+end function
+
+function TestUtil__Context_AssertSameRefs(actual as Dynamic, expected as Object) as String
+  r = m.assertArrayCount(actual, expected.Count())
+  if r <> "" then
+    return r
+  end if
+
+  return m.assertArrayContainsSubset(actual, expected)
+end function
+
 function TestCase__Context_LegacyFormat_CanRetrieveComplexAttributes() as String
   address = { city: "Oakland", state: "CA", zip: 94612 }
   tags = ["LaunchDarkly", "Feature Flags"]
@@ -388,6 +440,7 @@ function TestSuite__Context() as Object
     this = BaseTestSuite()
 
     this.name = "TestSuite__Context"
+    this.assertSameRefs = TestUtil__Context_AssertSameRefs
 
     this.addTest("TestCase__Context_FailsIfDataIsNotAssociativeArray", TestCase__Context_FailsIfDataIsNotAssociativeArray)
 
@@ -395,6 +448,7 @@ function TestSuite__Context() as Object
     this.addTest("TestCase__Context_LegacyFormat_CanCreate", TestCase__Context_LegacyFormat_CanCreate)
     this.addTest("TestCase__Context_LegacyFormat_CanRetrieveBasicAttributes", TestCase__Context_LegacyFormat_CanRetrieveBasicAttributes)
     this.addTest("TestCase__Context_LegacyFormat_CanRetrieveComplexAttributes", TestCase__Context_LegacyFormat_CanRetrieveComplexAttributes)
+    this.addTest("TestCase__Context_LegacyFormat_PrivateAttributeNamesAreLiteral", TestCase__Context_LegacyFormat_PrivateAttributeNamesAreLiteral)
 
     this.addTest("TestCase__Context_SingleKind_ValidatesTypes", TestCase__Context_SingleKind_ValidatesTypes)
     this.addTest("TestCase__Context_SingleKind_CanCreate", TestCase__Context_SingleKind_CanCreate)
@@ -402,6 +456,7 @@ function TestSuite__Context() as Object
     this.addTest("TestCase__Context_SingleKind_CanRetrieveComplexAttributes", TestCase__Context_SingleKind_CanRetrieveComplexAttributes)
     this.addTest("TestCase__Context_SingleKind_ReturnsIndividualContexts", TestCase__Context_SingleKind_ReturnsIndividualContexts)
     this.addTest("TestCase__Context_SingleKind_RedactsNestedAttributes", TestCase__Context_SingleKind_RedactsNestedAttributes)
+    this.addTest("TestCase__Context_AllAttributesPrivate_EscapesRedactedNames", TestCase__Context_AllAttributesPrivate_EscapesRedactedNames)
 
     this.addTest("TestCase__Context_MultiKind_ValidatesTypes", TestCase__Context_MultiKind_ValidatesTypes)
     this.addTest("TestCase__Context_MultiKind_CanCreate", TestCase__Context_MultiKind_CanCreate)
