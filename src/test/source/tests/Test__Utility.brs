@@ -169,6 +169,15 @@ function TestCase__Utility_UnsignedIntegerToLittleEndian() as String
     return m.assertEqual(bytes.toHexString(), "AB320000")
 end function
 
+function TestCase__Utility_Base64UrlEncode() as String
+    ' 0xFB 0xFF encodes to "+/8=" in standard base64.
+    bytes = createObject("roByteArray")
+    bytes.push(&hFB)
+    bytes.push(&hFF)
+
+    return m.assertEqual(LaunchDarklyUtility().base64UrlEncode(bytes), "-_8=")
+end function
+
 function TestSuite__Utility() as Object
     this = BaseTestSuite()
 
@@ -185,6 +194,7 @@ function TestSuite__Utility() as Object
     this.addTest("TestCase__Utility_ExtractUriParts", TestCase__Utility_ExtractUriParts)
     this.addTest("TestCase__Utility_RandomBytes", TestCase__Utility_RandomBytes)
     this.addTest("TestCase__Utility_UnsignedIntegerToLittleEndian", TestCase__Utility_UnsignedIntegerToLittleEndian)
+    this.addTest("TestCase__Utility_Base64UrlEncode", TestCase__Utility_Base64UrlEncode)
 
     return this
 end function
